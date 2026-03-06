@@ -97,7 +97,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final entitiesAsync = ref.watch(entitiesProvider);
+    final entitiesAsync = ref.watch(activeEntitiesProvider);
 
     return Scaffold(
       appBar: AppBar(

@@ -68,3 +68,9 @@ final entitiesProvider =
         (ref) {
   return EntitiesNotifier();
 });
+
+final activeEntitiesProvider =
+    FutureProvider<List<BankingEntity>>((ref) async {
+  final service = EntityService();
+  return service.getAll(activeOnly: true);
+});

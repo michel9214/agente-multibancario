@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/banking_entity.dart';
 import '../../providers/entities_provider.dart';
+import '../../providers/shift_provider.dart';
 import '../../widgets/loading_widget.dart';
 
 class EntitiesScreen extends ConsumerWidget {
@@ -127,6 +128,21 @@ class EntitiesScreen extends ConsumerWidget {
 
   void _toggleActive(
       BuildContext context, WidgetRef ref, BankingEntity entity) {
+    // Block deactivation if there's an active shift
+    if (entity.isActive) {
+      final shiftState = ref.read(activeShiftProvider);
+      final hasActiveShift = shiftState.valueOrNull != null;
+      if (hasActiveShift) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No puedes desactivar entidades mientras hay un turno activo'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
     final newState = !entity.isActive;
     ref.read(entitiesProvider.notifier).update(
           id: entity.id,
