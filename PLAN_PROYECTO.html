@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Proyecto - App Agente Multibancario</title>
+    <style>
+        /* ===== CSS RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue-900: #0c2340;
+            --blue-800: #0f3460;
+            --blue-700: #16537e;
+            --blue-600: #1a6fa0;
+            --blue-500: #2196F3;
+            --blue-400: #42a5f5;
+            --blue-300: #90caf9;
+            --blue-200: #bbdefb;
+            --blue-100: #e3f2fd;
+            --blue-50:  #f0f7ff;
+
+            --green-700: #15803d;
+            --green-600: #16a34a;
+            --green-500: #22c55e;
+            --green-400: #4ade80;
+            --green-300: #86efac;
+            --green-200: #bbf7d0;
+            --green-100: #dcfce7;
+            --green-50:  #f0fdf4;
+
+            --amber-500: #f59e0b;
+            --amber-100: #fef3c7;
+
+            --red-500: #ef4444;
+            --red-100: #fee2e2;
+
+            --gray-900: #111827;
+            --gray-800: #1f2937;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-500: #6b7280;
+            --gray-400: #9ca3af;
+            --gray-300: #d1d5db;
+            --gray-200: #e5e7eb;
+            --gray-100: #f3f4f6;
+            --gray-50:  #f9fafb;
+
+            --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            font-family: var(--font-sans);
+            color: var(--gray-800);
+            background: var(--gray-50);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== HEADER / HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 50%, var(--blue-600) 100%);
+            color: #fff;
+            padding: 3.5rem 2rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: var(--green-300);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.9rem;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 span { color: var(--green-400); }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--blue-200);
+            max-width: 600px;
+            margin-bottom: 1.5rem;
+        }
+        .hero-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: var(--blue-300);
+        }
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .hero-meta-item strong { color: #fff; }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem 2rem;
+            margin: 2rem auto;
+            max-width: 960px;
+            box-shadow: var(--shadow-sm);
+        }
+        .toc h2 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--gray-500);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--blue-100);
+        }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem 2rem;
+        }
+        .toc a {
+            color: var(--blue-700);
+            text-decoration: none;
+            font-size: 0.92rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.15s, color 0.15s;
+        }
+        .toc a:hover {
+            background: var(--blue-50);
+            color: var(--blue-900);
+        }
+        .toc-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--blue-600);
+            background: var(--blue-100);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ===== SECTIONS ===== */
+        .section {
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 2rem 2.25rem;
+            margin: 1.5rem auto;
+            max-width: 960px;
+            box-shadow: var(--shadow-sm);
+        }
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--blue-900);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--blue-500);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .section h2 .sec-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--blue-100);
+            color: var(--blue-600);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin: 1.5rem 0 0.75rem;
+        }
+        .section p {
+            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+        }
+
+        /* ===== CALLOUT / INFO BOX ===== */
+        .callout {
+            background: var(--blue-50);
+            border-left: 4px solid var(--blue-500);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
+        .callout-green {
+            background: var(--green-50);
+            border-left-color: var(--green-600);
+        }
+        .callout-amber {
+            background: var(--amber-100);
+            border-left-color: var(--amber-500);
+        }
+        .callout strong {
+            color: var(--gray-900);
+        }
+
+        /* ===== DECISION TAGS ===== */
+        .decisions-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .decisions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.92rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--green-50);
+            border-radius: var(--radius);
+            border: 1px solid var(--green-200);
+        }
+        .decisions-list li::before {
+            content: '\2713';
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: var(--green-600);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        thead th {
+            background: var(--blue-900);
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        thead th:first-child { border-radius: var(--radius) 0 0 0; }
+        thead th:last-child { border-radius: 0 var(--radius) 0 0; }
+        tbody td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: top;
+        }
+        tbody tr:nth-child(even) { background: var(--gray-50); }
+        tbody tr:hover { background: var(--blue-50); }
+        tbody tr:last-child td { border-bottom: none; }
+        td code, p code, li code {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.82em;
+            color: var(--blue-800);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .badge-blue { background: var(--blue-100); color: var(--blue-800); }
+        .badge-green { background: var(--green-100); color: var(--green-700); }
+        .badge-amber { background: var(--amber-100); color: #92400e; }
+
+        /* ===== API TABLE ===== */
+        .method-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 0.04em;
+        }
+        .method-get { background: var(--green-100); color: var(--green-700); }
+        .method-post { background: var(--blue-100); color: var(--blue-800); }
+        .method-patch { background: var(--amber-100); color: #92400e; }
+        .api-route {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--gray-700);
+        }
+
+        /* ===== CODE BLOCKS ===== */
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            line-height: 1.65;
+            border: 1px solid #313244;
+        }
+        .code-block .folder { color: #89b4fa; font-weight: 600; }
+        .code-block .file { color: #a6adc8; }
+        .code-block .comment { color: #6c7086; font-style: italic; }
+        .code-block .tree { color: #585b70; }
+        .code-block .highlight { color: #a6e3a1; }
+        .code-block .keyword { color: #cba6f7; }
+        .code-block .string { color: #a6e3a1; }
+        .code-block .operator { color: #89dceb; }
+        .code-block .number { color: #fab387; }
+
+        /* ===== FORMULA BOX ===== */
+        .formula-box {
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--green-50) 100%);
+            border: 2px solid var(--blue-300);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            margin: 1.25rem 0;
+        }
+        .formula-box h4 {
+            color: var(--blue-900);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.75rem;
+        }
+        .formula {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: var(--gray-800);
+            background: rgba(255,255,255,0.7);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            margin: 0.4rem 0;
+            border: 1px solid var(--blue-200);
+        }
+        .formula .var { color: var(--blue-700); font-weight: 600; }
+        .formula .op { color: var(--green-700); font-weight: 700; }
+        .formula .fn { color: #7c3aed; font-weight: 600; }
+
+        /* ===== DB SCHEMA CARDS ===== */
+        .schema-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .schema-card {
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .schema-card-header {
+            background: var(--blue-900);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .schema-card-header .table-icon {
+            width: 18px;
+            height: 18px;
+            background: var(--blue-500);
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+        .schema-card-subtitle {
+            background: var(--gray-100);
+            color: var(--gray-600);
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            font-style: italic;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .schema-card-body {
+            padding: 0.5rem 0;
+        }
+        .schema-field {
+            display: flex;
+            align-items: center;
+            padding: 0.3rem 1rem;
+            font-size: 0.82rem;
+            gap: 0.5rem;
+        }
+        .schema-field:hover { background: var(--gray-50); }
+        .schema-field-name {
+            font-family: var(--font-mono);
+            color: var(--gray-800);
+            font-weight: 500;
+            min-width: 140px;
+        }
+        .schema-field-type {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+        .schema-field-pk {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--amber-500);
+            background: var(--amber-100);
+            padding: 0.05rem 0.35rem;
+            border-radius: 3px;
+        }
+        .schema-field-fk {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--blue-600);
+            background: var(--blue-100);
+            padding: 0.05rem 0.35rem;
+            border-radius: 3px;
+        }
+        .schema-field-enum {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--green-700);
+            background: var(--green-100);
+            padding: 0.05rem 0.35rem;
+            border-radius: 3px;
+        }
+
+        /* ===== SCREENS LIST ===== */
+        .screens-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin: 1rem 0;
+        }
+        .screen-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .screen-item:hover {
+            border-color: var(--blue-300);
+            box-shadow: var(--shadow-sm);
+        }
+        .screen-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--blue-500);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .screen-info strong {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--gray-900);
+        }
+        .screen-info span {
+            font-size: 0.78rem;
+            color: var(--gray-500);
+        }
+
+        /* ===== TIMELINE ===== */
+        .timeline {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--gray-200);
+            border-radius: 999px;
+        }
+
+        .timeline-block {
+            margin-bottom: 1.5rem;
+        }
+        .timeline-block-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+        .timeline-block-dot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #fff;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 4px #fff, var(--shadow-md);
+        }
+        .dot-blue { background: linear-gradient(135deg, var(--blue-600), var(--blue-800)); }
+        .dot-green { background: linear-gradient(135deg, var(--green-500), var(--green-700)); }
+        .dot-amber { background: linear-gradient(135deg, var(--amber-500), #d97706); }
+        .dot-red { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+        .timeline-block-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        .timeline-block-title small {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.1rem;
+        }
+        .small-blue { color: var(--blue-600); }
+        .small-green { color: var(--green-600); }
+        .small-amber { color: var(--amber-500); }
+        .small-purple { color: #7c3aed; }
+
+        .timeline-phases {
+            margin-left: 74px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .timeline-phase {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .timeline-phase:hover {
+            border-color: var(--blue-300);
+            box-shadow: var(--shadow-sm);
+        }
+        .phase-num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gray-500);
+            background: var(--gray-100);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .phase-name {
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 1rem;
+            color: var(--gray-500);
+            font-size: 0.8rem;
+        }
+        .footer-line {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue-500), var(--green-500));
+            border-radius: 999px;
+            margin: 0 auto 1rem;
+        }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            body { background: #fff; font-size: 11pt; }
+            .hero { padding: 1.5rem; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .section, .toc { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .timeline-block { page-break-inside: avoid; }
+            .schema-grid { grid-template-columns: 1fr 1fr; }
+            a { color: var(--blue-700); text-decoration: underline; }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.75rem; }
+            .hero-meta { flex-direction: column; gap: 0.5rem; }
+            .toc-grid { grid-template-columns: 1fr; }
+            .section { padding: 1.25rem; }
+            .schema-grid { grid-template-columns: 1fr; }
+            .screens-list { grid-template-columns: 1fr; }
+            .timeline-phases { margin-left: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">Plan de Proyecto</div>
+        <h1>App Agente Multibancario<br><span>Cuadre de Caja</span></h1>
+        <p class="hero-subtitle">
+            Digitalizar el proceso de cuadre de caja para agentes multibancarios en Peru.
+            Automatizacion de calculos, almacenamiento de evidencia y gestion multi-operador.
+        </p>
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <strong>Moneda:</strong> Soles peruanos (S/)
+            </div>
+            <div class="hero-meta-item">
+                <strong>Operadores:</strong> 1 &ndash; 3 usuarios
+            </div>
+            <div class="hero-meta-item">
+                <strong>Plataforma:</strong> Android (iOS futuro)
+            </div>
+            <div class="hero-meta-item">
+                <strong>13</strong> fases de implementacion
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ===================== TABLE OF CONTENTS ===================== -->
+<nav class="toc container" id="toc">
+    <h2>Tabla de Contenidos</h2>
+    <div class="toc-grid">
+        <a href="#contexto"><span class="toc-num">1</span> Contexto del Proyecto</a>
+        <a href="#stack"><span class="toc-num">2</span> Stack Tecnologico</a>
+        <a href="#estructura"><span class="toc-num">3</span> Estructura del Proyecto</a>
+        <a href="#database"><span class="toc-num">4</span> Esquema de Base de Datos</a>
+        <a href="#formula"><span class="toc-num">5</span> Formula de Cuadre</a>
+        <a href="#api"><span class="toc-num">6</span> API Endpoints</a>
+        <a href="#pantallas"><span class="toc-num">7</span> Pantallas de la App</a>
+        <a href="#fases"><span class="toc-num">8</span> Fases de Implementacion</a>
+    </div>
+</nav>
+
+<!-- ===================== SECCIÓN 1: CONTEXTO ===================== -->
+<section class="section container" id="contexto">
+    <h2><span class="sec-icon">1</span> Contexto del Proyecto</h2>
+
+    <p>
+        Un negocio de <strong>agente multibancario en Peru</strong> necesita digitalizar el proceso manual
+        de cuadre de caja al finalizar cada turno de operador. Actualmente se realiza con papelitos de POS
+        de cada entidad bancaria, sumando manualmente para verificar que los montos cuadren.
+    </p>
+    <p>
+        La app <strong>automatiza este calculo</strong> y almacena evidencia fotografica de cada comprobante,
+        eliminando errores humanos y dejando un registro auditable de cada turno.
+    </p>
+
+    <h3>Decisiones Confirmadas</h3>
+    <ul class="decisions-list">
+        <li><strong>Moneda:</strong> Soles peruanos (S/) &mdash; formato <code>S/ 1,234.56</code></li>
+        <li><strong>Backend:</strong> NestJS con Fastify como adaptador HTTP</li>
+        <li><strong>Operadores:</strong> 1-3 operadores con gestion multi-usuario y roles (<code>OWNER</code> / <code>OPERATOR</code>) desde el inicio</li>
+        <li><strong>Mejoras incluidas:</strong> Modo offline basico, exportar PDF/Excel, dashboard con graficos</li>
+    </ul>
+</section>
+
+<!-- ===================== SECCIÓN 2: STACK ===================== -->
+<section class="section container" id="stack">
+    <h2><span class="sec-icon">2</span> Stack Tecnologico</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Componente</th>
+                    <th>Tecnologia</th>
+                    <th>Justificacion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td><span class="badge badge-blue">Flutter</span></td>
+                    <td>Multiplataforma (Android ahora, iOS despues)</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend</strong></td>
+                    <td><span class="badge badge-blue">NestJS + Fastify</span></td>
+                    <td>Estructura modular, TypeScript, validacion integrada, Swagger auto</td>
+                </tr>
+                <tr>
+                    <td><strong>ORM</strong></td>
+                    <td><span class="badge badge-green">Prisma</span></td>
+                    <td>Type-safe, migraciones automaticas, excelente con PostgreSQL</td>
+                </tr>
+                <tr>
+                    <td><strong>Base de datos</strong></td>
+                    <td><span class="badge badge-green">PostgreSQL 16</span></td>
+                    <td>Robusto, gratuito, ACID para transacciones monetarias</td>
+                </tr>
+                <tr>
+                    <td><strong>Estado (Flutter)</strong></td>
+                    <td><span class="badge badge-blue">Riverpod</span></td>
+                    <td>Compile-safe, manejo async nativo, testeable</td>
+                </tr>
+                <tr>
+                    <td><strong>Navegacion</strong></td>
+                    <td><span class="badge badge-blue">GoRouter</span></td>
+                    <td>Declarativo, deep linking, guards de autenticacion</td>
+                </tr>
+                <tr>
+                    <td><strong>Dev environment</strong></td>
+                    <td><span class="badge badge-amber">Docker Compose</span></td>
+                    <td>PostgreSQL + Backend en contenedores</td>
+                </tr>
+                <tr>
+                    <td><strong>Despliegue</strong></td>
+                    <td><span class="badge badge-amber">Railway (~$0-5/mes)</span></td>
+                    <td>Deploy con git push, PostgreSQL incluido</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ===================== SECCIÓN 3: ESTRUCTURA ===================== -->
+<section class="section container" id="estructura">
+    <h2><span class="sec-icon">3</span> Estructura del Proyecto</h2>
+
+    <div class="code-block">
+<span class="folder">D:\AGENTES MULTIBANCO\</span>
+<span class="tree">|</span>
+<span class="tree">|--</span> <span class="file">docker-compose.yml</span>
+<span class="tree">|--</span> <span class="file">.env.example</span>
+<span class="tree">|--</span> <span class="file">.gitignore</span>
+<span class="tree">|</span>
+<span class="tree">|--</span> <span class="folder">backend/</span>
+<span class="tree">|   |--</span> <span class="file">Dockerfile</span> <span class="comment">/ Dockerfile.dev</span>
+<span class="tree">|   |--</span> <span class="file">package.json</span>
+<span class="tree">|   |--</span> <span class="folder">prisma/</span>
+<span class="tree">|   |   |--</span> <span class="file">schema.prisma</span>
+<span class="tree">|   |   |--</span> <span class="folder">migrations/</span>
+<span class="tree">|   |   |--</span> <span class="file">seed.ts</span>
+<span class="tree">|   |--</span> <span class="folder">src/</span>
+<span class="tree">|       |--</span> <span class="file">main.ts</span>
+<span class="tree">|       |--</span> <span class="file">app.module.ts</span>
+<span class="tree">|       |--</span> <span class="folder">common/</span>          <span class="comment">// Guards, decoradores, filtros</span>
+<span class="tree">|       |--</span> <span class="folder">prisma/</span>          <span class="comment">// PrismaModule / PrismaService</span>
+<span class="tree">|       |--</span> <span class="folder">auth/</span>            <span class="comment">// JWT, login, registro</span>
+<span class="tree">|       |--</span> <span class="folder">users/</span>           <span class="comment">// CRUD de usuarios</span>
+<span class="tree">|       |--</span> <span class="folder">entities/</span>        <span class="comment">// Entidades bancarias</span>
+<span class="tree">|       |--</span> <span class="folder">shifts/</span>          <span class="comment">// Turnos de trabajo</span>
+<span class="tree">|       |--</span> <span class="folder">balances/</span>        <span class="comment">// Saldos apertura/cierre</span>
+<span class="tree">|       |--</span> <span class="folder">movements/</span>       <span class="comment">// Movimientos del turno</span>
+<span class="tree">|       |--</span> <span class="folder">uploads/</span>         <span class="comment">// Subida de comprobantes</span>
+<span class="tree">|       |--</span> <span class="folder">reconciliation/</span>  <span class="comment">// Logica de cuadre</span>
+<span class="tree">|</span>
+<span class="tree">|--</span> <span class="folder">mobile/</span>
+<span class="tree">    |--</span> <span class="folder">lib/</span>
+<span class="tree">        |--</span> <span class="file">main.dart</span>
+<span class="tree">        |--</span> <span class="folder">config/</span>          <span class="comment">// Tema, rutas, constantes</span>
+<span class="tree">        |--</span> <span class="folder">models/</span>          <span class="comment">// Modelos de datos</span>
+<span class="tree">        |--</span> <span class="folder">services/</span>        <span class="comment">// HTTP, almacenamiento</span>
+<span class="tree">        |--</span> <span class="folder">providers/</span>       <span class="comment">// Riverpod providers</span>
+<span class="tree">        |--</span> <span class="folder">screens/</span>
+<span class="tree">        |   |--</span> <span class="folder">auth/</span>        <span class="comment">// Login</span>
+<span class="tree">        |   |--</span> <span class="folder">home/</span>        <span class="comment">// Dashboard</span>
+<span class="tree">        |   |--</span> <span class="folder">entities/</span>    <span class="comment">// Entidades bancarias</span>
+<span class="tree">        |   |--</span> <span class="folder">shift/</span>       <span class="comment">// Flujo de turno</span>
+<span class="tree">        |   |--</span> <span class="folder">movements/</span>   <span class="comment">// Registrar movimientos</span>
+<span class="tree">        |   |--</span> <span class="folder">history/</span>     <span class="comment">// Historial de turnos</span>
+<span class="tree">        |--</span> <span class="folder">widgets/</span>         <span class="comment">// Componentes reutilizables</span>
+    </div>
+</section>
+
+<!-- ===================== SECCIÓN 4: BASE DE DATOS ===================== -->
+<section class="section container" id="database">
+    <h2><span class="sec-icon">4</span> Esquema de Base de Datos</h2>
+
+    <p>El sistema utiliza <strong>5 tablas principales</strong> en PostgreSQL 16, relacionadas entre si para modelar
+    el flujo completo de un turno de cuadre de caja.</p>
+
+    <div class="schema-grid">
+        <!-- users -->
+        <div class="schema-card">
+            <div class="schema-card-header">
+                <span class="table-icon">T</span> users
+            </div>
+            <div class="schema-card-subtitle">Operadores y dueno del negocio</div>
+            <div class="schema-card-body">
+                <div class="schema-field">
+                    <span class="schema-field-name">id</span>
+                    <span class="schema-field-pk">PK</span>
+                    <span class="schema-field-type">UUID</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">email</span>
+                    <span class="schema-field-type">VARCHAR UNIQUE</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">password_hash</span>
+                    <span class="schema-field-type">VARCHAR</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">full_name</span>
+                    <span class="schema-field-type">VARCHAR</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">role</span>
+                    <span class="schema-field-enum">ENUM</span>
+                    <span class="schema-field-type">OWNER | OPERATOR</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">is_active</span>
+                    <span class="schema-field-type">BOOLEAN</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- banking_entities -->
+        <div class="schema-card">
+            <div class="schema-card-header">
+                <span class="table-icon">T</span> banking_entities
+            </div>
+            <div class="schema-card-subtitle">Entidades bancarias e intermediarios</div>
+            <div class="schema-card-body">
+                <div class="schema-field">
+                    <span class="schema-field-name">id</span>
+                    <span class="schema-field-pk">PK</span>
+                    <span class="schema-field-type">UUID</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">name</span>
+                    <span class="schema-field-type">VARCHAR</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">type</span>
+                    <span class="schema-field-enum">ENUM</span>
+                    <span class="schema-field-type">bank | intermediary | fintech</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">color</span>
+                    <span class="schema-field-type">VARCHAR</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">is_active</span>
+                    <span class="schema-field-type">BOOLEAN</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- shifts -->
+        <div class="schema-card">
+            <div class="schema-card-header">
+                <span class="table-icon">T</span> shifts
+            </div>
+            <div class="schema-card-subtitle">Turnos de trabajo</div>
+            <div class="schema-card-body">
+                <div class="schema-field">
+                    <span class="schema-field-name">id</span>
+                    <span class="schema-field-pk">PK</span>
+                    <span class="schema-field-type">UUID</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">operator_id</span>
+                    <span class="schema-field-fk">FK</span>
+                    <span class="schema-field-type">UUID &rarr; users</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">status</span>
+                    <span class="schema-field-enum">ENUM</span>
+                    <span class="schema-field-type">OPEN | CLOSED</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">started_at</span>
+                    <span class="schema-field-type">TIMESTAMP</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">closed_at</span>
+                    <span class="schema-field-type">TIMESTAMP?</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">starting_cash</span>
+                    <span class="schema-field-type">DECIMAL(12,2)</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">ending_cash</span>
+                    <span class="schema-field-type">DECIMAL(12,2)?</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">total_opening_balance</span>
+                    <span class="schema-field-type">DECIMAL(12,2)</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">total_closing_balance</span>
+                    <span class="schema-field-type">DECIMAL(12,2)?</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">total_movements</span>
+                    <span class="schema-field-type">DECIMAL(12,2)?</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">discrepancy</span>
+                    <span class="schema-field-type">DECIMAL(12,2)?</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- balance_entries -->
+        <div class="schema-card">
+            <div class="schema-card-header">
+                <span class="table-icon">T</span> balance_entries
+            </div>
+            <div class="schema-card-subtitle">Saldo por entidad al inicio/fin del turno</div>
+            <div class="schema-card-body">
+                <div class="schema-field">
+                    <span class="schema-field-name">id</span>
+                    <span class="schema-field-pk">PK</span>
+                    <span class="schema-field-type">UUID</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">shift_id</span>
+                    <span class="schema-field-fk">FK</span>
+                    <span class="schema-field-type">UUID &rarr; shifts</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">entity_id</span>
+                    <span class="schema-field-fk">FK</span>
+                    <span class="schema-field-type">UUID &rarr; banking_entities</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">type</span>
+                    <span class="schema-field-enum">ENUM</span>
+                    <span class="schema-field-type">OPENING | CLOSING</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">amount</span>
+                    <span class="schema-field-type">DECIMAL(12,2)</span>
+                </div>
+                <div class="schema-field">
+                    <span class="schema-field-name">receipt_photo_url</span>
+                    <span class="schema-field-type">VARCHAR?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- movements - full width -->
+    <div class="schema-card" style="margin-top: 1rem;">
+        <div class="schema-card-header">
+            <span class="table-icon">T</span> movements
+        </div>
+        <div class="schema-card-subtitle">Movimientos del dueno durante el turno (inyecciones/retiros de efectivo, etc.)</div>
+        <div class="schema-card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+            <div class="schema-field">
+                <span class="schema-field-name">id</span>
+                <span class="schema-field-pk">PK</span>
+                <span class="schema-field-type">UUID</span>
+            </div>
+            <div class="schema-field">
+                <span class="schema-field-name">shift_id</span>
+                <span class="schema-field-fk">FK</span>
+                <span class="schema-field-type">UUID &rarr; shifts</span>
+            </div>
+            <div class="schema-field">
+                <span class="schema-field-name">type</span>
+                <span class="schema-field-type">VARCHAR</span>
+            </div>
+            <div class="schema-field">
+                <span class="schema-field-name">direction</span>
+                <span class="schema-field-enum">ENUM</span>
+                <span class="schema-field-type">IN | OUT</span>
+            </div>
+            <div class="schema-field">
+                <span class="schema-field-name">amount</span>
+                <span class="schema-field-type">DECIMAL(12,2)</span>
+            </div>
+            <div class="schema-field">
+                <span class="schema-field-name">description</span>
+                <span class="schema-field-type">TEXT?</span>
+            </div>
+            <div class="schema-field" style="grid-column: span 2;">
+                <span class="schema-field-name">receipt_photo_url</span>
+                <span class="schema-field-type">VARCHAR?</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== SECCIÓN 5: FÓRMULA ===================== -->
+<section class="section container" id="formula">
+    <h2><span class="sec-icon">5</span> Formula de Cuadre</h2>
+
+    <p>
+        El calculo de cuadre compara los totales de cierre contra los totales de apertura,
+        restando los movimientos netos realizados durante el turno. Si la discrepancia es
+        <strong>cero</strong>, el turno esta <strong>cuadrado</strong>.
+    </p>
+
+    <div class="formula-box">
+        <h4>Calculo principal</h4>
+        <div class="formula">
+            <span class="var">discrepancia</span>
+            <span class="op"> = </span>
+            (<span class="var">saldos_cierre</span> <span class="op">+</span> <span class="var">efectivo_cierre</span>)
+            <span class="op"> - </span>
+            (<span class="var">saldos_apertura</span> <span class="op">+</span> <span class="var">efectivo_apertura</span>)
+            <span class="op"> - </span>
+            <span class="var">movimientos_netos</span>
+        </div>
+        <div class="formula" style="margin-top: 0.5rem;">
+            <span class="var">movimientos_netos</span>
+            <span class="op"> = </span>
+            <span class="fn">SUM</span>(<span class="var">entradas</span>)
+            <span class="op"> - </span>
+            <span class="fn">SUM</span>(<span class="var">salidas</span>)
+        </div>
+    </div>
+
+    <div class="callout callout-green">
+        <strong>Resultado = 0:</strong> El turno esta <strong>CUADRADO</strong>. Todos los montos coinciden correctamente.
+    </div>
+    <div class="callout callout-amber">
+        <strong>Resultado &ne; 0:</strong> Existe un <strong>DESCUADRE</strong>. Se muestra el monto de diferencia para investigacion.
+    </div>
+</section>
+
+<!-- ===================== SECCIÓN 6: API ===================== -->
+<section class="section container" id="api">
+    <h2><span class="sec-icon">6</span> API Endpoints</h2>
+
+    <p>API RESTful con autenticacion JWT. Documentacion auto-generada con Swagger en <code>/api/docs</code>.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 90px;">Metodo</th>
+                    <th>Ruta</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="method-badge method-post">POST</span></td>
+                    <td class="api-route">/api/auth/login</td>
+                    <td>Login &rarr; retorna JWT</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-post">POST</span></td>
+                    <td class="api-route">/api/auth/register</td>
+                    <td>Crear usuario (solo dueno)</td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="method-badge method-get">GET</span>
+                        <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td class="api-route">/api/entities</td>
+                    <td>Listar / Crear entidades bancarias</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-post">POST</span></td>
+                    <td class="api-route">/api/shifts</td>
+                    <td>Abrir turno</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-get">GET</span></td>
+                    <td class="api-route">/api/shifts/active</td>
+                    <td>Turno activo del operador</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-patch">PATCH</span></td>
+                    <td class="api-route">/api/shifts/:id/close</td>
+                    <td>Cerrar turno + calcular cuadre</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-post">POST</span></td>
+                    <td class="api-route">/api/shifts/:id/movements</td>
+                    <td>Registrar movimiento en el turno</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-get">GET</span></td>
+                    <td class="api-route">/api/shifts/:id/reconciliation</td>
+                    <td>Resultado del cuadre</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge method-post">POST</span></td>
+                    <td class="api-route">/api/uploads/receipt</td>
+                    <td>Subir foto de comprobante</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ===================== SECCIÓN 7: PANTALLAS ===================== -->
+<section class="section container" id="pantallas">
+    <h2><span class="sec-icon">7</span> Pantallas de la App</h2>
+
+    <p>La aplicacion Flutter consta de <strong>8 pantallas principales</strong> que cubren el flujo completo
+    desde el inicio de sesion hasta la revision del historial.</p>
+
+    <ul class="screens-list">
+        <li class="screen-item">
+            <span class="screen-num">1</span>
+            <div class="screen-info">
+                <strong>Login</strong>
+                <span>Email + contrasena</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">2</span>
+            <div class="screen-info">
+                <strong>Dashboard</strong>
+                <span>Estado del turno, boton &ldquo;Iniciar Turno&rdquo;</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">3</span>
+            <div class="screen-info">
+                <strong>Iniciar Turno</strong>
+                <span>Wizard de 3 pasos (efectivo + saldos por entidad)</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">4</span>
+            <div class="screen-info">
+                <strong>Turno Activo</strong>
+                <span>Lista de movimientos del turno en curso</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">5</span>
+            <div class="screen-info">
+                <strong>Agregar Movimiento</strong>
+                <span>Tipo, monto, direccion, descripcion, foto</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">6</span>
+            <div class="screen-info">
+                <strong>Cerrar Turno</strong>
+                <span>Wizard de 3 pasos (efectivo + saldos cierre)</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">7</span>
+            <div class="screen-info">
+                <strong>Resumen de Cuadre</strong>
+                <span>Resultado: CUADRADO o DESCUADRE</span>
+            </div>
+        </li>
+        <li class="screen-item">
+            <span class="screen-num">8</span>
+            <div class="screen-info">
+                <strong>Historial</strong>
+                <span>Lista de turnos cerrados con filtros</span>
+            </div>
+        </li>
+    </ul>
+</section>
+
+<!-- ===================== SECCIÓN 8: FASES ===================== -->
+<section class="section container" id="fases">
+    <h2><span class="sec-icon">8</span> Fases de Implementacion</h2>
+
+    <p>El proyecto se divide en <strong>4 bloques</strong> y <strong>13 fases</strong> secuenciales,
+    desde el scaffolding del backend hasta el despliegue en produccion.</p>
+
+    <div class="timeline">
+
+        <!-- BLOQUE A -->
+        <div class="timeline-block">
+            <div class="timeline-block-header">
+                <div class="timeline-block-dot dot-blue">A</div>
+                <div class="timeline-block-title">
+                    <small class="small-blue">Bloque A &mdash; Fases 1-5</small>
+                    Backend (NestJS + Fastify)
+                </div>
+            </div>
+            <div class="timeline-phases">
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 1</span>
+                    <span class="phase-name"><strong>Scaffolding</strong> &mdash; Docker Compose, Prisma schema, estructura de modulos NestJS</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 2</span>
+                    <span class="phase-name"><strong>Auth + Usuarios</strong> &mdash; JWT, registro, login, roles OWNER/OPERATOR, guards</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 3</span>
+                    <span class="phase-name"><strong>Entidades Bancarias</strong> &mdash; CRUD de entidades, tipos (bank/intermediary/fintech)</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 4</span>
+                    <span class="phase-name"><strong>Turnos + Cuadre</strong> &mdash; Abrir/cerrar turno, saldos, movimientos, calculo de discrepancia</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 5</span>
+                    <span class="phase-name"><strong>Upload de Imagenes</strong> &mdash; Subida de fotos de comprobantes, almacenamiento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOQUE B -->
+        <div class="timeline-block">
+            <div class="timeline-block-header">
+                <div class="timeline-block-dot dot-green">B</div>
+                <div class="timeline-block-title">
+                    <small class="small-green">Bloque B &mdash; Fases 6-9</small>
+                    App Flutter Core
+                </div>
+            </div>
+            <div class="timeline-phases">
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 6</span>
+                    <span class="phase-name"><strong>Flutter Base + Auth</strong> &mdash; Proyecto Flutter, Riverpod, GoRouter, pantalla de login</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 7</span>
+                    <span class="phase-name"><strong>Entidades</strong> &mdash; Listado y gestion de entidades bancarias en la app</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 8</span>
+                    <span class="phase-name"><strong>Flujo de Turno</strong> &mdash; Wizards de apertura/cierre, movimientos, resumen de cuadre</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 9</span>
+                    <span class="phase-name"><strong>Historial + Pulido</strong> &mdash; Pantalla de historial, mejoras de UX, manejo de errores</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOQUE C -->
+        <div class="timeline-block">
+            <div class="timeline-block-header">
+                <div class="timeline-block-dot dot-amber">C</div>
+                <div class="timeline-block-title">
+                    <small class="small-amber">Bloque C &mdash; Fases 10-12</small>
+                    Mejoras
+                </div>
+            </div>
+            <div class="timeline-phases">
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 10</span>
+                    <span class="phase-name"><strong>Exportar PDF/Excel</strong> &mdash; Generacion de reportes descargables del cuadre</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 11</span>
+                    <span class="phase-name"><strong>Dashboard con Graficos</strong> &mdash; Visualizacion de tendencias, totales por entidad</span>
+                </div>
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 12</span>
+                    <span class="phase-name"><strong>Modo Offline Basico</strong> &mdash; Cola de operaciones, sincronizacion al reconectar</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOQUE D -->
+        <div class="timeline-block">
+            <div class="timeline-block-header">
+                <div class="timeline-block-dot dot-red">D</div>
+                <div class="timeline-block-title">
+                    <small class="small-purple">Bloque D &mdash; Fase 13</small>
+                    Despliegue
+                </div>
+            </div>
+            <div class="timeline-phases">
+                <div class="timeline-phase">
+                    <span class="phase-num">Fase 13</span>
+                    <span class="phase-name"><strong>Produccion</strong> &mdash; Dockerfile produccion, despliegue en Railway, APK release firmado</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Progress summary bar -->
+    <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.9rem; color: var(--gray-800);">Progreso General del Proyecto</span>
+            <span style="font-size: 0.8rem; color: var(--gray-500);">13 fases &middot; 4 bloques</span>
+        </div>
+        <div style="display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--gray-200);">
+            <div style="width: 38.5%; background: linear-gradient(90deg, var(--blue-600), var(--blue-400));" title="Bloque A: Backend (5 fases)"></div>
+            <div style="width: 30.7%; background: linear-gradient(90deg, var(--green-600), var(--green-400));" title="Bloque B: Flutter Core (4 fases)"></div>
+            <div style="width: 23.1%; background: linear-gradient(90deg, var(--amber-500), #fbbf24);" title="Bloque C: Mejoras (3 fases)"></div>
+            <div style="width: 7.7%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);" title="Bloque D: Despliegue (1 fase)"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.72rem; color: var(--gray-500);">
+            <span style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: var(--blue-500);"></span>
+                Backend (5 fases)
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: var(--green-500);"></span>
+                Flutter Core (4 fases)
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: var(--amber-500);"></span>
+                Mejoras (3 fases)
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: #8b5cf6;"></span>
+                Despliegue (1 fase)
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+    <div class="footer-line"></div>
+    <p><strong>App Agente Multibancario &mdash; Cuadre de Caja</strong></p>
+    <p>Plan de proyecto generado el 5 de marzo de 2026</p>
+    <p style="margin-top: 0.5rem;">
+        <a href="#toc" style="color: var(--blue-500); text-decoration: none;">Volver al inicio</a>
+    </p>
+</footer>
+
+</body>
+</html>

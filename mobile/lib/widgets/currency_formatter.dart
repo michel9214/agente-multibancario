@@ -1,0 +1,14 @@
+import 'package:intl/intl.dart';
+
+String formatCurrency(double amount) {
+  final formatter = NumberFormat('#,##0.00', 'es_PE');
+  return 'S/ ${formatter.format(amount)}';
+}
+
+String formatDate(DateTime date) {
+  return DateFormat('dd/MM/yyyy HH:mm', 'es_PE').format(date);
+}
+
+String formatDateShort(DateTime date) {
+  return DateFormat('dd/MM/yyyy', 'es_PE').format(date);
+}
