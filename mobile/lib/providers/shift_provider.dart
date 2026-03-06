@@ -6,7 +6,23 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
   final ShiftService _service = ShiftService();
 
   ActiveShiftNotifier() : super(const AsyncValue.loading()) {
-    load();
+    _loadWithRetry();
+  }
+
+  Future<void> _loadWithRetry() async {
+    for (var i = 0; i < 3; i++) {
+      try {
+        final shift = await _service.getActiveShift();
+        state = AsyncValue.data(shift);
+        return;
+      } catch (e, st) {
+        if (i == 2) {
+          state = AsyncValue.error(e, st);
+        } else {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
+    }
   }
 
   Future<void> load() async {
