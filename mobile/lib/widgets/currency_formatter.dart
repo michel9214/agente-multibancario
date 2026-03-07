@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 String formatCurrency(double amount) {
-  final formatter = NumberFormat('#,##0.00', 'es_PE');
+  final formatter = NumberFormat('#,##0.00', 'en_US');
   return 'S/ ${formatter.format(amount)}';
 }
 

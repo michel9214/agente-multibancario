@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../providers/entities_provider.dart';
 import '../../providers/shift_provider.dart';
-import '../../services/upload_service.dart';
 import '../../widgets/currency_formatter.dart';
+import '../../widgets/photo_picker.dart';
 import '../../models/banking_entity.dart';
 
 class StartShiftScreen extends ConsumerStatefulWidget {
@@ -24,6 +22,13 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
   bool _loading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Force refresh active entities when entering the screen
+    Future.microtask(() => ref.invalidate(activeEntitiesProvider));
+  }
+
+  @override
   void dispose() {
     _cashController.dispose();
     for (final c in _balanceControllers.values) {
@@ -32,25 +37,41 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
     super.dispose();
   }
 
-  Future<void> _pickPhoto(String entityId) async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1200,
-      imageQuality: 80,
-    );
-    if (image == null) return;
-
-    try {
-      final url = await UploadService().uploadReceipt(File(image.path));
+  Future<void> _handlePickPhoto(String entityId) async {
+    final url = await pickAndUploadPhoto(context);
+    if (url != null) {
       setState(() => _photoUrls[entityId] = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al subir foto')),
-        );
+    }
+  }
+
+  List<String> _getMissingPhotos(List<BankingEntity> entities) {
+    final missing = <String>[];
+    for (final entity in entities) {
+      final amount =
+          double.tryParse(_balanceControllers[entity.id]?.text ?? '') ?? 0;
+      if (amount > 0 && _photoUrls[entity.id] == null) {
+        missing.add(entity.name);
       }
     }
+    return missing;
+  }
+
+  void _tryNextStep(List<BankingEntity> entities) {
+    if (_step == 1) {
+      // Validate photos for entities with balance > 0
+      final missingPhotos = _getMissingPhotos(entities);
+      if (missingPhotos.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Falta foto de: ${missingPhotos.join(", ")}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
+    setState(() => _step++);
   }
 
   Future<void> _openShift(List<BankingEntity> entities) async {
@@ -107,14 +128,12 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (entities) {
-          // Initialize controllers for each entity
           for (final e in entities) {
             _balanceControllers.putIfAbsent(e.id, () => TextEditingController());
           }
 
           return Column(
             children: [
-              // Step indicator
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -134,7 +153,6 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                   }),
                 ),
               ),
-
               Expanded(
                 child: _step == 0
                     ? _buildCashStep()
@@ -142,8 +160,6 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         ? _buildBalancesStep(entities)
                         : _buildReviewStep(entities),
               ),
-
-              // Navigation buttons
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -162,7 +178,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                             ? null
                             : () {
                                 if (_step < 2) {
-                                  setState(() => _step++);
+                                  _tryNextStep(entities);
                                 } else {
                                   _openShift(entities);
                                 }
@@ -176,10 +192,13 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         ),
                         child: _loading
                             ? const SizedBox(
-                                height: 20, width: 20,
+                                height: 20,
+                                width: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : Text(_step == 2 ? 'Confirmar e Iniciar' : 'Siguiente'),
+                            : Text(_step == 2
+                                ? 'Confirmar e Iniciar'
+                                : 'Siguiente'),
                       ),
                     ),
                   ],
@@ -205,7 +224,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
           const SizedBox(height: 24),
           TextFormField(
             controller: _cashController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Monto en soles',
               prefixText: 'S/ ',
@@ -237,6 +257,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
         }
         final entity = entities[i - 1];
         final color = _parseColor(entity.color);
+        final hasPhoto = _photoUrls[entity.id] != null;
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -249,7 +270,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     CircleAvatar(
                       backgroundColor: color.withOpacity(0.2),
                       radius: 16,
-                      child: Icon(Icons.account_balance, color: color, size: 18),
+                      child: Icon(Icons.account_balance,
+                          color: color, size: 18),
                     ),
                     const SizedBox(width: 8),
                     Text(entity.name,
@@ -262,7 +284,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _balanceControllers[entity.id],
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: const InputDecoration(
                           labelText: 'Saldo',
                           prefixText: 'S/ ',
@@ -272,20 +295,40 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () => _pickPhoto(entity.id),
-                      icon: Icon(
-                        _photoUrls[entity.id] != null
-                            ? Icons.check_circle
-                            : Icons.camera_alt,
-                        color: _photoUrls[entity.id] != null
-                            ? Colors.green
-                            : Colors.grey,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: !hasPhoto
+                            ? Border.all(color: Colors.red, width: 2)
+                            : null,
                       ),
-                      tooltip: 'Foto del comprobante',
+                      child: IconButton(
+                        onPressed: () => _handlePickPhoto(entity.id),
+                        icon: Icon(
+                          hasPhoto ? Icons.check_circle : Icons.camera_alt,
+                          color: hasPhoto ? Colors.green : Colors.red,
+                        ),
+                        tooltip: 'Foto obligatoria',
+                      ),
                     ),
+                    if (hasPhoto)
+                      IconButton(
+                        onPressed: () => showPhotoPreview(
+                            context, _photoUrls[entity.id]!),
+                        icon: const Icon(Icons.visibility,
+                            color: Colors.blue, size: 20),
+                        tooltip: 'Ver foto',
+                      ),
                   ],
                 ),
+                if (!hasPhoto)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Foto del comprobante obligatoria',
+                      style: TextStyle(color: Colors.red[700], fontSize: 11),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -323,10 +366,11 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                 children: [
                   _reviewRow('Efectivo inicial', formatCurrency(cash)),
                   const Divider(),
-                  ...balanceItems.map((e) =>
-                      _reviewRow(e.key, formatCurrency(e.value))),
+                  ...balanceItems
+                      .map((e) => _reviewRow(e.key, formatCurrency(e.value))),
                   if (balanceItems.isNotEmpty) const Divider(),
-                  _reviewRow('Total saldos', formatCurrency(totalBalances),
+                  _reviewRow(
+                      'Total saldos', formatCurrency(totalBalances),
                       bold: true),
                   const Divider(),
                   _reviewRow(

@@ -1,14 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../models/shift.dart';
 import '../../models/balance_entry.dart';
 import '../../providers/shift_provider.dart';
-import '../../services/upload_service.dart';
 import '../../widgets/currency_formatter.dart';
-import '../../models/banking_entity.dart';
+import '../../widgets/photo_picker.dart';
 
 class EndShiftScreen extends ConsumerStatefulWidget {
   const EndShiftScreen({super.key});
@@ -33,33 +30,17 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     super.dispose();
   }
 
-  Future<void> _pickPhoto(String entityId) async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1200,
-      imageQuality: 80,
-    );
-    if (image == null) return;
-
-    try {
-      final url = await UploadService().uploadReceipt(File(image.path));
+  Future<void> _handlePickPhoto(String entityId) async {
+    final url = await pickAndUploadPhoto(context);
+    if (url != null) {
       setState(() => _photoUrls[entityId] = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al subir foto')),
-        );
-      }
     }
   }
 
-  /// Get opening entries from the active shift
   List<BalanceEntry> _getOpeningEntries(Shift shift) {
     return shift.balanceEntries.where((b) => b.type == 'OPENING').toList();
   }
 
-  /// Validate that all opening entities have a closing balance entered
   List<String> _getMissingEntities(List<BalanceEntry> openingEntries) {
     final missing = <String>[];
     for (final entry in openingEntries) {
@@ -72,7 +53,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     return missing;
   }
 
-  /// Get entities missing their closing photo
   List<String> _getMissingPhotos(List<BalanceEntry> openingEntries) {
     final missing = <String>[];
     for (final entry in openingEntries) {
@@ -85,7 +65,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
   void _tryNextStep(Shift shift) {
     if (_step == 0) {
-      // Validate all opening entities have closing balances
       final openingEntries = _getOpeningEntries(shift);
       final missing = _getMissingEntities(openingEntries);
       if (missing.isNotEmpty) {
@@ -98,7 +77,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         );
         return;
       }
-      // Validate all entities have photos
       final missingPhotos = _getMissingPhotos(openingEntries);
       if (missingPhotos.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +104,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     setState(() => _step++);
   }
 
-  Future<void> _closeShift(Shift shift, List<BalanceEntry> openingEntries) async {
+  Future<void> _closeShift(
+      Shift shift, List<BalanceEntry> openingEntries) async {
     setState(() => _loading = true);
     try {
       final balances = <Map<String, dynamic>>[];
@@ -141,11 +120,12 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         });
       }
 
-      final closedShift = await ref.read(activeShiftProvider.notifier).closeShift(
-            shiftId: shift.id,
-            endingCash: double.tryParse(_cashController.text) ?? 0,
-            closingBalances: balances,
-          );
+      final closedShift =
+          await ref.read(activeShiftProvider.notifier).closeShift(
+                shiftId: shift.id,
+                endingCash: double.tryParse(_cashController.text) ?? 0,
+                closingBalances: balances,
+              );
 
       if (mounted) {
         context.go('/shift/${closedShift.id}/summary');
@@ -179,7 +159,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
           final openingEntries = _getOpeningEntries(shift);
 
-          // Initialize controllers for opening entities only
           for (final entry in openingEntries) {
             _balanceControllers.putIfAbsent(
                 entry.entityId, () => TextEditingController());
@@ -187,7 +166,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
           return Column(
             children: [
-              // Step indicator
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -197,9 +175,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         height: 4,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         decoration: BoxDecoration(
-                          color: i <= _step
-                              ? Colors.orange
-                              : Colors.grey[300],
+                          color:
+                              i <= _step ? Colors.orange : Colors.grey[300],
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -207,7 +184,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   }),
                 ),
               ),
-
               Expanded(
                 child: _step == 0
                     ? _buildBalancesStep(openingEntries)
@@ -215,7 +191,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         ? _buildCashStep()
                         : _buildPreviewStep(shift, openingEntries),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -240,17 +215,22 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _step == 2 ? Colors.orange : Theme.of(context).colorScheme.primary,
+                          backgroundColor: _step == 2
+                              ? Colors.orange
+                              : Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: _loading
                             ? const SizedBox(
-                                height: 20, width: 20,
+                                height: 20,
+                                width: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : Text(_step == 2 ? 'Cerrar Turno' : 'Siguiente'),
+                            : Text(_step == 2
+                                ? 'Cerrar Turno'
+                                : 'Siguiente'),
                       ),
                     ),
                   ],
@@ -288,6 +268,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         final entityColor = entry.entity?.color != null
             ? _parseColor(entry.entity!.color)
             : Colors.blue;
+        final hasPhoto = _photoUrls[entry.entityId] != null;
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -300,7 +281,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     CircleAvatar(
                       backgroundColor: entityColor.withOpacity(0.2),
                       radius: 16,
-                      child: Icon(Icons.account_balance, color: entityColor, size: 18),
+                      child: Icon(Icons.account_balance,
+                          color: entityColor, size: 18),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -308,7 +290,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(entityName,
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold)),
                           Text(
                             'Apertura: ${formatCurrency(entry.amount)}',
                             style: TextStyle(
@@ -327,8 +310,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _balanceControllers[entry.entityId],
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: const InputDecoration(
                           labelText: 'Saldo de cierre *',
                           prefixText: 'S/ ',
@@ -341,31 +324,39 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: _photoUrls[entry.entityId] == null
+                        border: !hasPhoto
                             ? Border.all(color: Colors.red, width: 2)
                             : null,
                       ),
                       child: IconButton(
-                        onPressed: () => _pickPhoto(entry.entityId),
+                        onPressed: () =>
+                            _handlePickPhoto(entry.entityId),
                         icon: Icon(
-                          _photoUrls[entry.entityId] != null
+                          hasPhoto
                               ? Icons.check_circle
                               : Icons.camera_alt,
-                          color: _photoUrls[entry.entityId] != null
-                              ? Colors.green
-                              : Colors.red,
+                          color: hasPhoto ? Colors.green : Colors.red,
                         ),
                         tooltip: 'Foto obligatoria',
                       ),
                     ),
+                    if (hasPhoto)
+                      IconButton(
+                        onPressed: () => showPhotoPreview(
+                            context, _photoUrls[entry.entityId]!),
+                        icon: const Icon(Icons.visibility,
+                            color: Colors.blue, size: 20),
+                        tooltip: 'Ver foto',
+                      ),
                   ],
                 ),
-                if (_photoUrls[entry.entityId] == null)
+                if (!hasPhoto)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       'Foto del comprobante obligatoria',
-                      style: TextStyle(color: Colors.red[700], fontSize: 11),
+                      style:
+                          TextStyle(color: Colors.red[700], fontSize: 11),
                     ),
                   ),
               ],
@@ -389,7 +380,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           const SizedBox(height: 24),
           TextFormField(
             controller: _cashController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Monto en soles *',
               prefixText: 'S/ ',
@@ -402,25 +394,25 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     );
   }
 
-  Widget _buildPreviewStep(Shift shift, List<BalanceEntry> openingEntries) {
+  Widget _buildPreviewStep(
+      Shift shift, List<BalanceEntry> openingEntries) {
     final cash = double.tryParse(_cashController.text) ?? 0;
 
-    // Closing balances
     double totalClosing = 0;
     final closingItems = <MapEntry<String, double>>[];
     for (final entry in openingEntries) {
-      final amount =
-          double.tryParse(_balanceControllers[entry.entityId]?.text ?? '') ?? 0;
-      closingItems.add(MapEntry(entry.entity?.name ?? 'Entidad', amount));
+      final amount = double.tryParse(
+              _balanceControllers[entry.entityId]?.text ?? '') ??
+          0;
+      closingItems
+          .add(MapEntry(entry.entity?.name ?? 'Entidad', amount));
       totalClosing += amount;
     }
 
-    // Opening totals
     final totalOpening = openingEntries.fold<double>(
         0.0, (sum, b) => sum + b.amount);
     final totalOpeningGeneral = shift.startingCash + totalOpening;
 
-    // Movements
     final movements = shift.movements;
     final totalMovementsIn = movements
         .where((m) => m.direction == 'IN')
@@ -436,8 +428,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         Text('Vista Previa del Cierre',
             style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
-
-        // Opening summary
         Card(
           color: Colors.blue[50],
           child: Padding(
@@ -452,18 +442,19 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                       fontSize: 13,
                     )),
                 const SizedBox(height: 8),
-                _reviewRow('Efectivo inicial', formatCurrency(shift.startingCash)),
-                _reviewRow('Saldos entidades', formatCurrency(totalOpening)),
+                _reviewRow('Efectivo inicial',
+                    formatCurrency(shift.startingCash)),
+                _reviewRow(
+                    'Saldos entidades', formatCurrency(totalOpening)),
                 const Divider(),
-                _reviewRow('Total apertura', formatCurrency(totalOpeningGeneral),
+                _reviewRow('Total apertura',
+                    formatCurrency(totalOpeningGeneral),
                     bold: true, color: Colors.blue[800]),
               ],
             ),
           ),
         ),
         const SizedBox(height: 8),
-
-        // Movements summary
         if (movements.isNotEmpty) ...[
           Card(
             color: Colors.purple[50],
@@ -495,7 +486,10 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                m.typeLabel + (m.description != null ? ' - ${m.description}' : ''),
+                                m.typeLabel +
+                                    (m.description != null
+                                        ? ' - ${m.description}'
+                                        : ''),
                                 style: const TextStyle(fontSize: 13),
                               ),
                             ),
@@ -512,7 +506,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         ),
                       )),
                   const Divider(),
-                  _reviewRow('Movimientos netos', formatCurrency(netMovements),
+                  _reviewRow('Movimientos netos',
+                      formatCurrency(netMovements),
                       bold: true, color: Colors.purple[800]),
                 ],
               ),
@@ -520,8 +515,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           ),
           const SizedBox(height: 8),
         ],
-
-        // Total esperado = apertura + movimientos netos
         Card(
           color: Colors.green[50],
           child: Padding(
@@ -536,9 +529,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                       fontSize: 13,
                     )),
                 const SizedBox(height: 8),
-                _reviewRow('Total apertura', formatCurrency(totalOpeningGeneral)),
+                _reviewRow('Total apertura',
+                    formatCurrency(totalOpeningGeneral)),
                 if (movements.isNotEmpty)
-                  _reviewRow('Movimientos netos', formatCurrency(netMovements)),
+                  _reviewRow('Movimientos netos',
+                      formatCurrency(netMovements)),
                 const Divider(),
                 _reviewRow(
                   'Debería tener',
@@ -551,8 +546,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           ),
         ),
         const SizedBox(height: 8),
-
-        // Closing balances
         Card(
           color: Colors.orange[50],
           child: Padding(
@@ -569,9 +562,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 const SizedBox(height: 8),
                 _reviewRow('Efectivo final', formatCurrency(cash)),
                 const Divider(),
-                ...closingItems.map((e) => _reviewRow(e.key, formatCurrency(e.value))),
+                ...closingItems.map(
+                    (e) => _reviewRow(e.key, formatCurrency(e.value))),
                 const Divider(),
-                _reviewRow('Total saldos cierre', formatCurrency(totalClosing),
+                _reviewRow(
+                    'Total saldos cierre', formatCurrency(totalClosing),
                     bold: true),
                 const Divider(),
                 _reviewRow(
@@ -585,7 +580,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -620,7 +614,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           Flexible(
             child: Text(label,
                 style: TextStyle(
-                    fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        bold ? FontWeight.bold : FontWeight.normal,
                     color: color)),
           ),
           Text(value,
