@@ -11,6 +11,7 @@ export class UsersService {
         id: true,
         email: true,
         fullName: true,
+        photoUrl: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -26,6 +27,7 @@ export class UsersService {
         id: true,
         email: true,
         fullName: true,
+        photoUrl: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -33,6 +35,24 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
+  }
+
+  async update(id: string, data: { fullName?: string; photoUrl?: string }) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        photoUrl: true,
+        role: true,
+        isActive: true,
+      },
+    });
   }
 
   async toggleActive(id: string) {
@@ -46,6 +66,7 @@ export class UsersService {
         id: true,
         email: true,
         fullName: true,
+        photoUrl: true,
         role: true,
         isActive: true,
       },

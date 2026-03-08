@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
+import '../../services/movement_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
@@ -12,18 +14,22 @@ class ActiveShiftScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shiftAsync = ref.watch(activeShiftProvider);
+    final isOwner = ref.watch(authProvider).user?.isOwner == true;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Turno Activo')),
-      floatingActionButton: shiftAsync.whenOrNull(
-        data: (shift) => shift != null
-            ? FloatingActionButton.extended(
-                onPressed: () => context.push('/shift/${shift.id}/movement'),
-                icon: const Icon(Icons.add),
-                label: const Text('Movimiento'),
-              )
-            : null,
-      ),
+      floatingActionButton: isOwner
+          ? shiftAsync.whenOrNull(
+              data: (shift) => shift != null
+                  ? FloatingActionButton.extended(
+                      onPressed: () =>
+                          context.push('/shift/${shift.id}/movement'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Movimiento'),
+                    )
+                  : null,
+            )
+          : null,
       body: shiftAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando turno...'),
         error: (e, _) => ErrorDisplay(
@@ -190,6 +196,39 @@ class ActiveShiftScreen extends ConsumerWidget {
                                       color: Colors.blue, size: 20),
                                 ),
                               ],
+                              const SizedBox(width: 4),
+                              PopupMenuButton<String>(
+                                padding: EdgeInsets.zero,
+                                iconSize: 20,
+                                onSelected: (action) {
+                                  if (action == 'edit') {
+                                    context.push(
+                                        '/shift/${shift.id}/movement/${m.id}');
+                                  } else if (action == 'delete') {
+                                    _confirmDelete(context, ref, shift.id, m.id);
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(children: [
+                                      Icon(Icons.edit, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('Editar'),
+                                    ]),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(children: [
+                                      Icon(Icons.delete,
+                                          size: 18, color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('Eliminar',
+                                          style: TextStyle(color: Colors.red)),
+                                    ]),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -213,6 +252,49 @@ class ActiveShiftScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _confirmDelete(
+      BuildContext context, WidgetRef ref, String shiftId, String movementId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar movimiento'),
+        content:
+            const Text('¿Estás seguro de que deseas eliminar este movimiento?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await MovementService().delete(movementId, shiftId);
+                ref.read(activeShiftProvider.notifier).refresh();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Movimiento eliminado'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Eliminar',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

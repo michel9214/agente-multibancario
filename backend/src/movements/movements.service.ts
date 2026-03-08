@@ -36,6 +36,30 @@ export class MovementsService {
     });
   }
 
+  async update(id: string, dto: Partial<CreateMovementDto>) {
+    const movement = await this.prisma.movement.findUnique({
+      where: { id },
+      include: { shift: true },
+    });
+    if (!movement) throw new NotFoundException('Movimiento no encontrado');
+    if (movement.shift.status === ShiftStatus.CLOSED) {
+      throw new BadRequestException('No puedes modificar movimientos de un turno cerrado');
+    }
+
+    return this.prisma.movement.update({
+      where: { id },
+      data: {
+        ...(dto.type !== undefined && { type: dto.type }),
+        ...(dto.reasonId !== undefined && { reasonId: dto.reasonId }),
+        ...(dto.direction !== undefined && { direction: dto.direction }),
+        ...(dto.amount !== undefined && { amount: dto.amount }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.receiptPhotoUrl !== undefined && { receiptPhotoUrl: dto.receiptPhotoUrl }),
+      },
+      include: { reason: true },
+    });
+  }
+
   async remove(id: string) {
     const movement = await this.prisma.movement.findUnique({
       where: { id },

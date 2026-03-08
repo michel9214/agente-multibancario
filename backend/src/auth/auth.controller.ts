@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -15,6 +15,16 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('operators')
+  listOperators() {
+    return this.authService.listOperators();
+  }
+
+  @Post('login-operator/:id')
+  loginOperator(@Param('id') id: string) {
+    return this.authService.loginOperator(id);
   }
 
   @Post('register')

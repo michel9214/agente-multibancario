@@ -67,6 +67,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> loginOperator(String operatorId) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final data = await _authService.loginOperator(operatorId);
+      final token = data['accessToken'];
+      final user = User.fromJson(data['user']);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      await prefs.setString('auth_user', jsonEncode(data['user']));
+
+      state = AuthState(token: token, user: user);
+      return true;
+    } catch (e) {
+      String msg = 'Error de conexión';
+      state = state.copyWith(isLoading: false, error: msg);
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');

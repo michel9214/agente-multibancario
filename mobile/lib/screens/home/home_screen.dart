@@ -19,11 +19,12 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Agente Multibanco'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Historial',
-            onPressed: () => context.push('/history'),
-          ),
+          if (auth.user?.isOwner == true)
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Historial',
+              onPressed: () => context.push('/history'),
+            ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
@@ -31,6 +32,8 @@ class HomeScreen extends ConsumerWidget {
                   context.push('/entities');
                 case 'reasons':
                   context.push('/movement-reasons');
+                case 'operators':
+                  context.push('/operators');
                 case 'logout':
                   ref.read(authProvider.notifier).logout();
                   context.go('/login');
@@ -52,6 +55,15 @@ class HomeScreen extends ConsumerWidget {
                   child: ListTile(
                     leading: Icon(Icons.category),
                     title: Text('Razones de Movimiento'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              if (auth.user?.isOwner == true)
+                const PopupMenuItem(
+                  value: 'operators',
+                  child: ListTile(
+                    leading: Icon(Icons.people),
+                    title: Text('Operadores'),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),

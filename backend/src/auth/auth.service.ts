@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -27,7 +28,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash || '');
     if (!passwordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -44,9 +45,48 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        photoUrl: user.photoUrl,
         role: user.role,
       },
     };
+  }
+
+  async loginOperator(operatorId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: operatorId },
+    });
+
+    if (!user || !user.isActive || user.role !== Role.OPERATOR) {
+      throw new NotFoundException('Operador no encontrado');
+    }
+
+    const token = this.jwtService.sign({
+      sub: user.id,
+      role: user.role,
+    });
+
+    return {
+      accessToken: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        photoUrl: user.photoUrl,
+        role: user.role,
+      },
+    };
+  }
+
+  async listOperators() {
+    return this.prisma.user.findMany({
+      where: { role: Role.OPERATOR, isActive: true },
+      select: {
+        id: true,
+        fullName: true,
+        photoUrl: true,
+      },
+      orderBy: { fullName: 'asc' },
+    });
   }
 
   async register(dto: RegisterDto, currentUserRole?: Role) {
@@ -54,18 +94,20 @@ export class AuthService {
       throw new ForbiddenException('Solo el dueño puede registrar usuarios');
     }
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (existing) {
-      throw new ConflictException('El email ya está registrado');
+    if (dto.email) {
+      const existing = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existing) {
+        throw new ConflictException('El email ya está registrado');
+      }
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
 
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
+        email: dto.email || null,
         passwordHash,
         fullName: dto.fullName,
         role: dto.role || Role.OPERATOR,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/shift.dart';
 import '../../models/balance_entry.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
@@ -128,7 +129,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               );
 
       if (mounted) {
-        context.go('/shift/${closedShift.id}/summary');
+        final isOperator = ref.read(authProvider).user?.isOperator == true;
+        if (isOperator) {
+          await ref.read(authProvider.notifier).logout();
+          if (mounted) context.go('/login');
+        } else {
+          context.go('/shift/${closedShift.id}/summary');
+        }
       }
     } catch (e) {
       if (mounted) {

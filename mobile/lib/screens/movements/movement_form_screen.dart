@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/movement.dart';
 import '../../models/movement_reason.dart';
 import '../../providers/movement_reasons_provider.dart';
 import '../../providers/shift_provider.dart';
@@ -10,7 +11,8 @@ import '../../widgets/photo_picker.dart';
 
 class MovementFormScreen extends ConsumerStatefulWidget {
   final String shiftId;
-  const MovementFormScreen({super.key, required this.shiftId});
+  final String? movementId;
+  const MovementFormScreen({super.key, required this.shiftId, this.movementId});
 
   @override
   ConsumerState<MovementFormScreen> createState() => _MovementFormScreenState();
@@ -24,6 +26,34 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   String _direction = 'IN';
   String? _photoUrl;
   bool _loading = false;
+  bool _loadingMovement = false;
+  Movement? _editingMovement;
+
+  bool get isEditing => widget.movementId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditing) _loadMovement();
+  }
+
+  Future<void> _loadMovement() async {
+    setState(() => _loadingMovement = true);
+    try {
+      final movements =
+          await MovementService().getByShift(widget.shiftId);
+      final m = movements.firstWhere((m) => m.id == widget.movementId);
+      _editingMovement = m;
+      _amountController.text = m.amount.toStringAsFixed(2);
+      _descriptionController.text = m.description ?? '';
+      _direction = m.direction;
+      _photoUrl = m.receiptPhotoUrl;
+      if (m.reason != null) {
+        _selectedReason = m.reason;
+      }
+    } catch (_) {}
+    setState(() => _loadingMovement = false);
+  }
 
   @override
   void dispose() {
@@ -53,24 +83,40 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
     setState(() => _loading = true);
 
     try {
-      await MovementService().create(
-        shiftId: widget.shiftId,
-        type: 'OTHER',
-        reasonId: _selectedReason!.id,
-        direction: _direction,
-        amount: double.parse(_amountController.text),
-        description: _descriptionController.text.isNotEmpty
-            ? _descriptionController.text
-            : null,
-        receiptPhotoUrl: _photoUrl,
-      );
+      if (isEditing) {
+        await MovementService().update(
+          shiftId: widget.shiftId,
+          movementId: widget.movementId!,
+          type: 'OTHER',
+          reasonId: _selectedReason!.id,
+          direction: _direction,
+          amount: double.parse(_amountController.text),
+          description: _descriptionController.text.isNotEmpty
+              ? _descriptionController.text
+              : null,
+          receiptPhotoUrl: _photoUrl,
+        );
+      } else {
+        await MovementService().create(
+          shiftId: widget.shiftId,
+          type: 'OTHER',
+          reasonId: _selectedReason!.id,
+          direction: _direction,
+          amount: double.parse(_amountController.text),
+          description: _descriptionController.text.isNotEmpty
+              ? _descriptionController.text
+              : null,
+          receiptPhotoUrl: _photoUrl,
+        );
+      }
 
       ref.read(activeShiftProvider.notifier).refresh();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Movimiento registrado'),
+          SnackBar(
+            content:
+                Text(isEditing ? 'Movimiento actualizado' : 'Movimiento registrado'),
             backgroundColor: Colors.green,
           ),
         );
@@ -91,8 +137,16 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   Widget build(BuildContext context) {
     final reasonsAsync = ref.watch(movementReasonsProvider);
 
+    if (_loadingMovement) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Cargando...')),
+        body: const LoadingWidget(message: 'Cargando movimiento...'),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Movimiento')),
+      appBar: AppBar(
+          title: Text(isEditing ? 'Editar Movimiento' : 'Registrar Movimiento')),
       body: reasonsAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando razones...'),
         error: (e, _) => ErrorDisplay(
@@ -102,6 +156,14 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
         ),
         data: (reasons) {
           final activeReasons = reasons.where((r) => r.isActive).toList();
+
+          // Set selected reason for edit mode
+          if (isEditing &&
+              _selectedReason != null &&
+              !activeReasons.any((r) => r.id == _selectedReason!.id)) {
+            activeReasons.add(_selectedReason!);
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -110,7 +172,9 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   DropdownButtonFormField<MovementReason>(
-                    value: _selectedReason,
+                    value: activeReasons.any((r) => r.id == _selectedReason?.id)
+                        ? _selectedReason
+                        : null,
                     decoration: const InputDecoration(
                         labelText: 'Razón del movimiento'),
                     items: activeReasons
@@ -239,7 +303,9 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white))
                         : Text(
-                            'Registrar ${_direction == "IN" ? "Entrada" : "Salida"}',
+                            isEditing
+                                ? 'Guardar Cambios'
+                                : 'Registrar ${_direction == "IN" ? "Entrada" : "Salida"}',
                             style: const TextStyle(fontSize: 16),
                           ),
                   ),

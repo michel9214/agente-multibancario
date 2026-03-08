@@ -15,6 +15,9 @@ import '../screens/movements/movement_form_screen.dart';
 import '../screens/movement_reasons/movement_reasons_screen.dart';
 import '../screens/movement_reasons/create_reason_screen.dart';
 import '../screens/movement_reasons/edit_reason_screen.dart';
+import '../screens/operators/operators_screen.dart';
+import '../screens/operators/create_operator_screen.dart';
+import '../screens/operators/edit_operator_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/history/shift_detail_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
@@ -80,6 +83,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/shift/:id/movement/:movementId',
+        builder: (context, state) => MovementFormScreen(
+          shiftId: state.pathParameters['id']!,
+          movementId: state.pathParameters['movementId']!,
+        ),
+      ),
+      GoRoute(
         path: '/movement-reasons',
         builder: (context, state) => const MovementReasonsScreen(),
       ),
@@ -91,6 +101,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/movement-reasons/:id/edit',
         builder: (context, state) => EditReasonScreen(
           reasonId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/operators',
+        builder: (context, state) => const OperatorsScreen(),
+      ),
+      GoRoute(
+        path: '/operators/create',
+        builder: (context, state) => const CreateOperatorScreen(),
+      ),
+      GoRoute(
+        path: '/operators/:id/edit',
+        builder: (context, state) => EditOperatorScreen(
+          operatorId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(

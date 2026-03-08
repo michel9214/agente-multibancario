@@ -24,6 +24,28 @@ class MovementService {
     return Movement.fromJson(response.data);
   }
 
+  Future<Movement> update({
+    required String shiftId,
+    required String movementId,
+    String? type,
+    String? reasonId,
+    String? direction,
+    double? amount,
+    String? description,
+    String? receiptPhotoUrl,
+  }) async {
+    final response =
+        await _api.patch('/shifts/$shiftId/movements/$movementId', data: {
+      if (type != null) 'type': type,
+      if (reasonId != null) 'reasonId': reasonId,
+      if (direction != null) 'direction': direction,
+      if (amount != null) 'amount': amount,
+      if (description != null) 'description': description,
+      if (receiptPhotoUrl != null) 'receiptPhotoUrl': receiptPhotoUrl,
+    });
+    return Movement.fromJson(response.data);
+  }
+
   Future<List<Movement>> getByShift(String shiftId) async {
     final response = await _api.get('/shifts/$shiftId/movements');
     return (response.data as List)

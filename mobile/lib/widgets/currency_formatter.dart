@@ -6,13 +6,13 @@ String formatCurrency(double amount) {
 }
 
 String formatDate(DateTime date) {
-  return DateFormat('dd/MM/yyyy HH:mm', 'es_PE').format(date);
+  return DateFormat('dd/MM/yyyy HH:mm', 'es_PE').format(date.toLocal());
 }
 
 String formatDateShort(DateTime date) {
-  return DateFormat('dd/MM/yyyy', 'es_PE').format(date);
+  return DateFormat('dd/MM/yyyy', 'es_PE').format(date.toLocal());
 }
 
 String formatTime(DateTime date) {
-  return DateFormat('HH:mm', 'es_PE').format(date);
+  return DateFormat('HH:mm', 'es_PE').format(date.toLocal());
 }

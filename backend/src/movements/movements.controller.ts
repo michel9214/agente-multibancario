@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Delete,
+  Controller, Get, Post, Patch, Delete,
   Param, Body, UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,6 +25,14 @@ export class MovementsController {
   @Get()
   findByShift(@Param('shiftId') shiftId: string) {
     return this.movementsService.findByShift(shiftId);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateMovementDto>,
+  ) {
+    return this.movementsService.update(id, dto);
   }
 
   @Delete(':id')
