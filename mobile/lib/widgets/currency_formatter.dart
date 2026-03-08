@@ -12,3 +12,7 @@ String formatDate(DateTime date) {
 String formatDateShort(DateTime date) {
   return DateFormat('dd/MM/yyyy', 'es_PE').format(date);
 }
+
+String formatTime(DateTime date) {
+  return DateFormat('HH:mm', 'es_PE').format(date);
+}

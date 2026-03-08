@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/photo_picker.dart';
 
 class ActiveShiftScreen extends ConsumerWidget {
   const ActiveShiftScreen({super.key});
@@ -148,14 +149,28 @@ class ActiveShiftScreen extends ConsumerWidget {
                           subtitle: m.description != null
                               ? Text(m.description!)
                               : null,
-                          trailing: Text(
-                            '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: m.direction == 'IN'
-                                  ? Colors.green
-                                  : Colors.red,
-                            ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: m.direction == 'IN'
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                              if (m.receiptPhotoUrl != null) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => showPhotoPreview(
+                                      context, m.receiptPhotoUrl!),
+                                  child: const Icon(Icons.visibility,
+                                      color: Colors.blue, size: 20),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       )),

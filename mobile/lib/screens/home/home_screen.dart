@@ -19,12 +19,11 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Agente Multibanco'),
         actions: [
-          if (auth.user?.isOwner == true)
-            IconButton(
-              icon: const Icon(Icons.bar_chart),
-              tooltip: 'Dashboard',
-              onPressed: () => context.push('/dashboard'),
-            ),
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Historial',
+            onPressed: () => context.push('/history'),
+          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
@@ -32,8 +31,6 @@ class HomeScreen extends ConsumerWidget {
                   context.push('/entities');
                 case 'reasons':
                   context.push('/movement-reasons');
-                case 'history':
-                  context.push('/history');
                 case 'logout':
                   ref.read(authProvider.notifier).logout();
                   context.go('/login');
@@ -59,18 +56,11 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               const PopupMenuItem(
-                value: 'history',
-                child: ListTile(
-                  leading: Icon(Icons.history),
-                  title: Text('Historial'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
                   leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+                  title: Text('Cerrar Sesión',
+                      style: TextStyle(color: Colors.red)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -113,7 +103,9 @@ class HomeScreen extends ConsumerWidget {
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
-                                auth.user?.role == 'OWNER' ? 'Dueño' : 'Operador',
+                                auth.user?.role == 'OWNER'
+                                    ? 'Dueño'
+                                    : 'Operador',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -196,7 +188,8 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveShiftCard(BuildContext context, WidgetRef ref, Shift shift) {
+  Widget _buildActiveShiftCard(
+      BuildContext context, WidgetRef ref, Shift shift) {
     return Card(
       color: Colors.green[50],
       child: Padding(
@@ -207,7 +200,8 @@ class HomeScreen extends ConsumerWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.green,
                     borderRadius: BorderRadius.circular(20),

@@ -108,7 +108,7 @@ export class ShiftsService {
       where: { operatorId, status: ShiftStatus.OPEN },
       include: {
         balanceEntries: { include: { entity: true } },
-        movements: { orderBy: { createdAt: 'desc' } },
+        movements: { include: { reason: true }, orderBy: { createdAt: 'desc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -143,7 +143,7 @@ export class ShiftsService {
           include: { entity: true },
           orderBy: { entity: { name: 'asc' } },
         },
-        movements: { orderBy: { createdAt: 'asc' } },
+        movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -160,7 +160,7 @@ export class ShiftsService {
           include: { entity: true },
           orderBy: { entity: { name: 'asc' } },
         },
-        movements: { orderBy: { createdAt: 'asc' } },
+        movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });

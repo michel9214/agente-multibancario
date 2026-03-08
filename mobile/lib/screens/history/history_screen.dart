@@ -61,19 +61,52 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _loadShifts,
-                      child: ListView.builder(
+                      child: ListView(
                         padding: const EdgeInsets.all(16),
-                        itemCount: _shifts.length,
-                        itemBuilder: (context, i) {
-                          final shift = _shifts[i];
-                          return _buildShiftCard(context, shift);
-                        },
+                        children: _buildGroupedList(),
                       ),
                     ),
     );
   }
 
-  Widget _buildShiftCard(BuildContext context, Shift shift) {
+  List<Widget> _buildGroupedList() {
+    final grouped = <String, List<Shift>>{};
+    for (final shift in _shifts) {
+      final dateKey = formatDateShort(shift.startedAt);
+      grouped.putIfAbsent(dateKey, () => []).add(shift);
+    }
+
+    final widgets = <Widget>[];
+    for (final entry in grouped.entries) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+              const SizedBox(width: 8),
+              Text(
+                entry.key,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Divider(color: Colors.grey[300])),
+            ],
+          ),
+        ),
+      );
+      for (var i = 0; i < entry.value.length; i++) {
+        widgets.add(_buildShiftCard(context, entry.value[i], turnNumber: i + 1));
+      }
+    }
+    return widgets;
+  }
+
+  Widget _buildShiftCard(BuildContext context, Shift shift, {required int turnNumber}) {
 
     // Use pre-calculated fields from backend (history list doesn't include balanceEntries/movements)
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
@@ -140,17 +173,30 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    formatDateShort(shift.startedAt),
+                    formatTime(shift.startedAt),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              if (shift.operator != null)
-                Text(
-                  shift.operator!.fullName,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Turno $turnNumber',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (shift.operator != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '— ${shift.operator!.fullName}',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ],
+                ],
+              ),
               const SizedBox(height: 8),
               _cardRow('Apertura', formatCurrency(totalOpening)),
               if (netMovements.abs() >= 0.01)

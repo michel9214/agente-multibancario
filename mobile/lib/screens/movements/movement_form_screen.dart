@@ -1,14 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../models/movement_reason.dart';
 import '../../providers/movement_reasons_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../services/movement_service.dart';
-import '../../services/upload_service.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/photo_picker.dart';
 
 class MovementFormScreen extends ConsumerStatefulWidget {
   final String shiftId;
@@ -34,24 +32,10 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
     super.dispose();
   }
 
-  Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1200,
-      imageQuality: 80,
-    );
-    if (image == null) return;
-
-    try {
-      final url = await UploadService().uploadReceipt(File(image.path));
+  Future<void> _handlePickPhoto() async {
+    final url = await pickAndUploadPhoto(context);
+    if (url != null) {
       setState(() => _photoUrl = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al subir foto')),
-        );
-      }
     }
   }
 
@@ -113,7 +97,8 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
         loading: () => const LoadingWidget(message: 'Cargando razones...'),
         error: (e, _) => ErrorDisplay(
           message: 'Error al cargar razones',
-          onRetry: () => ref.read(movementReasonsProvider.notifier).load(activeOnly: true),
+          onRetry: () =>
+              ref.read(movementReasonsProvider.notifier).load(activeOnly: true),
         ),
         data: (reasons) {
           final activeReasons = reasons.where((r) => r.isActive).toList();
@@ -160,8 +145,6 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                         v == null ? 'Seleccione una razón' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // Direction toggle
                   Row(
                     children: [
                       const Text('Dirección: '),
@@ -182,11 +165,10 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   TextFormField(
                     controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
                       labelText: 'Monto',
                       prefixText: 'S/ ',
@@ -204,7 +186,6 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   TextFormField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
@@ -214,22 +195,35 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                     maxLines: 2,
                   ),
                   const SizedBox(height: 16),
-
-                  // Photo
-                  OutlinedButton.icon(
-                    onPressed: _pickPhoto,
-                    icon: Icon(
-                      _photoUrl != null
-                          ? Icons.check_circle
-                          : Icons.camera_alt,
-                      color: _photoUrl != null ? Colors.green : null,
-                    ),
-                    label: Text(_photoUrl != null
-                        ? 'Foto adjunta'
-                        : 'Adjuntar foto (opcional)'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _handlePickPhoto,
+                          icon: Icon(
+                            _photoUrl != null
+                                ? Icons.check_circle
+                                : Icons.camera_alt,
+                            color: _photoUrl != null ? Colors.green : null,
+                          ),
+                          label: Text(_photoUrl != null
+                              ? 'Foto adjunta'
+                              : 'Adjuntar foto (opcional)'),
+                        ),
+                      ),
+                      if (_photoUrl != null) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () =>
+                              showPhotoPreview(context, _photoUrl!),
+                          icon: const Icon(Icons.visibility,
+                              color: Colors.blue),
+                          tooltip: 'Ver foto',
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 32),
-
                   ElevatedButton(
                     onPressed: _loading ? null : _submit,
                     style: ElevatedButton.styleFrom(
