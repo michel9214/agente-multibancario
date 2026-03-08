@@ -63,6 +63,11 @@ class ShiftService {
     return Shift.fromJson(response.data);
   }
 
+  Future<Shift> annulClose(String shiftId) async {
+    final response = await _api.patch('/shifts/$shiftId/annul-close', data: {});
+    return Shift.fromJson(response.data);
+  }
+
   Future<Shift?> getLastClosedShift() async {
     final response = await _api.get('/shifts/last-closed');
     if (response.data == null || response.data == '') return null;

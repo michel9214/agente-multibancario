@@ -200,6 +200,47 @@ export class ShiftsService {
     return this.getShiftWithDetails(shiftId);
   }
 
+  /**
+   * Annul close: revert CLOSED back to PRECLOSED (OWNER only)
+   */
+  async annulClose(shiftId: string, userRole: Role) {
+    if (userRole !== Role.OWNER) {
+      throw new ForbiddenException('Solo el administrador puede anular un cierre');
+    }
+
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.CLOSED) {
+      throw new BadRequestException('Solo se puede anular un turno cerrado');
+    }
+
+    // Check there's no other open/preclosed shift
+    const existingActive = await this.prisma.shift.findFirst({
+      where: {
+        status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] },
+      },
+    });
+    if (existingActive) {
+      throw new BadRequestException(
+        'No se puede anular: ya existe un turno activo o en pre-cierre',
+      );
+    }
+
+    await this.prisma.shift.update({
+      where: { id: shiftId },
+      data: {
+        status: ShiftStatus.PRECLOSED,
+        closedAt: null,
+        discrepancyNote: null,
+        discrepancyPhotoUrl: null,
+      },
+    });
+
+    return this.getShiftWithDetails(shiftId);
+  }
+
   async getActiveShift(userId: string, userRole: Role) {
     // OWNER sees any open/preclosed shift, OPERATOR sees only their own
     const where = userRole === Role.OWNER

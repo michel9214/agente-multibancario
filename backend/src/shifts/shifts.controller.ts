@@ -74,6 +74,14 @@ export class ShiftsController {
     return this.shiftsService.finalCloseShift(id, userId, userRole, dto);
   }
 
+  @Patch(':id/annul-close')
+  annulClose(
+    @Param('id') id: string,
+    @CurrentUser('role') userRole: any,
+  ) {
+    return this.shiftsService.annulClose(id, userRole);
+  }
+
   @Patch(':id/reopen')
   reopenShift(
     @Param('id') id: string,

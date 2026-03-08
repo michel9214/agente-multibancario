@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/shift.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/shift_provider.dart';
 import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
 import 'section_detail_screen.dart';
 
-class ShiftDetailScreen extends StatefulWidget {
+class ShiftDetailScreen extends ConsumerStatefulWidget {
   final String shiftId;
   const ShiftDetailScreen({super.key, required this.shiftId});
 
   @override
-  State<ShiftDetailScreen> createState() => _ShiftDetailScreenState();
+  ConsumerState<ShiftDetailScreen> createState() => _ShiftDetailScreenState();
 }
 
-class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
+class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
   Shift? _shift;
   bool _loading = true;
+  bool _annulling = false;
 
   @override
   void initState() {
@@ -53,8 +58,69 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
     return Icons.trending_down;
   }
 
+  void _confirmAnnulClose() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Anular Cierre'),
+        content: const Text(
+          'El turno volvera a estado PRE-CERRADO. '
+          'Podras editar saldos de cierre, comisiones y movimientos '
+          'antes de cerrar definitivamente otra vez.\n\n'
+          '¿Continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _annulClose();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Anular Cierre'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _annulClose() async {
+    setState(() => _annulling = true);
+    try {
+      await ShiftService().annulClose(widget.shiftId);
+      // Refresh active shift provider so home shows it
+      ref.read(activeShiftProvider.notifier).refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cierre anulado. Turno en pre-cierre.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to active shift screen
+        context.go('/shift/active');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _annulling = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final isOwner = authState.user?.isOwner == true;
+
     if (_loading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Detalle del Turno')),
@@ -169,7 +235,8 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                   _row('Total apertura', formatCurrency(totalOpening)),
                   if (shift.movements.isNotEmpty)
                     _row('Movimientos netos', formatCurrency(netMovements),
-                        color: netMovements >= 0 ? Colors.green : Colors.red),
+                        color:
+                            netMovements >= 0 ? Colors.green : Colors.red),
                   if (shift.isClosed || shift.isPreclosed) ...[
                     _row('Total esperado', formatCurrency(totalExpected),
                         bold: true),
@@ -305,12 +372,14 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                             context, shift.discrepancyPhotoUrl!),
                         child: const Row(
                           children: [
-                            Icon(Icons.photo, color: Colors.blue, size: 18),
+                            Icon(Icons.photo,
+                                color: Colors.blue, size: 18),
                             SizedBox(width: 6),
                             Text('Ver evidencia',
                                 style: TextStyle(
                                     color: Colors.blue,
-                                    decoration: TextDecoration.underline)),
+                                    decoration:
+                                        TextDecoration.underline)),
                           ],
                         ),
                       ),
@@ -344,6 +413,30 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                 ),
               ),
             ),
+
+          // Annul close button (OWNER only, CLOSED shifts only)
+          if (shift.isClosed && isOwner) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _annulling ? null : _confirmAnnulClose,
+                icon: _annulling
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.undo),
+                label: const Text('Anular Cierre'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
