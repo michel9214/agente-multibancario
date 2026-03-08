@@ -29,4 +29,4 @@ RUN mkdir -p uploads
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["dumb-init", "sh", "-c", "npx prisma migrate resolve --rolled-back 20260308140000_fix_shift2_timestamps 2>/dev/null; npx prisma migrate deploy && node dist/main"]
+CMD ["dumb-init", "sh", "-c", "npx prisma migrate deploy && node dist/main"]
