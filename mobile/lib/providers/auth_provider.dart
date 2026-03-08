@@ -71,7 +71,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _authService.loginOperator(operatorId);
-      print('loginOperator response: $data');
       final token = data['accessToken'];
       final user = User.fromJson(data['user']);
 
@@ -80,11 +79,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await prefs.setString('auth_user', jsonEncode(data['user']));
 
       state = AuthState(token: token, user: user);
-      print('loginOperator success, token set');
       return true;
     } catch (e, stack) {
-      print('loginOperator error: $e');
-      print('loginOperator stack: $stack');
       String msg = 'Error de conexión';
       state = state.copyWith(isLoading: false, error: msg);
       return false;

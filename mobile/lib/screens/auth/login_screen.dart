@@ -281,12 +281,9 @@ class _OperatorLoginViewState extends ConsumerState<_OperatorLoginView> {
   }
 
   Future<void> _selectOperator(User operator) async {
-    print('_selectOperator called for: ${operator.id} ${operator.fullName}');
     final success =
         await ref.read(authProvider.notifier).loginOperator(operator.id);
-    print('_selectOperator result: $success, mounted: $mounted');
     if (success && mounted) {
-      print('Navigating to /home');
       context.go('/home');
     }
   }

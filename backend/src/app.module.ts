@@ -11,8 +11,6 @@ import { ReconciliationModule } from './reconciliation/reconciliation.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ReportsModule } from './reports/reports.module';
 import { MovementReasonsModule } from './movement-reasons/movement-reasons.module';
-import { SeedController } from './seed.controller';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -28,6 +26,5 @@ import { SeedController } from './seed.controller';
     UploadsModule,
     ReportsModule,
   ],
-  controllers: [SeedController],
 })
 export class AppModule {}
