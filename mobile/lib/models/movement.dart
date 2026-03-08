@@ -3,6 +3,7 @@ import 'movement_reason.dart';
 class Movement {
   final String id;
   final String shiftId;
+  final String? createdById;
   final String type;
   final String? reasonId;
   final MovementReason? reason;
@@ -15,6 +16,7 @@ class Movement {
   Movement({
     required this.id,
     required this.shiftId,
+    this.createdById,
     required this.type,
     this.reasonId,
     this.reason,
@@ -29,6 +31,7 @@ class Movement {
     return Movement(
       id: json['id'],
       shiftId: json['shiftId'] ?? json['shift_id'] ?? '',
+      createdById: json['createdById'] ?? json['created_by_id'],
       type: json['type'],
       reasonId: json['reasonId'] ?? json['reason_id'],
       reason: json['reason'] != null

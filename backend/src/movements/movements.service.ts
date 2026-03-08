@@ -1,13 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
-import { ShiftStatus } from '@prisma/client';
+import { ShiftStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class MovementsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(shiftId: string, dto: CreateMovementDto) {
+  async create(shiftId: string, userId: string, dto: CreateMovementDto) {
     const shift = await this.prisma.shift.findUnique({ where: { id: shiftId } });
     if (!shift) throw new NotFoundException('Turno no encontrado');
     if (shift.status === ShiftStatus.CLOSED) {
@@ -17,6 +22,7 @@ export class MovementsService {
     return this.prisma.movement.create({
       data: {
         shiftId,
+        createdById: userId,
         type: dto.type,
         reasonId: dto.reasonId,
         direction: dto.direction,
@@ -36,7 +42,7 @@ export class MovementsService {
     });
   }
 
-  async update(id: string, dto: Partial<CreateMovementDto>) {
+  async update(id: string, userId: string, userRole: Role, dto: Partial<CreateMovementDto>) {
     const movement = await this.prisma.movement.findUnique({
       where: { id },
       include: { shift: true },
@@ -44,6 +50,9 @@ export class MovementsService {
     if (!movement) throw new NotFoundException('Movimiento no encontrado');
     if (movement.shift.status === ShiftStatus.CLOSED) {
       throw new BadRequestException('No puedes modificar movimientos de un turno cerrado');
+    }
+    if (userRole !== Role.OWNER && movement.createdById !== userId) {
+      throw new ForbiddenException('Solo puedes editar tus propios movimientos');
     }
 
     return this.prisma.movement.update({
@@ -60,7 +69,7 @@ export class MovementsService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string, userRole: Role) {
     const movement = await this.prisma.movement.findUnique({
       where: { id },
       include: { shift: true },
@@ -68,6 +77,9 @@ export class MovementsService {
     if (!movement) throw new NotFoundException('Movimiento no encontrado');
     if (movement.shift.status === ShiftStatus.CLOSED) {
       throw new BadRequestException('No puedes eliminar movimientos de un turno cerrado');
+    }
+    if (userRole !== Role.OWNER && movement.createdById !== userId) {
+      throw new ForbiddenException('Solo puedes eliminar tus propios movimientos');
     }
     return this.prisma.movement.delete({ where: { id } });
   }

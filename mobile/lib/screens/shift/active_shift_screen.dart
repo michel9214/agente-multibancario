@@ -14,22 +14,12 @@ class ActiveShiftScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shiftAsync = ref.watch(activeShiftProvider);
-    final isOwner = ref.watch(authProvider).user?.isOwner == true;
+    final authState = ref.watch(authProvider);
+    final isOwner = authState.user?.isOwner == true;
+    final currentUserId = authState.user?.id;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Turno Activo')),
-      floatingActionButton: isOwner
-          ? shiftAsync.whenOrNull(
-              data: (shift) => shift != null
-                  ? FloatingActionButton.extended(
-                      onPressed: () =>
-                          context.push('/shift/${shift.id}/movement'),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Movimiento'),
-                    )
-                  : null,
-            )
-          : null,
       body: shiftAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando turno...'),
         error: (e, _) => ErrorDisplay(
@@ -147,7 +137,7 @@ class ActiveShiftScreen extends ConsumerWidget {
                           const Text('Sin movimientos registrados'),
                           const SizedBox(height: 4),
                           Text(
-                            'Los movimientos del dueño aparecerán aquí',
+                            'Los movimientos aparecerán aquí',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -155,7 +145,9 @@ class ActiveShiftScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  ...shift.movements.map((m) => Card(
+                  ...shift.movements.map((m) {
+                    final canEditDelete = isOwner || m.createdById == currentUserId;
+                    return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: CircleAvatar(
@@ -196,45 +188,61 @@ class ActiveShiftScreen extends ConsumerWidget {
                                       color: Colors.blue, size: 20),
                                 ),
                               ],
-                              const SizedBox(width: 4),
-                              PopupMenuButton<String>(
-                                padding: EdgeInsets.zero,
-                                iconSize: 20,
-                                onSelected: (action) {
-                                  if (action == 'edit') {
-                                    context.push(
-                                        '/shift/${shift.id}/movement/${m.id}');
-                                  } else if (action == 'delete') {
-                                    _confirmDelete(context, ref, shift.id, m.id);
-                                  }
-                                },
-                                itemBuilder: (_) => [
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Row(children: [
-                                      Icon(Icons.edit, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Editar'),
-                                    ]),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(children: [
-                                      Icon(Icons.delete,
-                                          size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Eliminar',
-                                          style: TextStyle(color: Colors.red)),
-                                    ]),
-                                  ),
-                                ],
-                              ),
+                              if (canEditDelete) ...[
+                                const SizedBox(width: 4),
+                                PopupMenuButton<String>(
+                                  padding: EdgeInsets.zero,
+                                  iconSize: 20,
+                                  onSelected: (action) {
+                                    if (action == 'edit') {
+                                      context.push(
+                                          '/shift/${shift.id}/movement/${m.id}');
+                                    } else if (action == 'delete') {
+                                      _confirmDelete(context, ref, shift.id, m.id);
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(children: [
+                                        Icon(Icons.edit, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Editar'),
+                                      ]),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(children: [
+                                        Icon(Icons.delete,
+                                            size: 18, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Eliminar',
+                                            style: TextStyle(color: Colors.red)),
+                                      ]),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                      )),
+                      );
+                  }),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        context.push('/shift/${shift.id}/movement'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Agregar Movimiento'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

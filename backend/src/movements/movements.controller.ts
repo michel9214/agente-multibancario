@@ -6,6 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MovementsService } from './movements.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
+import { CurrentUser } from '../common';
 
 @ApiTags('Movements')
 @ApiBearerAuth()
@@ -17,9 +18,10 @@ export class MovementsController {
   @Post()
   create(
     @Param('shiftId') shiftId: string,
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateMovementDto,
   ) {
-    return this.movementsService.create(shiftId, dto);
+    return this.movementsService.create(shiftId, userId, dto);
   }
 
   @Get()
@@ -30,13 +32,19 @@ export class MovementsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
     @Body() dto: Partial<CreateMovementDto>,
   ) {
-    return this.movementsService.update(id, dto);
+    return this.movementsService.update(id, userId, userRole, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movementsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
+  ) {
+    return this.movementsService.remove(id, userId, userRole);
   }
 }

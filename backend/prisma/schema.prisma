@@ -53,7 +53,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  shifts Shift[]
+  shifts    Shift[]
+  movements Movement[]
 
   @@map("users")
 }
@@ -131,6 +132,7 @@ model MovementReason {
 model Movement {
   id        String            @id @default(uuid())
   shiftId   String            @map("shift_id")
+  createdById String?         @map("created_by_id")
   type      MovementType
   reasonId  String?           @map("reason_id")
   direction MovementDirection
@@ -140,8 +142,9 @@ model Movement {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  shift  Shift           @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  reason MovementReason? @relation(fields: [reasonId], references: [id])
+  shift     Shift           @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  reason    MovementReason? @relation(fields: [reasonId], references: [id])
+  createdBy User?           @relation(fields: [createdById], references: [id])
 
   @@map("movements")
 }
