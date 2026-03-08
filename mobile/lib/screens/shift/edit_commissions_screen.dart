@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/shift.dart';
@@ -55,13 +54,13 @@ class _EditCommissionsScreenState
         final key = 'entity_${comm.entityId}';
         if (_controllers.containsKey(key)) {
           _controllers[key]!.text =
-              comm.amount > 0 ? comm.amount.toStringAsFixed(0) : '';
+              comm.amount > 0 ? _formatAmount(comm.amount) : '';
         }
       } else if (comm.concept != null) {
         final key = 'concept_${comm.concept}';
         if (_controllers.containsKey(key)) {
           _controllers[key]!.text =
-              comm.amount > 0 ? comm.amount.toStringAsFixed(0) : '';
+              comm.amount > 0 ? _formatAmount(comm.amount) : '';
         }
       }
     }
@@ -127,6 +126,12 @@ class _EditCommissionsScreenState
     }
   }
 
+  String _formatAmount(double amount) {
+    return amount % 1 == 0
+        ? amount.toStringAsFixed(0)
+        : amount.toStringAsFixed(2);
+  }
+
   Color _parseColor(String hex) {
     try {
       return Color(int.parse(hex.replaceFirst('#', '0xFF')));
@@ -165,7 +170,7 @@ class _EditCommissionsScreenState
                         style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 8),
                     Text(
-                      'Ingresa el monto cobrado por comisiones (max 999). Deja en blanco si no aplica.',
+                      'Ingresa el monto cobrado por comisiones (max 999.99). Deja en blanco si no aplica.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -206,14 +211,13 @@ class _EditCommissionsScreenState
                               child: TextFormField(
                                 controller: _controllers[
                                     'entity_${entry.entityId}'],
-                                keyboardType: TextInputType.number,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(3),
+                                  DecimalInputFormatter(),
                                 ],
                                 decoration: const InputDecoration(
                                   prefixText: 'S/ ',
-                                  hintText: '0',
+                                  hintText: '0.00',
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 10),
@@ -261,14 +265,13 @@ class _EditCommissionsScreenState
                               child: TextFormField(
                                 controller: _controllers[
                                     'concept_$concept'],
-                                keyboardType: TextInputType.number,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(3),
+                                  DecimalInputFormatter(),
                                 ],
                                 decoration: const InputDecoration(
                                   prefixText: 'S/ ',
-                                  hintText: '0',
+                                  hintText: '0.00',
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 10),

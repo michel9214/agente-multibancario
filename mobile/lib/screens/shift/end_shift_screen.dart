@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/shift.dart';
@@ -434,7 +433,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 8),
       Text(
-        'Ingresa el monto cobrado por comisiones (max 999). Deja en blanco si no aplica.',
+        'Ingresa el monto cobrado por comisiones (max 999.99). Deja en blanco si no aplica.',
         style: Theme.of(context).textTheme.bodyMedium,
       ),
       const SizedBox(height: 8),
@@ -493,14 +492,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 width: 110,
                 child: TextFormField(
                   controller: _commissionControllers['entity_${entry.entityId}'],
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(3),
+                    DecimalInputFormatter(),
                   ],
                   decoration: const InputDecoration(
                     prefixText: 'S/ ',
-                    hintText: '0',
+                    hintText: '0.00',
                     isDense: true,
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -550,14 +548,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 width: 110,
                 child: TextFormField(
                   controller: _commissionControllers['concept_$concept'],
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(3),
+                    DecimalInputFormatter(),
                   ],
                   decoration: const InputDecoration(
                     prefixText: 'S/ ',
-                    hintText: '0',
+                    hintText: '0.00',
                     isDense: true,
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 10, vertical: 10),
