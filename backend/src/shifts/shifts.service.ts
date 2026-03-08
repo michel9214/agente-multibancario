@@ -260,6 +260,54 @@ export class ShiftsService {
     return shift;
   }
 
+  /**
+   * Update commissions on a PRECLOSED shift
+   */
+  async updateCommissions(
+    shiftId: string,
+    userId: string,
+    userRole: Role,
+    commissions: { entityId?: string; concept?: string; amount: number }[],
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.PRECLOSED) {
+      throw new BadRequestException('Solo se pueden editar comisiones en pre-cierre');
+    }
+    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
+      throw new ForbiddenException('No puedes modificar el turno de otro operador');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.commissionEntry.deleteMany({ where: { shiftId } });
+
+      const validCommissions = commissions.filter((c) => c.amount > 0);
+      if (validCommissions.length > 0) {
+        await tx.commissionEntry.createMany({
+          data: validCommissions.map((c) => ({
+            shiftId,
+            entityId: c.entityId || null,
+            concept: c.concept || null,
+            amount: c.amount,
+          })),
+        });
+      }
+
+      // Recalculate totalCommissions
+      const totalCommissions = validCommissions.reduce(
+        (sum, c) => sum + c.amount, 0,
+      );
+      await tx.shift.update({
+        where: { id: shiftId },
+        data: { totalCommissions },
+      });
+
+      return this.getShiftWithDetails(shiftId, tx);
+    });
+  }
+
   async getLastClosedShift() {
     const shift = await this.prisma.shift.findFirst({
       where: { status: ShiftStatus.CLOSED },

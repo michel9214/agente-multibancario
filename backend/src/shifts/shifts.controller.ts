@@ -74,6 +74,16 @@ export class ShiftsController {
     return this.shiftsService.finalCloseShift(id, userId, userRole, dto);
   }
 
+  @Patch(':id/commissions')
+  updateCommissions(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
+    @Body() body: { commissions: { entityId?: string; concept?: string; amount: number }[] },
+  ) {
+    return this.shiftsService.updateCommissions(id, userId, userRole, body.commissions);
+  }
+
   @Patch(':id/annul-close')
   annulClose(
     @Param('id') id: string,

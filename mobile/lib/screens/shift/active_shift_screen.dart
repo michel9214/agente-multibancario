@@ -420,21 +420,49 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Commissions
-                  if (shift.commissionEntries.isNotEmpty)
-                    Card(
-                      color: Colors.teal[50],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('COMISIONES',
+                  // Commissions (always show with edit button)
+                  Card(
+                    color: Colors.teal[50],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('COMISIONES',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal[800],
+                                    fontSize: 13,
+                                  )),
+                              TextButton.icon(
+                                onPressed: () =>
+                                    context.push('/shift/commissions'),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Editar'),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(60, 30),
+                                  foregroundColor: Colors.teal[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (shift.commissionEntries.isEmpty)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Sin comisiones registradas',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal[800],
-                                  fontSize: 13,
-                                )),
+                                    color: Colors.teal[300],
+                                    fontSize: 13),
+                              ),
+                            )
+                          else ...[
                             const SizedBox(height: 8),
                             ...shift.commissionEntries.map((c) =>
                                 _infoRow(c.name,
@@ -443,15 +471,19 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                             _infoRow(
                               'Total comisiones',
                               formatCurrency(
-                                  shift.commissionEntries.fold<double>(
-                                      0.0, (sum, c) => sum + c.amount)),
+                                  shift.commissionEntries
+                                      .fold<double>(
+                                          0.0,
+                                          (sum, c) =>
+                                              sum + c.amount)),
                               bold: true,
                               color: Colors.teal[800],
                             ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
+                  ),
                   const SizedBox(height: 8),
 
                   // Discrepancy preview

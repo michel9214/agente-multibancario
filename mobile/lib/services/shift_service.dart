@@ -63,6 +63,14 @@ class ShiftService {
     return Shift.fromJson(response.data);
   }
 
+  Future<Shift> updateCommissions(
+      String shiftId, List<Map<String, dynamic>> commissions) async {
+    final response = await _api.patch('/shifts/$shiftId/commissions', data: {
+      'commissions': commissions,
+    });
+    return Shift.fromJson(response.data);
+  }
+
   Future<Shift> annulClose(String shiftId) async {
     final response = await _api.patch('/shifts/$shiftId/annul-close', data: {});
     return Shift.fromJson(response.data);
