@@ -104,9 +104,15 @@ export class ShiftsService {
     });
   }
 
-  async getActiveShift(operatorId: string) {
+  async getActiveShift(userId: string, userRole: Role) {
+    // OWNER sees any open shift, OPERATOR sees only their own
+    const where = userRole === Role.OWNER
+      ? { status: ShiftStatus.OPEN }
+      : { operatorId: userId, status: ShiftStatus.OPEN };
+
     const shift = await this.prisma.shift.findFirst({
-      where: { operatorId, status: ShiftStatus.OPEN },
+      where,
+      orderBy: { startedAt: 'desc' },
       include: {
         balanceEntries: { include: { entity: true } },
         movements: { include: { reason: true }, orderBy: { createdAt: 'desc' } },

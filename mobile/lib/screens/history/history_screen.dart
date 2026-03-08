@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift.dart';
 import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
@@ -57,7 +58,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ? const EmptyState(
                       icon: Icons.history,
                       title: 'Sin turnos registrados',
-                      subtitle: 'Los turnos cerrados aparecerán aquí',
+                      subtitle: 'Los turnos cerrados apareceran aqui',
                     )
                   : RefreshIndicator(
                       onRefresh: _loadShifts,
@@ -76,67 +77,77 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       grouped.putIfAbsent(dateKey, () => []).add(shift);
     }
 
+    for (final list in grouped.values) {
+      list.sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    }
+
     final widgets = <Widget>[];
     for (final entry in grouped.entries) {
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          padding: const EdgeInsets.only(top: 8, bottom: 10),
           child: Row(
             children: [
-              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A56DB).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.calendar_today,
+                    size: 14, color: Color(0xFF1A56DB)),
+              ),
+              const SizedBox(width: 10),
               Text(
                 entry.key,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.grey,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(child: Divider(color: Colors.grey[300])),
+              const SizedBox(width: 10),
+              Expanded(child: Divider(color: Colors.grey.shade300)),
             ],
           ),
         ),
       );
       for (var i = 0; i < entry.value.length; i++) {
-        widgets.add(_buildShiftCard(context, entry.value[i], turnNumber: i + 1));
+        widgets
+            .add(_buildShiftCard(context, entry.value[i], turnNumber: i + 1));
       }
     }
     return widgets;
   }
 
-  Widget _buildShiftCard(BuildContext context, Shift shift, {required int turnNumber}) {
-
-    // Use pre-calculated fields from backend (history list doesn't include balanceEntries/movements)
+  Widget _buildShiftCard(BuildContext context, Shift shift,
+      {required int turnNumber}) {
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
     final totalOpening = shift.startingCash + totalOpeningBalance;
     final netMovements = shift.totalMovements ?? 0.0;
     final totalExpected = totalOpening + netMovements;
     final totalClosingBalance = shift.totalClosingBalance ?? 0.0;
     final totalClosing = (shift.endingCash ?? 0.0) + totalClosingBalance;
-    // Compute discrepancy from displayed values to guarantee visual consistency
     final discrepancy = totalClosing - totalExpected;
 
-    // Color based on computed discrepancy
     final Color discColor;
     final String discLabel;
     if (discrepancy.abs() < 0.01) {
-      discColor = Colors.green;
+      discColor = const Color(0xFF0E9F6E);
       discLabel = 'Cuadrado';
     } else if (discrepancy > 0) {
-      discColor = Colors.green;
+      discColor = const Color(0xFF0E9F6E);
       discLabel = 'Sobrante';
     } else {
-      discColor = Colors.red;
+      discColor = const Color(0xFFE02424);
       discLabel = 'Faltante';
     }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         onTap: () => context.push('/history/${shift.id}'),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -144,29 +155,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    shift.isOpen
-                        ? Icons.access_time
-                        : discrepancy.abs() < 0.01
-                            ? Icons.check_circle
-                            : discrepancy > 0
-                                ? Icons.trending_up
-                                : Icons.trending_down,
-                    color: shift.isOpen ? Colors.blue : discColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (shift.isOpen ? Colors.blue : discColor).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: (shift.isOpen ? const Color(0xFF1A56DB) : discColor)
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       shift.isOpen ? 'Abierto' : discLabel,
-                      style: TextStyle(
-                        color: shift.isOpen ? Colors.blue : discColor,
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.poppins(
+                        color: shift.isOpen ? const Color(0xFF1A56DB) : discColor,
+                        fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
                     ),
@@ -174,56 +175,69 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   const Spacer(),
                   Text(
                     formatTime(shift.startedAt),
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: TextStyle(
+                        color: Colors.grey.shade500, fontSize: 13),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Text(
                     'Turno $turnNumber',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
                   if (shift.operator != null) ...[
                     const SizedBox(width: 8),
                     Text(
-                      '— ${shift.operator!.fullName}',
-                      style: Theme.of(context).textTheme.titleSmall,
+                      '- ${shift.operator!.fullName}',
+                      style: TextStyle(
+                          color: Colors.grey.shade600, fontSize: 14),
                     ),
                   ],
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _cardRow('Apertura', formatCurrency(totalOpening)),
               if (netMovements.abs() >= 0.01)
                 _cardRow('Movimientos', formatCurrency(netMovements),
-                    valueColor: netMovements >= 0 ? Colors.green : Colors.red),
+                    valueColor:
+                        netMovements >= 0 ? const Color(0xFF0E9F6E) : const Color(0xFFE02424)),
               if (shift.isClosed) ...[
                 _cardRow('Esperado', formatCurrency(totalExpected)),
                 _cardRow('Cierre', formatCurrency(totalClosing)),
-                const Divider(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Discrepancia:',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: discColor,
-                        )),
-                    Text(
-                      formatCurrency(discrepancy),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: discColor,
-                      ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: discColor.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Discrepancia',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: discColor,
+                            )),
+                        Text(
+                          formatCurrency(discrepancy),
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: discColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -234,17 +248,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   Widget _cardRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('$label:', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        Text(value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: valueColor,
-            )),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('$label:',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+          Text(value,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: valueColor,
+              )),
+        ],
+      ),
     );
   }
 }

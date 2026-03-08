@@ -25,8 +25,11 @@ export class ShiftsController {
   }
 
   @Get('active')
-  getActiveShift(@CurrentUser('id') userId: string) {
-    return this.shiftsService.getActiveShift(userId);
+  getActiveShift(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
+  ) {
+    return this.shiftsService.getActiveShift(userId, userRole);
   }
 
   @Get()
