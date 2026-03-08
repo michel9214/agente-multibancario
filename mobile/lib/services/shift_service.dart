@@ -63,6 +63,12 @@ class ShiftService {
     return Shift.fromJson(response.data);
   }
 
+  Future<Shift?> getLastClosedShift() async {
+    final response = await _api.get('/shifts/last-closed');
+    if (response.data == null || response.data == '') return null;
+    return Shift.fromJson(response.data);
+  }
+
   Future<Map<String, dynamic>> getShifts({int page = 1, int limit = 20}) async {
     final response = await _api.get('/shifts', queryParameters: {
       'page': page,

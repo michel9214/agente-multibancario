@@ -219,6 +219,22 @@ export class ShiftsService {
     return shift;
   }
 
+  async getLastClosedShift() {
+    const shift = await this.prisma.shift.findFirst({
+      where: { status: ShiftStatus.CLOSED },
+      orderBy: { closedAt: 'desc' },
+      include: {
+        balanceEntries: {
+          where: { type: BalanceType.CLOSING },
+          include: { entity: true },
+          orderBy: { entity: { name: 'asc' } },
+        },
+        operator: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+    return shift;
+  }
+
   async findAll(userId: string, userRole: Role, page = 1, limit = 20) {
     const where = userRole === Role.OWNER ? {} : { operatorId: userId };
     const skip = (page - 1) * limit;

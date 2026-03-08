@@ -32,6 +32,11 @@ export class ShiftsController {
     return this.shiftsService.getActiveShift(userId, userRole);
   }
 
+  @Get('last-closed')
+  getLastClosedShift() {
+    return this.shiftsService.getLastClosedShift();
+  }
+
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })

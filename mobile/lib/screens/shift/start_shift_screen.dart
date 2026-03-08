@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/entities_provider.dart';
 import '../../providers/shift_provider.dart';
+import '../../services/shift_service.dart';
+import '../../models/shift.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
 import '../../models/banking_entity.dart';
@@ -15,17 +17,24 @@ class StartShiftScreen extends ConsumerStatefulWidget {
 }
 
 class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
+  // null = not chosen yet, true = consecutive, false = new
+  bool? _isConsecutive;
+  Shift? _previousShift;
+  bool _loadingPrevious = false;
+  bool _noPreviousShift = false;
+
   int _step = 0;
   final _cashController = TextEditingController();
   final _sencilloController = TextEditingController();
   final Map<String, TextEditingController> _balanceControllers = {};
   final Map<String, String?> _photoUrls = {};
+  // Track which entries came from previous shift (skip photo validation)
+  final Set<String> _fromPreviousShift = {};
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    // Force refresh active entities when entering the screen
     Future.microtask(() => ref.invalidate(activeEntitiesProvider));
   }
 
@@ -39,10 +48,62 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
     super.dispose();
   }
 
+  Future<void> _loadPreviousShift() async {
+    setState(() => _loadingPrevious = true);
+    try {
+      final shift = await ShiftService().getLastClosedShift();
+      if (shift == null) {
+        setState(() {
+          _noPreviousShift = true;
+          _loadingPrevious = false;
+        });
+        return;
+      }
+      setState(() {
+        _previousShift = shift;
+        _loadingPrevious = false;
+      });
+      _prefillFromPreviousShift(shift);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingPrevious = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar turno anterior: $e')),
+        );
+      }
+    }
+  }
+
+  void _prefillFromPreviousShift(Shift shift) {
+    // Pre-fill ending cash as starting cash
+    _cashController.text = (shift.endingCash ?? 0).toStringAsFixed(2);
+
+    // Pre-fill closing balances as opening balances
+    final closingEntries =
+        shift.balanceEntries.where((b) => b.type == 'CLOSING').toList();
+    for (final entry in closingEntries) {
+      final entityId = entry.entityId;
+      if (entityId != null) {
+        _balanceControllers.putIfAbsent(
+            entityId, () => TextEditingController());
+        _balanceControllers[entityId]!.text =
+            entry.amount.toStringAsFixed(2);
+        if (entry.receiptPhotoUrl != null) {
+          _photoUrls[entityId] = entry.receiptPhotoUrl;
+        }
+        _fromPreviousShift.add(entityId);
+      }
+    }
+    setState(() {});
+  }
+
   Future<void> _handlePickPhoto(String entityId) async {
     final url = await pickAndUploadPhoto(context);
     if (url != null) {
-      setState(() => _photoUrls[entityId] = url);
+      setState(() {
+        _photoUrls[entityId] = url;
+        _fromPreviousShift.remove(entityId);
+      });
     }
   }
 
@@ -60,7 +121,6 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   void _tryNextStep(List<BankingEntity> entities) {
     if (_step == 1) {
-      // Validate photos for entities with balance > 0
       final missingPhotos = _getMissingPhotos(entities);
       if (missingPhotos.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,6 +181,11 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show choice screen first
+    if (_isConsecutive == null) {
+      return _buildChoiceScreen();
+    }
+
     final entitiesAsync = ref.watch(activeEntitiesProvider);
 
     return Scaffold(
@@ -132,11 +197,34 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (entities) {
           for (final e in entities) {
-            _balanceControllers.putIfAbsent(e.id, () => TextEditingController());
+            _balanceControllers.putIfAbsent(
+                e.id, () => TextEditingController());
           }
 
           return Column(
             children: [
+              // Consecutive badge
+              if (_isConsecutive == true)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  color: Colors.blue[50],
+                  child: Row(
+                    children: [
+                      Icon(Icons.repeat, size: 16, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Turno consecutivo - datos cargados del cierre anterior'
+                              '${_previousShift?.operator != null ? " (${_previousShift!.operator!.fullName})" : ""}',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.blue[700]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -191,7 +279,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                               ? Colors.green
                               : Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: _loading
                             ? const SizedBox(
@@ -214,6 +303,134 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
     );
   }
 
+  Widget _buildChoiceScreen() {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Iniciar Turno')),
+      body: _loadingPrevious
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.access_time_filled,
+                      size: 64, color: Colors.blue[300]),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '¿Que tipo de turno deseas iniciar?',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Consecutive shift
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: _noPreviousShift
+                          ? null
+                          : () async {
+                              await _loadPreviousShift();
+                              if (_previousShift != null && mounted) {
+                                setState(() => _isConsecutive = true);
+                              }
+                            },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.all(20),
+                        side: BorderSide(
+                            color: _noPreviousShift
+                                ? Colors.grey[300]!
+                                : Colors.blue,
+                            width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.repeat,
+                              size: 36,
+                              color: _noPreviousShift
+                                  ? Colors.grey
+                                  : Colors.blue),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Turno Consecutivo',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _noPreviousShift
+                                  ? Colors.grey
+                                  : Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _noPreviousShift
+                                ? 'No hay turno anterior cerrado'
+                                : 'Los datos de cierre del turno anterior\nseran los datos de apertura',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _noPreviousShift
+                                  ? Colors.grey
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // New shift
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() => _isConsecutive = false);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.all(20),
+                        side: const BorderSide(
+                            color: Colors.green, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.add_circle_outline,
+                              size: 36, color: Colors.green),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Turno Nuevo',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ingresar todos los datos\nde apertura manualmente',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
   Widget _buildCashStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -223,7 +440,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
           Text('Efectivo Inicial',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('Ingresa el monto de efectivo con el que inicias el turno'),
+          const Text(
+              'Ingresa el monto de efectivo con el que inicias el turno'),
           const SizedBox(height: 24),
           TextFormField(
             controller: _cashController,
@@ -234,14 +452,15 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
               prefixText: 'S/ ',
               hintText: '0.00',
             ),
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style:
+                const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 32),
           Text('Sencillo',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           const Text(
-            'Monto en sencillo entregado por el dueño. Se devuelve íntegro al cerrar turno.',
+            'Monto en sencillo entregado por el dueno. Se devuelve integro al cerrar turno.',
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 16),
@@ -254,7 +473,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
               prefixText: 'S/ ',
               hintText: '0.00',
             ),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style:
+                const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -281,6 +501,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
         final entity = entities[i - 1];
         final color = _parseColor(entity.color);
         final hasPhoto = _photoUrls[entity.id] != null;
+        final isFromPrevious = _fromPreviousShift.contains(entity.id);
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -297,8 +518,23 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                           color: color, size: 18),
                     ),
                     const SizedBox(width: 8),
-                    Text(entity.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Expanded(
+                      child: Text(entity.name,
+                          style:
+                              const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    if (isFromPrevious)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('anterior',
+                            style: TextStyle(
+                                fontSize: 10, color: Colors.blue[700])),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -307,14 +543,22 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _balanceControllers[entity.id],
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                        keyboardType:
+                            const TextInputType.numberWithOptions(
+                                decimal: true),
                         decoration: const InputDecoration(
                           labelText: 'Saldo',
                           prefixText: 'S/ ',
                           hintText: '0.00',
                           isDense: true,
                         ),
+                        onChanged: (_) {
+                          // If user modifies amount, remove "from previous" tag
+                          if (isFromPrevious) {
+                            setState(() =>
+                                _fromPreviousShift.remove(entity.id));
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -328,7 +572,9 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                       child: IconButton(
                         onPressed: () => _handlePickPhoto(entity.id),
                         icon: Icon(
-                          hasPhoto ? Icons.check_circle : Icons.camera_alt,
+                          hasPhoto
+                              ? Icons.check_circle
+                              : Icons.camera_alt,
                           color: hasPhoto ? Colors.green : Colors.red,
                         ),
                         tooltip: 'Foto obligatoria',
@@ -349,7 +595,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       'Foto del comprobante obligatoria',
-                      style: TextStyle(color: Colors.red[700], fontSize: 11),
+                      style:
+                          TextStyle(color: Colors.red[700], fontSize: 11),
                     ),
                   ),
               ],
@@ -393,8 +640,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     _reviewRow('Sencillo', formatCurrency(sencillo),
                         color: Colors.orange),
                   const Divider(),
-                  ...balanceItems
-                      .map((e) => _reviewRow(e.key, formatCurrency(e.value))),
+                  ...balanceItems.map(
+                      (e) => _reviewRow(e.key, formatCurrency(e.value))),
                   if (balanceItems.isNotEmpty) const Divider(),
                   _reviewRow(
                       'Total saldos', formatCurrency(totalBalances),
