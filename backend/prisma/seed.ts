@@ -4,69 +4,66 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  const existingOwner = await prisma.user.findUnique({
-    where: { email: 'admin@agente.com' },
+  // ===== CLEAN ALL DATA =====
+  console.log('Limpiando base de datos...');
+  await prisma.movement.deleteMany();
+  await prisma.balanceEntry.deleteMany();
+  await prisma.shift.deleteMany();
+  await prisma.movementReason.deleteMany();
+  await prisma.bankingEntity.deleteMany();
+  await prisma.user.deleteMany();
+  console.log('Base de datos limpia');
+
+  // ===== CREATE ADMIN USER =====
+  const passwordHash = await bcrypt.hash('angie123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'luzangiemon@gmail.com',
+      passwordHash,
+      fullName: 'Angie',
+      role: Role.OWNER,
+    },
   });
+  console.log('Usuario admin creado (luzangiemon@gmail.com / angie123)');
 
-  if (!existingOwner) {
-    const passwordHash = await bcrypt.hash('admin123', 10);
-    await prisma.user.create({
-      data: {
-        email: 'admin@agente.com',
-        passwordHash,
-        fullName: 'Administrador',
-        role: Role.OWNER,
-      },
-    });
-    console.log('Usuario admin creado (admin@agente.com / admin123)');
-  } else {
-    console.log('Usuario admin ya existe');
-  }
-
+  // ===== CREATE BANKING ENTITIES =====
   const entities = [
-    { name: 'BCP', type: EntityType.BANK, color: '#003882' },
-    { name: 'Interbank', type: EntityType.BANK, color: '#00A94F' },
-    { name: 'BBVA', type: EntityType.BANK, color: '#004B87' },
-    { name: 'Scotiabank', type: EntityType.BANK, color: '#EC111A' },
-    { name: 'BanBif', type: EntityType.BANK, color: '#00529B' },
-    { name: 'Kasnet', type: EntityType.INTERMEDIARY, color: '#FF6B00' },
-    { name: 'Western Union', type: EntityType.INTERMEDIARY, color: '#FFDD00' },
-    { name: 'Yape', type: EntityType.FINTECH, color: '#6B21A8' },
-    { name: 'Plin', type: EntityType.FINTECH, color: '#00C4B4' },
-    { name: 'Niubiz', type: EntityType.INTERMEDIARY, color: '#E31837' },
+    { name: 'BCP POS', type: EntityType.BANK, color: '#003882' },
+    { name: 'BBVA POS', type: EntityType.BANK, color: '#004B87' },
+    { name: 'BANCO DE LA NACION POS', type: EntityType.BANK, color: '#B71C1C' },
+    { name: 'KASNET', type: EntityType.INTERMEDIARY, color: '#FF6B00' },
+    { name: 'IZIPAY', type: EntityType.INTERMEDIARY, color: '#00BFA5' },
+    { name: 'CASH APP', type: EntityType.FINTECH, color: '#00C853' },
+    { name: 'PAGA YA', type: EntityType.INTERMEDIARY, color: '#FF6D00' },
+    { name: 'BCP JOEL', type: EntityType.BANK, color: '#1565C0' },
+    { name: 'INTERBANK JOEL', type: EntityType.BANK, color: '#00A94F' },
+    { name: 'BBVA JOEL', type: EntityType.BANK, color: '#1A237E' },
+    { name: 'BIM JOEL', type: EntityType.FINTECH, color: '#6A1B9A' },
+    { name: 'COMPARTAMOS JOEL', type: EntityType.BANK, color: '#2E7D32' },
   ];
 
   for (const entity of entities) {
-    const existing = await prisma.bankingEntity.findUnique({
-      where: { name: entity.name },
-    });
-    if (!existing) {
-      await prisma.bankingEntity.create({ data: entity });
-      console.log(`Entidad creada: ${entity.name}`);
-    }
+    await prisma.bankingEntity.create({ data: entity });
+    console.log(`Entidad creada: ${entity.name}`);
   }
 
-  // Seed movement reasons
+  // ===== CREATE MOVEMENT REASONS =====
   const reasons = [
-    { name: 'Inyección de efectivo', defaultDirection: MovementDirection.IN },
-    { name: 'Inyección de saldo', defaultDirection: MovementDirection.IN },
-    { name: 'Retiro ATM', defaultDirection: MovementDirection.OUT },
-    { name: 'Pago personal', defaultDirection: MovementDirection.OUT },
-    { name: 'Pago de negocio', defaultDirection: MovementDirection.OUT },
-    { name: 'Otro', defaultDirection: MovementDirection.IN },
+    { name: 'INYECCION DE EFECTIVO', defaultDirection: MovementDirection.IN },
+    { name: 'INYECCION DE SALDO', defaultDirection: MovementDirection.IN },
+    { name: 'OTRO', defaultDirection: MovementDirection.IN },
+    { name: 'PAGO SERVICIO DUEÑO', defaultDirection: MovementDirection.OUT },
+    { name: 'ENTREGA EN EFECTIVO', defaultDirection: MovementDirection.OUT },
+    { name: 'PAGO DIA ANTERIOR', defaultDirection: MovementDirection.OUT },
+    { name: 'RETIRO CAJERO', defaultDirection: MovementDirection.OUT },
   ];
 
   for (const reason of reasons) {
-    const existing = await prisma.movementReason.findUnique({
-      where: { name: reason.name },
-    });
-    if (!existing) {
-      await prisma.movementReason.create({ data: reason });
-      console.log(`Razón de movimiento creada: ${reason.name}`);
-    }
+    await prisma.movementReason.create({ data: reason });
+    console.log(`Razón creada: ${reason.name}`);
   }
 
-  console.log('\nSeed completado');
+  console.log('\nSeed completado exitosamente');
 }
 
 main()

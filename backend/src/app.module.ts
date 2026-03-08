@@ -11,6 +11,7 @@ import { ReconciliationModule } from './reconciliation/reconciliation.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ReportsModule } from './reports/reports.module';
 import { MovementReasonsModule } from './movement-reasons/movement-reasons.module';
+import { SeedController } from './seed.controller';
 
 @Module({
   imports: [
@@ -27,5 +28,6 @@ import { MovementReasonsModule } from './movement-reasons/movement-reasons.modul
     UploadsModule,
     ReportsModule,
   ],
+  controllers: [SeedController],
 })
 export class AppModule {}

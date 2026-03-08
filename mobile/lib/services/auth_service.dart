@@ -13,7 +13,7 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> loginOperator(String operatorId) async {
-    final response = await _api.post('/auth/login-operator/$operatorId');
+    final response = await _api.post('/auth/login-operator/$operatorId', data: {});
     return response.data;
   }
 

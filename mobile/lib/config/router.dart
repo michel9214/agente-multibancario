@@ -23,11 +23,22 @@ import '../screens/history/shift_detail_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final refreshNotifier = ValueNotifier<int>(0);
+
+  // Only trigger router refresh when the token actually changes (login/logout)
+  String? lastToken;
+  ref.listen<AuthState>(authProvider, (prev, next) {
+    if (next.token != lastToken) {
+      lastToken = next.token;
+      refreshNotifier.value++;
+    }
+  });
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isLoggedIn = authState.token != null;
       final isLoginRoute = state.matchedLocation == '/login';
 
