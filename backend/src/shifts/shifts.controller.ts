@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch,
+  Controller, Get, Post, Patch, Delete,
   Param, Body, Query, UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,11 +25,8 @@ export class ShiftsController {
   }
 
   @Get('active')
-  getActiveShift(
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') userRole: any,
-  ) {
-    return this.shiftsService.getActiveShift(userId, userRole);
+  getActiveShift() {
+    return this.shiftsService.getActiveShift();
   }
 
   @Get('last-closed')
@@ -41,12 +38,10 @@ export class ShiftsController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   findAll(
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') userRole: any,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.shiftsService.findAll(userId, userRole, page, limit);
+    return this.shiftsService.findAll(page, limit);
   }
 
   @Get(':id')
@@ -90,6 +85,14 @@ export class ShiftsController {
     @CurrentUser('role') userRole: any,
   ) {
     return this.shiftsService.annulClose(id, userRole);
+  }
+
+  @Delete(':id')
+  annulShift(
+    @Param('id') id: string,
+    @CurrentUser('role') userRole: any,
+  ) {
+    return this.shiftsService.annulShift(id, userRole);
   }
 
   @Patch(':id/reopen')

@@ -241,14 +241,9 @@ export class ShiftsService {
     return this.getShiftWithDetails(shiftId);
   }
 
-  async getActiveShift(userId: string, userRole: Role) {
-    // OWNER sees any open/preclosed shift, OPERATOR sees only their own
-    const where = userRole === Role.OWNER
-      ? { status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } }
-      : { operatorId: userId, status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } };
-
+  async getActiveShift() {
     const shift = await this.prisma.shift.findFirst({
-      where,
+      where: { status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } },
       orderBy: { startedAt: 'desc' },
       include: {
         balanceEntries: { include: { entity: true } },
@@ -308,6 +303,28 @@ export class ShiftsService {
     });
   }
 
+  /**
+   * Annul an OPEN shift: delete it and all related data (OWNER only)
+   */
+  async annulShift(shiftId: string, userRole: Role) {
+    if (userRole !== Role.OWNER) {
+      throw new ForbiddenException('Solo el administrador puede anular un turno');
+    }
+
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.OPEN) {
+      throw new BadRequestException('Solo se puede anular un turno abierto');
+    }
+
+    // Cascade delete handles balance_entries, movements, commission_entries
+    await this.prisma.shift.delete({ where: { id: shiftId } });
+
+    return { message: 'Turno anulado correctamente' };
+  }
+
   async getLastClosedShift() {
     const shift = await this.prisma.shift.findFirst({
       where: { status: ShiftStatus.CLOSED },
@@ -324,8 +341,8 @@ export class ShiftsService {
     return shift;
   }
 
-  async findAll(userId: string, userRole: Role, page = 1, limit = 20) {
-    const where = userRole === Role.OWNER ? {} : { operatorId: userId };
+  async findAll(page = 1, limit = 20) {
+    const where = {};
     const skip = (page - 1) * limit;
 
     const [shifts, total] = await Promise.all([

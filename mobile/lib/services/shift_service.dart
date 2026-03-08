@@ -71,6 +71,11 @@ class ShiftService {
     return Shift.fromJson(response.data);
   }
 
+  /// Annul an OPEN shift (OWNER only) - deletes shift and all data
+  Future<void> annulShift(String shiftId) async {
+    await _api.delete('/shifts/$shiftId');
+  }
+
   Future<Shift> annulClose(String shiftId) async {
     final response = await _api.patch('/shifts/$shiftId/annul-close', data: {});
     return Shift.fromJson(response.data);

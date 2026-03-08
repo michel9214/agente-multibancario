@@ -58,6 +58,61 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
     return Icons.trending_down;
   }
 
+  void _confirmAnnulShift() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Anular Turno'),
+        content: const Text(
+          'Se eliminara este turno y todos sus datos (saldos, movimientos, comisiones). '
+          'Esta accion es irreversible.\n\n'
+          '¿Continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _annulShift();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Anular Turno'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _annulShift() async {
+    setState(() => _annulling = true);
+    try {
+      await ShiftService().annulShift(widget.shiftId);
+      ref.read(activeShiftProvider.notifier).refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Turno anulado correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/history');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _annulling = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   void _confirmAnnulClose() {
     showDialog(
       context: context,
@@ -413,6 +468,30 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                 ),
               ),
             ),
+
+          // Annul open shift button (OWNER only, OPEN shifts only)
+          if (shift.isOpen && isOwner) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _annulling ? null : _confirmAnnulShift,
+                icon: _annulling
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_forever),
+                label: const Text('Anular Turno'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
 
           // Annul close button (OWNER only, CLOSED shifts only)
           if (shift.isClosed && isOwner) ...[
