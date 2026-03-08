@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/upload_service.dart';
@@ -112,6 +114,13 @@ Future<String?> pickAndUploadPhoto(BuildContext context) async {
   }
 
   try {
+    // Disable Android Photo Picker (shows empty on MIUI/Xiaomi),
+    // use legacy intent picker (ACTION_GET_CONTENT) which works correctly
+    final ImagePickerPlatform pickerPlatform = ImagePickerPlatform.instance;
+    if (pickerPlatform is ImagePickerAndroid) {
+      pickerPlatform.useAndroidPhotoPicker = false;
+    }
+
     final picker = ImagePicker();
     final image = await picker.pickImage(
       source: source,
