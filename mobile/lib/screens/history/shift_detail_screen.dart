@@ -117,6 +117,9 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                   _row('Inicio', formatDate(shift.startedAt)),
                   if (shift.closedAt != null)
                     _row('Cierre', formatDate(shift.closedAt!)),
+                  if (shift.sencillo > 0)
+                    _row('Sencillo', formatCurrency(shift.sencillo),
+                        color: Colors.orange),
                 ],
               ),
             ),
@@ -196,6 +199,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                   color: Colors.blue,
                   cashLabel: 'Efectivo inicial',
                   cashAmount: shift.startingCash,
+                  sencillo: shift.sencillo,
                   entries: openingEntries,
                   totalBalance: totalOpeningBalance,
                   totalGeneral: totalOpening,

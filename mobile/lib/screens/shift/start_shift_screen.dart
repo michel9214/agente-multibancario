@@ -17,6 +17,7 @@ class StartShiftScreen extends ConsumerStatefulWidget {
 class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
   int _step = 0;
   final _cashController = TextEditingController();
+  final _sencilloController = TextEditingController();
   final Map<String, TextEditingController> _balanceControllers = {};
   final Map<String, String?> _photoUrls = {};
   bool _loading = false;
@@ -31,6 +32,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
   @override
   void dispose() {
     _cashController.dispose();
+    _sencilloController.dispose();
     for (final c in _balanceControllers.values) {
       c.dispose();
     }
@@ -93,6 +95,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
       await ref.read(activeShiftProvider.notifier).openShift(
             startingCash: double.tryParse(_cashController.text) ?? 0,
+            sencillo: double.tryParse(_sencilloController.text) ?? 0,
             openingBalances: balances,
           );
 
@@ -233,6 +236,26 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
             ),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
+          const SizedBox(height: 32),
+          Text('Sencillo',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'Monto en sencillo entregado por el dueño. Se devuelve íntegro al cerrar turno.',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _sencilloController,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Sencillo (opcional)',
+              prefixText: 'S/ ',
+              hintText: '0.00',
+            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -339,6 +362,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   Widget _buildReviewStep(List<BankingEntity> entities) {
     final cash = double.tryParse(_cashController.text) ?? 0;
+    final sencillo = double.tryParse(_sencilloController.text) ?? 0;
     double totalBalances = 0;
     final balanceItems = <MapEntry<String, double>>[];
 
@@ -365,6 +389,9 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
               child: Column(
                 children: [
                   _reviewRow('Efectivo inicial', formatCurrency(cash)),
+                  if (sencillo > 0)
+                    _reviewRow('Sencillo', formatCurrency(sencillo),
+                        color: Colors.orange),
                   const Divider(),
                   ...balanceItems
                       .map((e) => _reviewRow(e.key, formatCurrency(e.value))),

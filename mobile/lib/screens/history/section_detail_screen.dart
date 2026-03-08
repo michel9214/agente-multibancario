@@ -10,6 +10,7 @@ class SectionDetailScreen extends StatelessWidget {
   final Color color;
   final String cashLabel;
   final double cashAmount;
+  final double sencillo;
   final List<BalanceEntry> entries;
   final double totalBalance;
   final double totalGeneral;
@@ -20,6 +21,7 @@ class SectionDetailScreen extends StatelessWidget {
     required this.color,
     required this.cashLabel,
     required this.cashAmount,
+    this.sencillo = 0,
     required this.entries,
     required this.totalBalance,
     required this.totalGeneral,
@@ -36,15 +38,37 @@ class SectionDetailScreen extends StatelessWidget {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Text(cashLabel,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w500)),
-                  Text(formatCurrency(cashAmount),
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(cashLabel,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500)),
+                      Text(formatCurrency(cashAmount),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  if (sencillo > 0) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Sencillo',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.orange)),
+                        Text(formatCurrency(sencillo),
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange)),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

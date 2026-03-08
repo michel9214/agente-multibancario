@@ -79,6 +79,7 @@ model Shift {
   closedAt   DateTime?   @map("closed_at")
 
   startingCash Decimal @default(0) @map("starting_cash") @db.Decimal(12, 2)
+  sencillo     Decimal @default(0) @db.Decimal(12, 2)
   endingCash   Decimal? @map("ending_cash") @db.Decimal(12, 2)
 
   totalOpeningBalance Decimal? @map("total_opening_balance") @db.Decimal(12, 2)

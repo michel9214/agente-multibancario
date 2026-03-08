@@ -8,6 +8,7 @@ class Shift {
   final DateTime startedAt;
   final DateTime? closedAt;
   final double startingCash;
+  final double sencillo;
   final double? endingCash;
   final double? totalOpeningBalance;
   final double? totalClosingBalance;
@@ -24,6 +25,7 @@ class Shift {
     required this.startedAt,
     this.closedAt,
     required this.startingCash,
+    this.sencillo = 0,
     this.endingCash,
     this.totalOpeningBalance,
     this.totalClosingBalance,
@@ -44,6 +46,7 @@ class Shift {
           ? DateTime.parse(json['closedAt'] ?? json['closed_at'])
           : null,
       startingCash: _toDouble(json['startingCash'] ?? json['starting_cash']),
+      sencillo: _toDouble(json['sencillo'] ?? 0),
       endingCash: json['endingCash'] != null || json['ending_cash'] != null
           ? _toDouble(json['endingCash'] ?? json['ending_cash'])
           : null,

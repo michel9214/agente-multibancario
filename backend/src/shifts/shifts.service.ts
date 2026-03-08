@@ -31,6 +31,7 @@ export class ShiftsService {
         data: {
           operatorId,
           startingCash: dto.startingCash,
+          sencillo: dto.sencillo ?? 0,
           status: ShiftStatus.OPEN,
         },
       });

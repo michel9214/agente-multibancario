@@ -7,10 +7,12 @@ class ShiftService {
 
   Future<Shift> openShift({
     required double startingCash,
+    double sencillo = 0,
     required List<Map<String, dynamic>> openingBalances,
   }) async {
     final response = await _api.post('/shifts', data: {
       'startingCash': startingCash,
+      if (sencillo > 0) 'sencillo': sencillo,
       'openingBalances': openingBalances,
     });
     return Shift.fromJson(response.data);

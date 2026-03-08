@@ -224,6 +224,8 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _infoRow('Efectivo inicial', formatCurrency(shift.startingCash)),
+            if (shift.sencillo > 0)
+              _infoRow('Sencillo', formatCurrency(shift.sencillo)),
             _infoRow('Saldos de apertura',
                 '${shift.balanceEntries.where((b) => b.type == "OPENING").length} entidades'),
             Builder(builder: (context) {

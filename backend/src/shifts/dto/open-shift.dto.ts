@@ -24,6 +24,12 @@ export class OpenShiftDto {
   @Min(0)
   startingCash: number;
 
+  @ApiPropertyOptional({ example: 100.00, description: 'Sencillo entregado al operador (no afecta cálculos)' })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  sencillo?: number;
+
   @ApiProperty({ type: [BalanceEntryDto], description: 'Saldos de apertura por entidad' })
   @IsArray()
   @ValidateNested({ each: true })

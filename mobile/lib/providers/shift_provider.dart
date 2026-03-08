@@ -37,10 +37,12 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
 
   Future<Shift> openShift({
     required double startingCash,
+    double sencillo = 0,
     required List<Map<String, dynamic>> openingBalances,
   }) async {
     final shift = await _service.openShift(
       startingCash: startingCash,
+      sencillo: sencillo,
       openingBalances: openingBalances,
     );
     state = AsyncValue.data(shift);

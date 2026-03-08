@@ -368,6 +368,9 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
   }
 
   Widget _buildCashStep() {
+    final shift = ref.read(activeShiftProvider).value;
+    final sencillo = shift?.sencillo ?? 0;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -389,6 +392,38 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             ),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
+          if (sencillo > 0) ...[
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.orange[300]!),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.orange),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Sencillo a devolver',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Debes devolver ${formatCurrency(sencillo)} de sencillo recibido al inicio del turno.',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -580,6 +615,37 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        if (shift.sencillo > 0) ...[
+          Card(
+            color: Colors.amber[50],
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Icon(Icons.money, color: Colors.orange, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Sencillo a devolver',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 4),
+                        Text(formatCurrency(shift.sencillo),
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(

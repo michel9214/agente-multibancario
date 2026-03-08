@@ -59,11 +59,31 @@ class ActiveShiftScreen extends ConsumerWidget {
                         const SizedBox(height: 12),
                         _infoRow('Efectivo inicial',
                             formatCurrency(shift.startingCash)),
+                        if (shift.sencillo > 0)
+                          _infoRow('Sencillo', formatCurrency(shift.sencillo)),
                         _infoRow('Inicio', formatDate(shift.startedAt)),
                         const Divider(),
-                        ...openingEntries.map((b) => _infoRow(
-                              b.entity?.name ?? 'Entidad',
-                              formatCurrency(b.amount),
+                        ...openingEntries.map((b) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(b.entity?.name ?? 'Entidad',
+                                        style: const TextStyle(color: Colors.grey)),
+                                  ),
+                                  Text(formatCurrency(b.amount),
+                                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                                  if (b.receiptPhotoUrl != null) ...[
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () => showPhotoPreview(
+                                          context, b.receiptPhotoUrl!),
+                                      child: const Icon(Icons.visibility,
+                                          color: Colors.blue, size: 20),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             )),
                         if (openingEntries.isNotEmpty) ...[
                           const Divider(),
