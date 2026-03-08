@@ -3,7 +3,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/upload_service.dart';
+
+/// Request storage/photo permissions based on Android version.
+Future<bool> _requestPermissions(BuildContext context, ImageSource source) async {
+  if (source == ImageSource.camera) {
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Se necesita permiso de cámara'),
+            action: SnackBarAction(
+              label: 'Abrir config',
+              onPressed: () => openAppSettings(),
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
+  // For gallery: try photos first (Android 13+), then storage (older)
+  PermissionStatus status = await Permission.photos.request();
+  if (status.isGranted || status.isLimited) return true;
+
+  // Fallback for Android < 13
+  status = await Permission.storage.request();
+  if (status.isGranted || status.isLimited) return true;
+
+  // If permanently denied, guide user to settings
+  if (status.isPermanentlyDenied || status.isDenied) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Se necesita permiso para acceder a fotos'),
+          action: SnackBarAction(
+            label: 'Abrir config',
+            onPressed: () => openAppSettings(),
+          ),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+    return false;
+  }
+
+  return true;
+}
 
 /// Shows a bottom sheet to pick photo from camera or gallery,
 /// compresses it for low-RAM devices, uploads it, and returns the URL.
@@ -36,6 +86,12 @@ Future<String?> pickAndUploadPhoto(BuildContext context) async {
 
   if (source == null) return null;
 
+  // Request permissions before proceeding
+  if (context.mounted) {
+    final granted = await _requestPermissions(context, source);
+    if (!granted) return null;
+  }
+
   // Show loading indicator
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -63,6 +119,7 @@ Future<String?> pickAndUploadPhoto(BuildContext context) async {
       maxHeight: 800,
       imageQuality: 50,
       preferredCameraDevice: CameraDevice.rear,
+      requestFullMetadata: false,
     );
     if (image == null) {
       if (context.mounted) {
