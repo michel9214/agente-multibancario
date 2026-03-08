@@ -155,7 +155,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     return total;
   }
 
-  Future<void> _closeShift(
+  Future<void> _preCloseShift(
       Shift shift, List<BalanceEntry> openingEntries) async {
     setState(() => _loading = true);
     try {
@@ -173,22 +173,15 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
       final commissions = _buildCommissions(openingEntries);
 
-      final closedShift =
-          await ref.read(activeShiftProvider.notifier).closeShift(
-                shiftId: shift.id,
-                endingCash: double.tryParse(_cashController.text) ?? 0,
-                closingBalances: balances,
-                commissions: commissions,
-              );
+      await ref.read(activeShiftProvider.notifier).preCloseShift(
+            shiftId: shift.id,
+            endingCash: double.tryParse(_cashController.text) ?? 0,
+            closingBalances: balances,
+            commissions: commissions,
+          );
 
       if (mounted) {
-        final isOperator = ref.read(authProvider).user?.isOperator == true;
-        if (isOperator) {
-          await ref.read(authProvider.notifier).logout();
-          if (mounted) context.go('/login');
-        } else {
-          context.go('/shift/${closedShift.id}/summary');
-        }
+        context.go('/home');
       }
     } catch (e) {
       if (mounted) {
@@ -279,7 +272,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                 if (_step < _totalSteps - 1) {
                                   _tryNextStep(shift);
                                 } else {
-                                  _closeShift(shift, openingEntries);
+                                  _preCloseShift(shift, openingEntries);
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -297,7 +290,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
                             : Text(_step == _totalSteps - 1
-                                ? 'Cerrar Turno'
+                                ? 'Pre-Cerrar Turno'
                                 : 'Siguiente'),
                       ),
                     ),
@@ -851,13 +844,10 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 if (movements.isNotEmpty)
                   _reviewRow('Movimientos netos',
                       formatCurrency(netMovements)),
-                if (totalComm > 0)
-                  _reviewRow('Comisiones',
-                      formatCurrency(totalComm)),
                 const Divider(),
                 _reviewRow(
                   'Debería tener',
-                  formatCurrency(totalOpeningGeneral + netMovements + totalComm),
+                  formatCurrency(totalOpeningGeneral + netMovements),
                   bold: true,
                   color: Colors.green[800],
                 ),
@@ -944,7 +934,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Al cerrar el turno se calculará el cuadre automáticamente. Esta acción no se puede deshacer.',
+                  'Se realizará un pre-cierre. Podrás revisar y modificar los datos antes del cierre definitivo.',
                   style: TextStyle(fontSize: 13),
                 ),
               ),

@@ -9,6 +9,7 @@ import '../../services/shift_service.dart';
 import '../../services/report_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/photo_picker.dart';
 
 class ShiftSummaryScreen extends ConsumerStatefulWidget {
   final String shiftId;
@@ -298,7 +299,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             const SizedBox(height: 8),
           ],
 
-          // Total esperado
+          // Total esperado (sin comisiones)
           Card(
             color: Colors.green[50],
             child: Padding(
@@ -316,8 +317,6 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   _row('Total apertura', formatCurrency(r.totalOpening)),
                   if (r.details.movements.isNotEmpty)
                     _row('Movimientos netos', formatCurrency(r.totalMovements)),
-                  if (r.totalCommissions > 0)
-                    _row('Comisiones', formatCurrency(r.totalCommissions)),
                   const Divider(),
                   _row('Debería tener', formatCurrency(r.totalExpected),
                       bold: true, color: Colors.green[800]),
@@ -387,6 +386,56 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
               ),
             ),
           ),
+
+          // Discrepancy justification
+          if (r.discrepancyNote != null || r.discrepancyPhotoUrl != null) ...[
+            const SizedBox(height: 8),
+            Card(
+              color: Colors.grey[100],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.note_alt, color: Colors.grey[700], size: 20),
+                        const SizedBox(width: 8),
+                        Text('JUSTIFICACION',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                    if (r.discrepancyNote != null) ...[
+                      const SizedBox(height: 8),
+                      Text(r.discrepancyNote!,
+                          style: const TextStyle(fontSize: 14)),
+                    ],
+                    if (r.discrepancyPhotoUrl != null) ...[
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => showPhotoPreview(
+                            context, r.discrepancyPhotoUrl!),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.photo, color: Colors.blue, size: 18),
+                            const SizedBox(width: 6),
+                            const Text('Ver evidencia',
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 24),
           SizedBox(

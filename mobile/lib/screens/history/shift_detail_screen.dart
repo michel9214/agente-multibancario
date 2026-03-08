@@ -3,6 +3,7 @@ import '../../models/shift.dart';
 import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/photo_picker.dart';
 import 'section_detail_screen.dart';
 
 class ShiftDetailScreen extends StatefulWidget {
@@ -126,8 +127,8 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Status banner (only for closed shifts)
-          if (shift.isClosed) ...[
+          // Status banner (for closed and preclosed shifts)
+          if (shift.isClosed || shift.isPreclosed) ...[
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -169,7 +170,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                   if (shift.movements.isNotEmpty)
                     _row('Movimientos netos', formatCurrency(netMovements),
                         color: netMovements >= 0 ? Colors.green : Colors.red),
-                  if (shift.isClosed) ...[
+                  if (shift.isClosed || shift.isPreclosed) ...[
                     _row('Total esperado', formatCurrency(totalExpected),
                         bold: true),
                     _row('Total cierre', formatCurrency(totalClosing),
@@ -227,7 +228,101 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
           ),
           const SizedBox(height: 8),
 
-          if (shift.isClosed)
+          // Commissions card
+          if (shift.commissionEntries.isNotEmpty) ...[
+            Card(
+              color: Colors.teal[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.receipt_long,
+                            color: Colors.teal[800], size: 20),
+                        const SizedBox(width: 8),
+                        Text('COMISIONES',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal[800],
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...shift.commissionEntries.map((c) => _row(
+                          c.name,
+                          formatCurrency(c.amount),
+                        )),
+                    const Divider(),
+                    _row(
+                      'Total comisiones',
+                      formatCurrency(shift.commissionEntries
+                          .fold<double>(0.0, (sum, c) => sum + c.amount)),
+                      bold: true,
+                      color: Colors.teal[800],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Discrepancy justification
+          if (shift.discrepancyNote != null ||
+              shift.discrepancyPhotoUrl != null) ...[
+            Card(
+              color: Colors.grey[100],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.note_alt,
+                            color: Colors.grey[700], size: 20),
+                        const SizedBox(width: 8),
+                        Text('JUSTIFICACION',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                    if (shift.discrepancyNote != null) ...[
+                      const SizedBox(height: 8),
+                      Text(shift.discrepancyNote!,
+                          style: const TextStyle(fontSize: 14)),
+                    ],
+                    if (shift.discrepancyPhotoUrl != null) ...[
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => showPhotoPreview(
+                            context, shift.discrepancyPhotoUrl!),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.photo, color: Colors.blue, size: 18),
+                            SizedBox(width: 6),
+                            Text('Ver evidencia',
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          if (shift.isClosed || shift.isPreclosed)
             _SectionCard(
               title: 'CIERRE',
               titleColor: Colors.orange[800]!,

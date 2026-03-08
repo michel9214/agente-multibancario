@@ -4,15 +4,25 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../services/movement_service.dart';
+import '../../services/shift_service.dart';
+import '../../models/reconciliation.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
 
-class ActiveShiftScreen extends ConsumerWidget {
+class ActiveShiftScreen extends ConsumerStatefulWidget {
   const ActiveShiftScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ActiveShiftScreen> createState() => _ActiveShiftScreenState();
+}
+
+class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
+  Reconciliation? _reconciliation;
+  bool _loadingRecon = false;
+
+  @override
+  Widget build(BuildContext context) {
     final shiftAsync = ref.watch(activeShiftProvider);
     final authState = ref.watch(authProvider);
     final isOwner = authState.user?.isOwner == true;
@@ -34,16 +44,79 @@ class ActiveShiftScreen extends ConsumerWidget {
             );
           }
 
+          // Load reconciliation for PRECLOSED shifts
+          if (shift.isPreclosed && _reconciliation == null && !_loadingRecon) {
+            _loadingRecon = true;
+            ShiftService().getReconciliation(shift.id).then((recon) {
+              if (mounted) {
+                setState(() {
+                  _reconciliation = recon;
+                  _loadingRecon = false;
+                });
+              }
+            }).catchError((_) {
+              if (mounted) setState(() => _loadingRecon = false);
+            });
+          }
+
           final openingEntries =
               shift.balanceEntries.where((b) => b.type == 'OPENING').toList();
+          final closingEntries =
+              shift.balanceEntries.where((b) => b.type == 'CLOSING').toList();
 
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.read(activeShiftProvider.notifier).refresh(),
+            onRefresh: () async {
+              setState(() {
+                _reconciliation = null;
+                _loadingRecon = false;
+              });
+              ref.read(activeShiftProvider.notifier).refresh();
+            },
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Summary card
+                // PRECLOSED banner
+                if (shift.isPreclosed) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber, width: 2),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.pause_circle_filled,
+                            color: Colors.amber, size: 32),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('TURNO PRE-CERRADO',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber[900],
+                                    fontSize: 15,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Puedes modificar datos antes del cierre definitivo',
+                                style: TextStyle(
+                                  color: Colors.amber[800],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Opening summary card
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -56,19 +129,24 @@ class ActiveShiftScreen extends ConsumerWidget {
                         _infoRow('Efectivo inicial',
                             formatCurrency(shift.startingCash)),
                         if (shift.sencillo > 0)
-                          _infoRow('Sencillo', formatCurrency(shift.sencillo)),
+                          _infoRow(
+                              'Sencillo', formatCurrency(shift.sencillo)),
                         _infoRow('Inicio', formatDate(shift.startedAt)),
                         const Divider(),
                         ...openingEntries.map((b) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: Text(b.entity?.name ?? 'Entidad',
-                                        style: const TextStyle(color: Colors.grey)),
+                                    child: Text(
+                                        b.entity?.name ?? 'Entidad',
+                                        style: const TextStyle(
+                                            color: Colors.grey)),
                                   ),
                                   Text(formatCurrency(b.amount),
-                                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500)),
                                   if (b.receiptPhotoUrl != null) ...[
                                     const SizedBox(width: 8),
                                     GestureDetector(
@@ -89,20 +167,27 @@ class ActiveShiftScreen extends ConsumerWidget {
                                 0.0, (sum, b) => sum + b.amount)),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text('TOTAL APERTURA',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15)),
                                 Text(
                                   formatCurrency(shift.startingCash +
                                       openingEntries.fold<double>(
-                                          0.0, (sum, b) => sum + b.amount)),
+                                          0.0,
+                                          (sum, b) => sum + b.amount)),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
                                   ),
                                 ),
                               ],
@@ -146,87 +231,91 @@ class ActiveShiftScreen extends ConsumerWidget {
                   )
                 else
                   ...shift.movements.map((m) {
-                    final canEditDelete = isOwner || m.createdById == currentUserId;
+                    final canEditDelete =
+                        isOwner || m.createdById == currentUserId;
                     return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: m.direction == 'IN'
-                                ? Colors.green[100]
-                                : Colors.red[100],
-                            child: Icon(
-                              m.direction == 'IN'
-                                  ? Icons.arrow_downward
-                                  : Icons.arrow_upward,
-                              color: m.direction == 'IN'
-                                  ? Colors.green
-                                  : Colors.red,
-                            ),
-                          ),
-                          title: Text(m.typeLabel),
-                          subtitle: m.description != null
-                              ? Text(m.description!)
-                              : null,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: m.direction == 'IN'
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                              ),
-                              if (m.receiptPhotoUrl != null) ...[
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => showPhotoPreview(
-                                      context, m.receiptPhotoUrl!),
-                                  child: const Icon(Icons.visibility,
-                                      color: Colors.blue, size: 20),
-                                ),
-                              ],
-                              if (canEditDelete) ...[
-                                const SizedBox(width: 4),
-                                PopupMenuButton<String>(
-                                  padding: EdgeInsets.zero,
-                                  iconSize: 20,
-                                  onSelected: (action) {
-                                    if (action == 'edit') {
-                                      context.push(
-                                          '/shift/${shift.id}/movement/${m.id}');
-                                    } else if (action == 'delete') {
-                                      _confirmDelete(context, ref, shift.id, m.id);
-                                    }
-                                  },
-                                  itemBuilder: (_) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Row(children: [
-                                        Icon(Icons.edit, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Editar'),
-                                      ]),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(children: [
-                                        Icon(Icons.delete,
-                                            size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Eliminar',
-                                            style: TextStyle(color: Colors.red)),
-                                      ]),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: m.direction == 'IN'
+                              ? Colors.green[100]
+                              : Colors.red[100],
+                          child: Icon(
+                            m.direction == 'IN'
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
+                            color: m.direction == 'IN'
+                                ? Colors.green
+                                : Colors.red,
                           ),
                         ),
-                      );
+                        title: Text(m.typeLabel),
+                        subtitle: m.description != null
+                            ? Text(m.description!)
+                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: m.direction == 'IN'
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ),
+                            if (m.receiptPhotoUrl != null) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => showPhotoPreview(
+                                    context, m.receiptPhotoUrl!),
+                                child: const Icon(Icons.visibility,
+                                    color: Colors.blue, size: 20),
+                              ),
+                            ],
+                            if (canEditDelete) ...[
+                              const SizedBox(width: 4),
+                              PopupMenuButton<String>(
+                                padding: EdgeInsets.zero,
+                                iconSize: 20,
+                                onSelected: (action) {
+                                  if (action == 'edit') {
+                                    context.push(
+                                        '/shift/${shift.id}/movement/${m.id}');
+                                  } else if (action == 'delete') {
+                                    _confirmDelete(
+                                        context, shift.id, m.id);
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(children: [
+                                      Icon(Icons.edit, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('Editar'),
+                                    ]),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(children: [
+                                      Icon(Icons.delete,
+                                          size: 18,
+                                          color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('Eliminar',
+                                          style: TextStyle(
+                                              color: Colors.red)),
+                                    ]),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
                   }),
 
                 const SizedBox(height: 16),
@@ -242,20 +331,195 @@ class ActiveShiftScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/shift/end'),
-                    icon: const Icon(Icons.stop_circle_outlined),
-                    label: const Text('Cerrar Turno'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+
+                // PRECLOSED: show closing summary + actions
+                if (shift.isPreclosed) ...[
+                  const SizedBox(height: 20),
+                  const Divider(thickness: 2),
+                  const SizedBox(height: 12),
+
+                  // Closing balances
+                  Card(
+                    color: Colors.orange[50],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('DATOS DE CIERRE',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange[800],
+                                    fontSize: 13,
+                                  )),
+                              TextButton.icon(
+                                onPressed: () =>
+                                    context.push('/shift/end'),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Editar'),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(60, 30),
+                                ),
+                              ),
+                            ],
+                          ),
+                          _infoRow('Efectivo final',
+                              formatCurrency(shift.endingCash ?? 0)),
+                          ...closingEntries.map((b) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                          b.entity?.name ?? 'Entidad',
+                                          style: const TextStyle(
+                                              color: Colors.grey)),
+                                    ),
+                                    Text(formatCurrency(b.amount),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w500)),
+                                    if (b.receiptPhotoUrl != null) ...[
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () => showPhotoPreview(
+                                            context, b.receiptPhotoUrl!),
+                                        child: const Icon(
+                                            Icons.visibility,
+                                            color: Colors.blue,
+                                            size: 20),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              )),
+                          if (closingEntries.isNotEmpty) ...[
+                            const Divider(),
+                            _infoRow(
+                              'Total saldos cierre',
+                              formatCurrency(closingEntries.fold<double>(
+                                  0.0, (sum, b) => sum + b.amount)),
+                            ),
+                            _infoRow(
+                              'TOTAL CIERRE',
+                              formatCurrency((shift.endingCash ?? 0) +
+                                  closingEntries.fold<double>(
+                                      0.0, (sum, b) => sum + b.amount)),
+                              bold: true,
+                              color: Colors.orange[800],
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+
+                  // Commissions
+                  if (shift.commissionEntries.isNotEmpty)
+                    Card(
+                      color: Colors.teal[50],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('COMISIONES',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.teal[800],
+                                  fontSize: 13,
+                                )),
+                            const SizedBox(height: 8),
+                            ...shift.commissionEntries.map((c) =>
+                                _infoRow(c.name,
+                                    formatCurrency(c.amount))),
+                            const Divider(),
+                            _infoRow(
+                              'Total comisiones',
+                              formatCurrency(
+                                  shift.commissionEntries.fold<double>(
+                                      0.0, (sum, c) => sum + c.amount)),
+                              bold: true,
+                              color: Colors.teal[800],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+
+                  // Discrepancy preview
+                  if (_reconciliation != null) ...[
+                    _buildDiscrepancyPreview(_reconciliation!),
+                  ] else if (_loadingRecon) ...[
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // Reopen button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _reopenShift(shift.id),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reabrir Turno'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Final close button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _showFinalCloseDialog(context, shift.id),
+                      icon: const Icon(Icons.lock),
+                      label: const Text('Cerrar Turno Definitivamente'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  // OPEN state: show close button
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push('/shift/end'),
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      label: const Text('Cerrar Turno'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           );
@@ -264,14 +528,148 @@ class ActiveShiftScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildDiscrepancyPreview(Reconciliation r) {
+    final discrepancy = r.totalClosing - r.totalExpected;
+    final Color discColor;
+    final String discLabel;
+    if (discrepancy.abs() < 0.01) {
+      discColor = Colors.green;
+      discLabel = 'CUADRADO';
+    } else if (discrepancy > 0) {
+      discColor = Colors.green;
+      discLabel = 'SOBRANTE';
+    } else {
+      discColor = Colors.red;
+      discLabel = 'FALTANTE';
+    }
+
+    return Card(
+      color: discColor.withOpacity(0.08),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(
+              discrepancy.abs() < 0.01
+                  ? Icons.check_circle
+                  : discrepancy > 0
+                      ? Icons.trending_up
+                      : Icons.trending_down,
+              size: 40,
+              color: discColor,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              discLabel,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: discColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Discrepancia: ${formatCurrency(discrepancy)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: discColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _infoRow('Esperado (apertura + mov.)',
+                formatCurrency(r.totalExpected)),
+            _infoRow('Cierre real', formatCurrency(r.totalClosing)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _reopenShift(String shiftId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reabrir Turno'),
+        content: const Text(
+            'Se eliminaran los datos de cierre y el turno volvera a estado ABIERTO. ¿Continuar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await ref
+                    .read(activeShiftProvider.notifier)
+                    .reopenShift(shiftId);
+                setState(() {
+                  _reconciliation = null;
+                  _loadingRecon = false;
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Turno reabierto'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Reabrir',
+                style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFinalCloseDialog(BuildContext context, String shiftId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _FinalCloseDialog(
+        shiftId: shiftId,
+        onConfirm: (note, photoUrl) async {
+          try {
+            await ref
+                .read(activeShiftProvider.notifier)
+                .finalCloseShift(
+                  shiftId: shiftId,
+                  discrepancyNote: note,
+                  discrepancyPhotoUrl: photoUrl,
+                );
+            if (mounted) {
+              context.go('/history/$shiftId');
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $e')),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
   void _confirmDelete(
-      BuildContext context, WidgetRef ref, String shiftId, String movementId) {
+      BuildContext context, String shiftId, String movementId) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Eliminar movimiento'),
-        content:
-            const Text('¿Estás seguro de que deseas eliminar este movimiento?'),
+        content: const Text(
+            '¿Estas seguro de que deseas eliminar este movimiento?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -282,6 +680,10 @@ class ActiveShiftScreen extends ConsumerWidget {
               Navigator.pop(ctx);
               try {
                 await MovementService().delete(movementId, shiftId);
+                setState(() {
+                  _reconciliation = null;
+                  _loadingRecon = false;
+                });
                 ref.read(activeShiftProvider.notifier).refresh();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -307,16 +709,151 @@ class ActiveShiftScreen extends ConsumerWidget {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String label, String value,
+      {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Flexible(
+            child: Text(label,
+                style: TextStyle(
+                  color: color ?? Colors.grey,
+                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                )),
+          ),
+          Text(value,
+              style: TextStyle(
+                fontWeight: bold ? FontWeight.bold : FontWeight.w500,
+                color: color,
+              )),
         ],
       ),
+    );
+  }
+}
+
+/// Dialog for final close with optional discrepancy justification
+class _FinalCloseDialog extends StatefulWidget {
+  final String shiftId;
+  final Future<void> Function(String? note, String? photoUrl) onConfirm;
+
+  const _FinalCloseDialog({
+    required this.shiftId,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_FinalCloseDialog> createState() => _FinalCloseDialogState();
+}
+
+class _FinalCloseDialogState extends State<_FinalCloseDialog> {
+  final _noteController = TextEditingController();
+  String? _photoUrl;
+  bool _closing = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cerrar Turno Definitivamente'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Esta accion es irreversible. El turno quedara cerrado permanentemente.',
+              style: TextStyle(color: Colors.red, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Justificacion de discrepancia (opcional):',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _noteController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Describe por que hay diferencia...',
+                border: OutlineInputBorder(),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _closing
+                      ? null
+                      : () async {
+                          final url = await pickAndUploadPhoto(context);
+                          if (url != null) {
+                            setState(() => _photoUrl = url);
+                          }
+                        },
+                  icon: Icon(
+                      _photoUrl != null ? Icons.check_circle : Icons.camera_alt,
+                      size: 18),
+                  label: Text(_photoUrl != null
+                      ? 'Evidencia cargada'
+                      : 'Agregar evidencia'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor:
+                        _photoUrl != null ? Colors.green : null,
+                  ),
+                ),
+                if (_photoUrl != null) ...[
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => showPhotoPreview(context, _photoUrl!),
+                    child: const Icon(Icons.visibility,
+                        color: Colors.blue, size: 20),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _closing ? null : () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _closing
+              ? null
+              : () async {
+                  setState(() => _closing = true);
+                  final note = _noteController.text.trim().isNotEmpty
+                      ? _noteController.text.trim()
+                      : null;
+                  Navigator.pop(context);
+                  await widget.onConfirm(note, _photoUrl);
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: _closing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Cerrar Definitivamente'),
+        ),
+      ],
     );
   }
 }

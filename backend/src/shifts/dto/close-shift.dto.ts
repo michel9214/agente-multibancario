@@ -40,3 +40,15 @@ export class CloseShiftDto {
   @Type(() => CommissionEntryDto)
   commissions?: CommissionEntryDto[];
 }
+
+export class FinalCloseDto {
+  @ApiPropertyOptional({ description: 'Nota justificando la discrepancia' })
+  @IsOptional()
+  @IsString()
+  discrepancyNote?: string;
+
+  @ApiPropertyOptional({ description: 'URL de foto de evidencia de la discrepancia' })
+  @IsOptional()
+  @IsString()
+  discrepancyPhotoUrl?: string;
+}

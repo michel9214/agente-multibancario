@@ -12,6 +12,8 @@ export interface ReconciliationResult {
   endingCash: number;
   discrepancy: number;
   status: 'BALANCED' | 'SURPLUS' | 'DEFICIT';
+  discrepancyNote: string | null;
+  discrepancyPhotoUrl: string | null;
   details: {
     openingBalances: { entityName: string; amount: number }[];
     closingBalances: { entityName: string; amount: number }[];
@@ -89,16 +91,13 @@ export class ReconciliationService {
       : new Decimal(0);
 
     // Formula:
-    // discrepancy = (closing_balances + ending_cash)
-    //             - (opening_balances + starting_cash)
-    //             - net_movements
-    //             - total_commissions
-    const discrepancy = totalClosingBalance
-      .plus(endingCash)
-      .minus(totalOpeningBalance)
-      .minus(startingCash)
-      .minus(netMovements)
-      .minus(totalCommissions);
+    // discrepancy = cierre - (apertura + movimientos)
+    // cierre = closing_balances + ending_cash
+    // apertura + movimientos = (opening_balances + starting_cash) + net_movements
+    // Commissions are informational only, NOT part of the formula
+    const totalClosing = totalClosingBalance.plus(endingCash);
+    const totalExpected = totalOpeningBalance.plus(startingCash).plus(netMovements);
+    const discrepancy = totalClosing.minus(totalExpected);
 
     let status: 'BALANCED' | 'SURPLUS' | 'DEFICIT';
     if (discrepancy.equals(0)) {
@@ -118,6 +117,8 @@ export class ReconciliationService {
       endingCash: endingCash.toNumber(),
       discrepancy: discrepancy.toNumber(),
       status,
+      discrepancyNote: shift.discrepancyNote,
+      discrepancyPhotoUrl: shift.discrepancyPhotoUrl,
       details: {
         openingBalances: openingBalances.map((b: any) => ({
           entityName: b.entity.name,

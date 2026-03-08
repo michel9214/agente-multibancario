@@ -49,19 +49,39 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
     return shift;
   }
 
-  Future<Shift> closeShift({
+  Future<Shift> preCloseShift({
     required String shiftId,
     required double endingCash,
     required List<Map<String, dynamic>> closingBalances,
     List<Map<String, dynamic>> commissions = const [],
   }) async {
-    final shift = await _service.closeShift(
+    final shift = await _service.preCloseShift(
       shiftId: shiftId,
       endingCash: endingCash,
       closingBalances: closingBalances,
       commissions: commissions,
     );
+    state = AsyncValue.data(shift);
+    return shift;
+  }
+
+  Future<Shift> finalCloseShift({
+    required String shiftId,
+    String? discrepancyNote,
+    String? discrepancyPhotoUrl,
+  }) async {
+    final shift = await _service.finalCloseShift(
+      shiftId: shiftId,
+      discrepancyNote: discrepancyNote,
+      discrepancyPhotoUrl: discrepancyPhotoUrl,
+    );
     state = const AsyncValue.data(null);
+    return shift;
+  }
+
+  Future<Shift> reopenShift(String shiftId) async {
+    final shift = await _service.reopenShift(shiftId);
+    state = AsyncValue.data(shift);
     return shift;
   }
 

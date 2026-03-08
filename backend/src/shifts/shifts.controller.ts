@@ -6,7 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ShiftsService } from './shifts.service';
 import { OpenShiftDto } from './dto/open-shift.dto';
-import { CloseShiftDto } from './dto/close-shift.dto';
+import { CloseShiftDto, FinalCloseDto } from './dto/close-shift.dto';
 import { CurrentUser } from '../common';
 
 @ApiTags('Shifts')
@@ -49,13 +49,32 @@ export class ShiftsController {
     return this.shiftsService.findOne(id);
   }
 
-  @Patch(':id/close')
-  closeShift(
+  @Patch(':id/preclose')
+  preCloseShift(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') userRole: any,
     @Body() dto: CloseShiftDto,
   ) {
-    return this.shiftsService.closeShift(id, userId, userRole, dto);
+    return this.shiftsService.preCloseShift(id, userId, userRole, dto);
+  }
+
+  @Patch(':id/close')
+  finalCloseShift(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
+    @Body() dto: FinalCloseDto,
+  ) {
+    return this.shiftsService.finalCloseShift(id, userId, userRole, dto);
+  }
+
+  @Patch(':id/reopen')
+  reopenShift(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: any,
+  ) {
+    return this.shiftsService.reopenShift(id, userId, userRole);
   }
 }

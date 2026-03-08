@@ -7,6 +7,8 @@ class Reconciliation {
   final double endingCash;
   final double discrepancy;
   final String status;
+  final String? discrepancyNote;
+  final String? discrepancyPhotoUrl;
   final ReconciliationDetails details;
 
   Reconciliation({
@@ -18,6 +20,8 @@ class Reconciliation {
     required this.endingCash,
     required this.discrepancy,
     required this.status,
+    this.discrepancyNote,
+    this.discrepancyPhotoUrl,
     required this.details,
   });
 
@@ -31,6 +35,8 @@ class Reconciliation {
       endingCash: _d(json['endingCash']),
       discrepancy: _d(json['discrepancy']),
       status: json['status'],
+      discrepancyNote: json['discrepancyNote'],
+      discrepancyPhotoUrl: json['discrepancyPhotoUrl'],
       details: ReconciliationDetails.fromJson(json['details']),
     );
   }
@@ -54,8 +60,8 @@ class Reconciliation {
   /// Total cierre (efectivo + saldos)
   double get totalClosing => endingCash + totalClosingBalance;
 
-  /// Total esperado = apertura + movimientos netos + comisiones
-  double get totalExpected => totalOpening + totalMovements + totalCommissions;
+  /// Total esperado = apertura + movimientos netos (comisiones son solo informativas)
+  double get totalExpected => totalOpening + totalMovements;
 
   static double _d(dynamic v) {
     if (v is num) return v.toDouble();

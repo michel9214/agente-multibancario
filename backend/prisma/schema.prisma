@@ -14,6 +14,7 @@ enum Role {
 
 enum ShiftStatus {
   OPEN
+  PRECLOSED
   CLOSED
 }
 
@@ -90,6 +91,8 @@ model Shift {
   totalMovements      Decimal? @map("total_movements") @db.Decimal(12, 2)
   totalCommissions    Decimal? @map("total_commissions") @db.Decimal(12, 2)
   discrepancy         Decimal? @db.Decimal(12, 2)
+  discrepancyNote     String?  @map("discrepancy_note")
+  discrepancyPhotoUrl String?  @map("discrepancy_photo_url")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

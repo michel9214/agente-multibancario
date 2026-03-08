@@ -247,15 +247,17 @@ class HomeScreen extends ConsumerWidget {
     return Card(
       child: Column(
         children: [
-          // Green status header
+          // Status header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF0E9F6E), Color(0xFF10B981)],
+                colors: shift.isPreclosed
+                    ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]
+                    : [const Color(0xFF0E9F6E), const Color(0xFF10B981)],
               ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
               children: [
@@ -267,7 +269,7 @@ class HomeScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'TURNO ACTIVO',
+                    shift.isPreclosed ? 'PRE-CERRADO' : 'TURNO ACTIVO',
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -332,24 +334,39 @@ class HomeScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: () => context.push('/shift/active'),
-                        icon: const Icon(Icons.visibility, size: 20),
-                        label: const Text('Ver Turno'),
+                        icon: Icon(
+                          shift.isPreclosed
+                              ? Icons.checklist
+                              : Icons.visibility,
+                          size: 20,
+                        ),
+                        label: Text(shift.isPreclosed
+                            ? 'Revisar y Cerrar'
+                            : 'Ver Turno'),
+                        style: shift.isPreclosed
+                            ? ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFF59E0B),
+                                foregroundColor: Colors.white,
+                              )
+                            : null,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.push('/shift/end'),
-                        icon: const Icon(Icons.stop_circle_outlined, size: 20),
-                        label: const Text('Cerrar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF59E0B),
-                          foregroundColor: Colors.white,
+                    if (!shift.isPreclosed) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/shift/end'),
+                          icon: const Icon(Icons.stop_circle_outlined, size: 20),
+                          label: const Text('Cerrar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF59E0B),
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],

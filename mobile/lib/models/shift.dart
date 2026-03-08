@@ -65,6 +65,8 @@ class Shift {
   final double? totalMovements;
   final double? totalCommissions;
   final double? discrepancy;
+  final String? discrepancyNote;
+  final String? discrepancyPhotoUrl;
   final List<BalanceEntry> balanceEntries;
   final List<Movement> movements;
   final List<CommissionEntry> commissionEntries;
@@ -84,6 +86,8 @@ class Shift {
     this.totalMovements,
     this.totalCommissions,
     this.discrepancy,
+    this.discrepancyNote,
+    this.discrepancyPhotoUrl,
     this.balanceEntries = const [],
     this.movements = const [],
     this.commissionEntries = const [],
@@ -119,6 +123,8 @@ class Shift {
       discrepancy: json['discrepancy'] != null
           ? _toDouble(json['discrepancy'])
           : null,
+      discrepancyNote: json['discrepancyNote'] ?? json['discrepancy_note'],
+      discrepancyPhotoUrl: json['discrepancyPhotoUrl'] ?? json['discrepancy_photo_url'],
       balanceEntries: (json['balanceEntries'] as List<dynamic>?)
               ?.map((e) => BalanceEntry.fromJson(e))
               .toList() ??
@@ -138,6 +144,7 @@ class Shift {
   }
 
   bool get isOpen => status == 'OPEN';
+  bool get isPreclosed => status == 'PRECLOSED';
   bool get isClosed => status == 'CLOSED';
   bool get isBalanced => discrepancy != null && discrepancy == 0;
 

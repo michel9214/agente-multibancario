@@ -126,7 +126,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final totalOpening = shift.startingCash + totalOpeningBalance;
     final netMovements = shift.totalMovements ?? 0.0;
     final totalComm = shift.totalCommissions ?? 0.0;
-    final totalExpected = totalOpening + netMovements + totalComm;
+    final totalExpected = totalOpening + netMovements;
     final totalClosingBalance = shift.totalClosingBalance ?? 0.0;
     final totalClosing = (shift.endingCash ?? 0.0) + totalClosingBalance;
     final discrepancy = totalClosing - totalExpected;
@@ -160,14 +160,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (shift.isOpen ? const Color(0xFF1A56DB) : discColor)
+                      color: (shift.isOpen
+                              ? const Color(0xFF1A56DB)
+                              : shift.isPreclosed
+                                  ? Colors.amber
+                                  : discColor)
                           .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      shift.isOpen ? 'Abierto' : discLabel,
+                      shift.isOpen
+                          ? 'Abierto'
+                          : shift.isPreclosed
+                              ? 'Pre-cerrado'
+                              : discLabel,
                       style: GoogleFonts.poppins(
-                        color: shift.isOpen ? const Color(0xFF1A56DB) : discColor,
+                        color: shift.isOpen
+                            ? const Color(0xFF1A56DB)
+                            : shift.isPreclosed
+                                ? Colors.amber[800]
+                                : discColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -207,10 +219,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 _cardRow('Movimientos', formatCurrency(netMovements),
                     valueColor:
                         netMovements >= 0 ? const Color(0xFF0E9F6E) : const Color(0xFFE02424)),
-              if (totalComm > 0)
-                _cardRow('Comisiones', formatCurrency(totalComm),
-                    valueColor: const Color(0xFF0E9F6E)),
-              if (shift.isClosed) ...[
+              if (shift.isClosed || shift.isPreclosed) ...[
                 _cardRow('Esperado', formatCurrency(totalExpected)),
                 _cardRow('Cierre', formatCurrency(totalClosing)),
                 Padding(
@@ -243,6 +252,36 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ),
                   ),
                 ),
+                if (totalComm > 0) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D9488).withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Comisiones',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0D9488),
+                            )),
+                        Text(
+                          formatCurrency(totalComm),
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0D9488),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

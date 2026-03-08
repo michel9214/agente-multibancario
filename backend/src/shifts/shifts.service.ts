@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { ReconciliationService } from '../reconciliation/reconciliation.service';
 import { OpenShiftDto } from './dto/open-shift.dto';
-import { CloseShiftDto } from './dto/close-shift.dto';
+import { CloseShiftDto, FinalCloseDto } from './dto/close-shift.dto';
 import { BalanceType, ShiftStatus, Role } from '@prisma/client';
 
 @Injectable()
@@ -18,9 +18,9 @@ export class ShiftsService {
   ) {}
 
   async openShift(operatorId: string, dto: OpenShiftDto) {
-    // Check for existing open shift
+    // Check for existing open/preclosed shift
     const existingOpen = await this.prisma.shift.findFirst({
-      where: { operatorId, status: ShiftStatus.OPEN },
+      where: { operatorId, status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } },
     });
     if (existingOpen) {
       throw new BadRequestException('Ya tienes un turno abierto. Ciérralo primero.');
@@ -52,7 +52,10 @@ export class ShiftsService {
     });
   }
 
-  async closeShift(
+  /**
+   * Pre-close: saves closing data but keeps shift editable
+   */
+  async preCloseShift(
     shiftId: string,
     userId: string,
     userRole: Role,
@@ -70,6 +73,14 @@ export class ShiftsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // Delete existing closing balances and commissions (in case of re-preclose)
+      await tx.balanceEntry.deleteMany({
+        where: { shiftId, type: BalanceType.CLOSING },
+      });
+      await tx.commissionEntry.deleteMany({
+        where: { shiftId },
+      });
+
       // Create closing balances
       if (dto.closingBalances.length > 0) {
         await tx.balanceEntry.createMany({
@@ -98,15 +109,14 @@ export class ShiftsService {
         }
       }
 
-      // Calculate reconciliation
+      // Calculate reconciliation (preview)
       const result = await this.reconciliation.calculate(shiftId, tx);
 
-      // Update shift
+      // Update shift to PRECLOSED
       await tx.shift.update({
         where: { id: shiftId },
         data: {
-          status: ShiftStatus.CLOSED,
-          closedAt: new Date(),
+          status: ShiftStatus.PRECLOSED,
           endingCash: dto.endingCash,
           totalOpeningBalance: result.totalOpeningBalance,
           totalClosingBalance: result.totalClosingBalance,
@@ -120,11 +130,81 @@ export class ShiftsService {
     });
   }
 
+  /**
+   * Final close: from PRECLOSED to CLOSED, with optional discrepancy justification
+   */
+  async finalCloseShift(
+    shiftId: string,
+    userId: string,
+    userRole: Role,
+    dto: FinalCloseDto,
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.PRECLOSED) {
+      throw new BadRequestException('El turno debe estar en pre-cierre para cerrar definitivamente');
+    }
+    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
+      throw new ForbiddenException('No puedes cerrar el turno de otro operador');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // Recalculate in case movements were modified during preclose
+      const result = await this.reconciliation.calculate(shiftId, tx);
+
+      await tx.shift.update({
+        where: { id: shiftId },
+        data: {
+          status: ShiftStatus.CLOSED,
+          closedAt: new Date(),
+          totalOpeningBalance: result.totalOpeningBalance,
+          totalClosingBalance: result.totalClosingBalance,
+          totalMovements: result.totalMovements,
+          totalCommissions: result.totalCommissions,
+          discrepancy: result.discrepancy,
+          discrepancyNote: dto.discrepancyNote || null,
+          discrepancyPhotoUrl: dto.discrepancyPhotoUrl || null,
+        },
+      });
+
+      return this.getShiftWithDetails(shiftId, tx);
+    });
+  }
+
+  /**
+   * Reopen from PRECLOSED back to OPEN (cancel preclose)
+   */
+  async reopenShift(
+    shiftId: string,
+    userId: string,
+    userRole: Role,
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.PRECLOSED) {
+      throw new BadRequestException('Solo se puede reabrir un turno en pre-cierre');
+    }
+    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
+      throw new ForbiddenException('No puedes modificar el turno de otro operador');
+    }
+
+    await this.prisma.shift.update({
+      where: { id: shiftId },
+      data: { status: ShiftStatus.OPEN },
+    });
+
+    return this.getShiftWithDetails(shiftId);
+  }
+
   async getActiveShift(userId: string, userRole: Role) {
-    // OWNER sees any open shift, OPERATOR sees only their own
+    // OWNER sees any open/preclosed shift, OPERATOR sees only their own
     const where = userRole === Role.OWNER
-      ? { status: ShiftStatus.OPEN }
-      : { operatorId: userId, status: ShiftStatus.OPEN };
+      ? { status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } }
+      : { operatorId: userId, status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } };
 
     const shift = await this.prisma.shift.findFirst({
       where,
@@ -148,6 +228,7 @@ export class ShiftsService {
         where,
         include: {
           operator: { select: { id: true, fullName: true, email: true } },
+          commissionEntries: true,
         },
         orderBy: { startedAt: 'desc' },
         skip,

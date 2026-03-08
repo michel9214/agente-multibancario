@@ -29,17 +29,37 @@ class ShiftService {
     return Shift.fromJson(response.data);
   }
 
-  Future<Shift> closeShift({
+  /// Pre-close: saves closing data, status becomes PRECLOSED
+  Future<Shift> preCloseShift({
     required String shiftId,
     required double endingCash,
     required List<Map<String, dynamic>> closingBalances,
     List<Map<String, dynamic>> commissions = const [],
   }) async {
-    final response = await _api.patch('/shifts/$shiftId/close', data: {
+    final response = await _api.patch('/shifts/$shiftId/preclose', data: {
       'endingCash': endingCash,
       'closingBalances': closingBalances,
       if (commissions.isNotEmpty) 'commissions': commissions,
     });
+    return Shift.fromJson(response.data);
+  }
+
+  /// Final close: from PRECLOSED to CLOSED
+  Future<Shift> finalCloseShift({
+    required String shiftId,
+    String? discrepancyNote,
+    String? discrepancyPhotoUrl,
+  }) async {
+    final response = await _api.patch('/shifts/$shiftId/close', data: {
+      if (discrepancyNote != null) 'discrepancyNote': discrepancyNote,
+      if (discrepancyPhotoUrl != null) 'discrepancyPhotoUrl': discrepancyPhotoUrl,
+    });
+    return Shift.fromJson(response.data);
+  }
+
+  /// Reopen from PRECLOSED back to OPEN
+  Future<Shift> reopenShift(String shiftId) async {
+    final response = await _api.patch('/shifts/$shiftId/reopen', data: {});
     return Shift.fromJson(response.data);
   }
 
