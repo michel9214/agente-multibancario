@@ -83,6 +83,21 @@ export class ShiftsService {
         });
       }
 
+      // Create commission entries
+      if (dto.commissions && dto.commissions.length > 0) {
+        const validCommissions = dto.commissions.filter((c) => c.amount > 0);
+        if (validCommissions.length > 0) {
+          await tx.commissionEntry.createMany({
+            data: validCommissions.map((c) => ({
+              shiftId,
+              entityId: c.entityId || null,
+              concept: c.concept || null,
+              amount: c.amount,
+            })),
+          });
+        }
+      }
+
       // Calculate reconciliation
       const result = await this.reconciliation.calculate(shiftId, tx);
 
@@ -96,6 +111,7 @@ export class ShiftsService {
           totalOpeningBalance: result.totalOpeningBalance,
           totalClosingBalance: result.totalClosingBalance,
           totalMovements: result.totalMovements,
+          totalCommissions: result.totalCommissions,
           discrepancy: result.discrepancy,
         },
       });
@@ -116,6 +132,7 @@ export class ShiftsService {
       include: {
         balanceEntries: { include: { entity: true } },
         movements: { include: { reason: true }, orderBy: { createdAt: 'desc' } },
+        commissionEntries: { include: { entity: true } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -151,6 +168,7 @@ export class ShiftsService {
           orderBy: { entity: { name: 'asc' } },
         },
         movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
+        commissionEntries: { include: { entity: true } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -168,6 +186,7 @@ export class ShiftsService {
           orderBy: { entity: { name: 'asc' } },
         },
         movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
+        commissionEntries: { include: { entity: true } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });

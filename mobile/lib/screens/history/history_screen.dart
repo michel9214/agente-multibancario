@@ -125,7 +125,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
     final totalOpening = shift.startingCash + totalOpeningBalance;
     final netMovements = shift.totalMovements ?? 0.0;
-    final totalExpected = totalOpening + netMovements;
+    final totalComm = shift.totalCommissions ?? 0.0;
+    final totalExpected = totalOpening + netMovements + totalComm;
     final totalClosingBalance = shift.totalClosingBalance ?? 0.0;
     final totalClosing = (shift.endingCash ?? 0.0) + totalClosingBalance;
     final discrepancy = totalClosing - totalExpected;
@@ -206,6 +207,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 _cardRow('Movimientos', formatCurrency(netMovements),
                     valueColor:
                         netMovements >= 0 ? const Color(0xFF0E9F6E) : const Color(0xFFE02424)),
+              if (totalComm > 0)
+                _cardRow('Comisiones', formatCurrency(totalComm),
+                    valueColor: const Color(0xFF0E9F6E)),
               if (shift.isClosed) ...[
                 _cardRow('Esperado', formatCurrency(totalExpected)),
                 _cardRow('Cierre', formatCurrency(totalClosing)),

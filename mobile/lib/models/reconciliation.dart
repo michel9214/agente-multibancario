@@ -2,6 +2,7 @@ class Reconciliation {
   final double totalOpeningBalance;
   final double totalClosingBalance;
   final double totalMovements;
+  final double totalCommissions;
   final double startingCash;
   final double endingCash;
   final double discrepancy;
@@ -12,6 +13,7 @@ class Reconciliation {
     required this.totalOpeningBalance,
     required this.totalClosingBalance,
     required this.totalMovements,
+    required this.totalCommissions,
     required this.startingCash,
     required this.endingCash,
     required this.discrepancy,
@@ -24,6 +26,7 @@ class Reconciliation {
       totalOpeningBalance: _d(json['totalOpeningBalance']),
       totalClosingBalance: _d(json['totalClosingBalance']),
       totalMovements: _d(json['totalMovements']),
+      totalCommissions: _d(json['totalCommissions']),
       startingCash: _d(json['startingCash']),
       endingCash: _d(json['endingCash']),
       discrepancy: _d(json['discrepancy']),
@@ -51,8 +54,8 @@ class Reconciliation {
   /// Total cierre (efectivo + saldos)
   double get totalClosing => endingCash + totalClosingBalance;
 
-  /// Total esperado = apertura + movimientos netos
-  double get totalExpected => totalOpening + totalMovements;
+  /// Total esperado = apertura + movimientos netos + comisiones
+  double get totalExpected => totalOpening + totalMovements + totalCommissions;
 
   static double _d(dynamic v) {
     if (v is num) return v.toDouble();
@@ -65,11 +68,13 @@ class ReconciliationDetails {
   final List<BalanceSummary> openingBalances;
   final List<BalanceSummary> closingBalances;
   final List<MovementSummary> movements;
+  final List<CommissionSummary> commissions;
 
   ReconciliationDetails({
     required this.openingBalances,
     required this.closingBalances,
     required this.movements,
+    required this.commissions,
   });
 
   factory ReconciliationDetails.fromJson(Map<String, dynamic> json) {
@@ -83,6 +88,24 @@ class ReconciliationDetails {
       movements: (json['movements'] as List)
           .map((e) => MovementSummary.fromJson(e))
           .toList(),
+      commissions: (json['commissions'] as List?)
+              ?.map((e) => CommissionSummary.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class CommissionSummary {
+  final String name;
+  final double amount;
+
+  CommissionSummary({required this.name, required this.amount});
+
+  factory CommissionSummary.fromJson(Map<String, dynamic> json) {
+    return CommissionSummary(
+      name: json['name'] ?? '',
+      amount: (json['amount'] as num).toDouble(),
     );
   }
 }

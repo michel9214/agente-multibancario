@@ -33,10 +33,12 @@ class ShiftService {
     required String shiftId,
     required double endingCash,
     required List<Map<String, dynamic>> closingBalances,
+    List<Map<String, dynamic>> commissions = const [],
   }) async {
     final response = await _api.patch('/shifts/$shiftId/close', data: {
       'endingCash': endingCash,
       'closingBalances': closingBalances,
+      if (commissions.isNotEmpty) 'commissions': commissions,
     });
     return Shift.fromJson(response.data);
   }

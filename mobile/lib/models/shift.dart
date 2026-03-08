@@ -1,6 +1,56 @@
 import 'balance_entry.dart';
 import 'movement.dart';
 
+class CommissionEntry {
+  final String id;
+  final String shiftId;
+  final String? entityId;
+  final String? concept;
+  final double amount;
+  final CommissionEntity? entity;
+
+  CommissionEntry({
+    required this.id,
+    required this.shiftId,
+    this.entityId,
+    this.concept,
+    required this.amount,
+    this.entity,
+  });
+
+  factory CommissionEntry.fromJson(Map<String, dynamic> json) {
+    return CommissionEntry(
+      id: json['id'],
+      shiftId: json['shiftId'] ?? json['shift_id'] ?? '',
+      entityId: json['entityId'] ?? json['entity_id'],
+      concept: json['concept'],
+      amount: _toDouble(json['amount']),
+      entity: json['entity'] != null
+          ? CommissionEntity.fromJson(json['entity'])
+          : null,
+    );
+  }
+
+  String get name => entity?.name ?? concept ?? '';
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
+  }
+}
+
+class CommissionEntity {
+  final String id;
+  final String name;
+
+  CommissionEntity({required this.id, required this.name});
+
+  factory CommissionEntity.fromJson(Map<String, dynamic> json) {
+    return CommissionEntity(id: json['id'], name: json['name']);
+  }
+}
+
 class Shift {
   final String id;
   final String operatorId;
@@ -13,9 +63,11 @@ class Shift {
   final double? totalOpeningBalance;
   final double? totalClosingBalance;
   final double? totalMovements;
+  final double? totalCommissions;
   final double? discrepancy;
   final List<BalanceEntry> balanceEntries;
   final List<Movement> movements;
+  final List<CommissionEntry> commissionEntries;
   final ShiftOperator? operator;
 
   Shift({
@@ -30,9 +82,11 @@ class Shift {
     this.totalOpeningBalance,
     this.totalClosingBalance,
     this.totalMovements,
+    this.totalCommissions,
     this.discrepancy,
     this.balanceEntries = const [],
     this.movements = const [],
+    this.commissionEntries = const [],
     this.operator,
   });
 
@@ -59,6 +113,9 @@ class Shift {
       totalMovements: json['totalMovements'] != null
           ? _toDouble(json['totalMovements'])
           : null,
+      totalCommissions: json['totalCommissions'] != null
+          ? _toDouble(json['totalCommissions'])
+          : null,
       discrepancy: json['discrepancy'] != null
           ? _toDouble(json['discrepancy'])
           : null,
@@ -68,6 +125,10 @@ class Shift {
           [],
       movements: (json['movements'] as List<dynamic>?)
               ?.map((e) => Movement.fromJson(e))
+              .toList() ??
+          [],
+      commissionEntries: (json['commissionEntries'] as List<dynamic>?)
+              ?.map((e) => CommissionEntry.fromJson(e))
               .toList() ??
           [],
       operator: json['operator'] != null

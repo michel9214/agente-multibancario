@@ -7,6 +7,7 @@ export interface ReconciliationResult {
   totalOpeningBalance: number;
   totalClosingBalance: number;
   totalMovements: number;
+  totalCommissions: number;
   startingCash: number;
   endingCash: number;
   discrepancy: number;
@@ -15,6 +16,7 @@ export interface ReconciliationResult {
     openingBalances: { entityName: string; amount: number }[];
     closingBalances: { entityName: string; amount: number }[];
     movements: { type: string; direction: string; amount: number; description: string | null }[];
+    commissions: { name: string; amount: number }[];
   };
 }
 
@@ -35,6 +37,11 @@ export class ReconciliationService {
 
     const movements = await db.movement.findMany({
       where: { shiftId },
+    });
+
+    const commissionEntries = await db.commissionEntry.findMany({
+      where: { shiftId },
+      include: { entity: true },
     });
 
     // Calculate totals using Decimal for precision
@@ -71,6 +78,11 @@ export class ReconciliationService {
 
     const netMovements = totalIn.minus(totalOut);
 
+    const totalCommissions = commissionEntries.reduce(
+      (sum: Decimal, c: any) => sum.plus(new Decimal(c.amount.toString())),
+      new Decimal(0),
+    );
+
     const startingCash = new Decimal(shift.startingCash.toString());
     const endingCash = shift.endingCash
       ? new Decimal(shift.endingCash.toString())
@@ -80,11 +92,13 @@ export class ReconciliationService {
     // discrepancy = (closing_balances + ending_cash)
     //             - (opening_balances + starting_cash)
     //             - net_movements
+    //             - total_commissions
     const discrepancy = totalClosingBalance
       .plus(endingCash)
       .minus(totalOpeningBalance)
       .minus(startingCash)
-      .minus(netMovements);
+      .minus(netMovements)
+      .minus(totalCommissions);
 
     let status: 'BALANCED' | 'SURPLUS' | 'DEFICIT';
     if (discrepancy.equals(0)) {
@@ -99,6 +113,7 @@ export class ReconciliationService {
       totalOpeningBalance: totalOpeningBalance.toNumber(),
       totalClosingBalance: totalClosingBalance.toNumber(),
       totalMovements: netMovements.toNumber(),
+      totalCommissions: totalCommissions.toNumber(),
       startingCash: startingCash.toNumber(),
       endingCash: endingCash.toNumber(),
       discrepancy: discrepancy.toNumber(),
@@ -117,6 +132,10 @@ export class ReconciliationService {
           direction: m.direction,
           amount: Number(m.amount),
           description: m.description,
+        })),
+        commissions: commissionEntries.map((c: any) => ({
+          name: c.entity ? c.entity.name : c.concept,
+          amount: Number(c.amount),
         })),
       },
     };

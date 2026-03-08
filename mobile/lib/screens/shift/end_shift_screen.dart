@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/shift.dart';
@@ -7,6 +8,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
+
+const _extraCommissionConcepts = ['Depositos', 'Retiros', 'Recargas'];
 
 class EndShiftScreen extends ConsumerStatefulWidget {
   const EndShiftScreen({super.key});
@@ -17,15 +20,21 @@ class EndShiftScreen extends ConsumerStatefulWidget {
 
 class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
   int _step = 0;
+  static const _totalSteps = 4;
   final _cashController = TextEditingController();
   final Map<String, TextEditingController> _balanceControllers = {};
   final Map<String, String?> _photoUrls = {};
+  // Commission controllers: entityId -> controller, concept -> controller
+  final Map<String, TextEditingController> _commissionControllers = {};
   bool _loading = false;
 
   @override
   void dispose() {
     _cashController.dispose();
     for (final c in _balanceControllers.values) {
+      c.dispose();
+    }
+    for (final c in _commissionControllers.values) {
       c.dispose();
     }
     super.dispose();
@@ -90,7 +99,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         return;
       }
     }
-    if (_step == 1) {
+    // Step 1 (commissions) - no validation needed, amounts are optional
+    if (_step == 2) {
       final cash = double.tryParse(_cashController.text);
       if (_cashController.text.isEmpty || cash == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,6 +113,46 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       }
     }
     setState(() => _step++);
+  }
+
+  List<Map<String, dynamic>> _buildCommissions(List<BalanceEntry> openingEntries) {
+    final commissions = <Map<String, dynamic>>[];
+    // Entity commissions
+    for (final entry in openingEntries) {
+      final text = _commissionControllers['entity_${entry.entityId}']?.text ?? '';
+      final amount = double.tryParse(text) ?? 0;
+      if (amount > 0) {
+        commissions.add({
+          'entityId': entry.entityId,
+          'amount': amount,
+        });
+      }
+    }
+    // Extra concept commissions
+    for (final concept in _extraCommissionConcepts) {
+      final text = _commissionControllers['concept_$concept']?.text ?? '';
+      final amount = double.tryParse(text) ?? 0;
+      if (amount > 0) {
+        commissions.add({
+          'concept': concept,
+          'amount': amount,
+        });
+      }
+    }
+    return commissions;
+  }
+
+  double _getTotalCommissions(List<BalanceEntry> openingEntries) {
+    double total = 0;
+    for (final entry in openingEntries) {
+      final text = _commissionControllers['entity_${entry.entityId}']?.text ?? '';
+      total += double.tryParse(text) ?? 0;
+    }
+    for (final concept in _extraCommissionConcepts) {
+      final text = _commissionControllers['concept_$concept']?.text ?? '';
+      total += double.tryParse(text) ?? 0;
+    }
+    return total;
   }
 
   Future<void> _closeShift(
@@ -121,11 +171,14 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         });
       }
 
+      final commissions = _buildCommissions(openingEntries);
+
       final closedShift =
           await ref.read(activeShiftProvider.notifier).closeShift(
                 shiftId: shift.id,
                 endingCash: double.tryParse(_cashController.text) ?? 0,
                 closingBalances: balances,
+                commissions: commissions,
               );
 
       if (mounted) {
@@ -154,7 +207,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cerrar Turno - Paso ${_step + 1}/3'),
+        title: Text('Cerrar Turno - Paso ${_step + 1}/$_totalSteps'),
       ),
       body: shiftAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -169,6 +222,12 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           for (final entry in openingEntries) {
             _balanceControllers.putIfAbsent(
                 entry.entityId, () => TextEditingController());
+            _commissionControllers.putIfAbsent(
+                'entity_${entry.entityId}', () => TextEditingController());
+          }
+          for (final concept in _extraCommissionConcepts) {
+            _commissionControllers.putIfAbsent(
+                'concept_$concept', () => TextEditingController());
           }
 
           return Column(
@@ -176,7 +235,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
-                  children: List.generate(3, (i) {
+                  children: List.generate(_totalSteps, (i) {
                     return Expanded(
                       child: Container(
                         height: 4,
@@ -195,8 +254,10 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 child: _step == 0
                     ? _buildBalancesStep(openingEntries)
                     : _step == 1
-                        ? _buildCashStep()
-                        : _buildPreviewStep(shift, openingEntries),
+                        ? _buildCommissionsStep(openingEntries)
+                        : _step == 2
+                            ? _buildCashStep()
+                            : _buildPreviewStep(shift, openingEntries),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -215,14 +276,14 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         onPressed: _loading
                             ? null
                             : () {
-                                if (_step < 2) {
+                                if (_step < _totalSteps - 1) {
                                   _tryNextStep(shift);
                                 } else {
                                   _closeShift(shift, openingEntries);
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _step == 2
+                          backgroundColor: _step == _totalSteps - 1
                               ? Colors.orange
                               : Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
@@ -235,7 +296,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : Text(_step == 2
+                            : Text(_step == _totalSteps - 1
                                 ? 'Cerrar Turno'
                                 : 'Siguiente'),
                       ),
@@ -374,6 +435,176 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     );
   }
 
+  Widget _buildCommissionsStep(List<BalanceEntry> openingEntries) {
+    final items = <Widget>[
+      Text('Comisiones Cobradas',
+          style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 8),
+      Text(
+        'Ingresa el monto cobrado por comisiones (max 999). Deja en blanco si no aplica.',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.teal[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.teal[200]!),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.teal[700], size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Las comisiones se suman al total esperado del cierre.',
+                style: TextStyle(fontSize: 12, color: Colors.teal[800]),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      Text('Por entidad',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.grey[700],
+          )),
+      const SizedBox(height: 8),
+    ];
+
+    // Entity commissions
+    for (final entry in openingEntries) {
+      final entityName = entry.entity?.name ?? 'Entidad';
+      final entityColor = entry.entity?.color != null
+          ? _parseColor(entry.entity!.color)
+          : Colors.blue;
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: entityColor.withOpacity(0.2),
+                radius: 14,
+                child: Icon(Icons.account_balance,
+                    color: entityColor, size: 14),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(entityName, style: const TextStyle(fontSize: 14)),
+              ),
+              SizedBox(
+                width: 110,
+                child: TextFormField(
+                  controller: _commissionControllers['entity_${entry.entityId}'],
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
+                  decoration: const InputDecoration(
+                    prefixText: 'S/ ',
+                    hintText: '0',
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Extra concepts
+    items.addAll([
+      const SizedBox(height: 12),
+      Text('Por concepto',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.grey[700],
+          )),
+      const SizedBox(height: 8),
+    ]);
+
+    for (final concept in _extraCommissionConcepts) {
+      final icon = concept == 'Depositos'
+          ? Icons.savings
+          : concept == 'Retiros'
+              ? Icons.atm
+              : Icons.phone_android;
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.teal[50],
+                radius: 14,
+                child: Icon(icon, color: Colors.teal, size: 14),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(concept, style: const TextStyle(fontSize: 14)),
+              ),
+              SizedBox(
+                width: 110,
+                child: TextFormField(
+                  controller: _commissionControllers['concept_$concept'],
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
+                  decoration: const InputDecoration(
+                    prefixText: 'S/ ',
+                    hintText: '0',
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Total
+    final totalComm = _getTotalCommissions(openingEntries);
+    items.addAll([
+      const Divider(),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Total comisiones',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(
+            formatCurrency(totalComm),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: totalComm > 0 ? Colors.teal[700] : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    ]);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: items,
+    );
+  }
+
   Widget _buildCashStep() {
     final shift = ref.read(activeShiftProvider).value;
     final sencillo = shift?.sencillo ?? 0;
@@ -463,6 +694,23 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         .where((m) => m.direction == 'OUT')
         .fold<double>(0.0, (sum, m) => sum + m.amount);
     final netMovements = totalMovementsIn - totalMovementsOut;
+
+    final totalComm = _getTotalCommissions(openingEntries);
+    final commissionItems = <MapEntry<String, double>>[];
+    for (final entry in openingEntries) {
+      final text = _commissionControllers['entity_${entry.entityId}']?.text ?? '';
+      final amount = double.tryParse(text) ?? 0;
+      if (amount > 0) {
+        commissionItems.add(MapEntry(entry.entity?.name ?? 'Entidad', amount));
+      }
+    }
+    for (final concept in _extraCommissionConcepts) {
+      final text = _commissionControllers['concept_$concept']?.text ?? '';
+      final amount = double.tryParse(text) ?? 0;
+      if (amount > 0) {
+        commissionItems.add(MapEntry(concept, amount));
+      }
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -557,6 +805,33 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           ),
           const SizedBox(height: 8),
         ],
+        if (commissionItems.isNotEmpty) ...[
+          Card(
+            color: Colors.teal[50],
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('COMISIONES',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal[800],
+                        fontSize: 13,
+                      )),
+                  const SizedBox(height: 8),
+                  ...commissionItems.map((e) => _reviewRow(
+                      e.key, formatCurrency(e.value))),
+                  const Divider(),
+                  _reviewRow('Total comisiones',
+                      formatCurrency(totalComm),
+                      bold: true, color: Colors.teal[800]),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Card(
           color: Colors.green[50],
           child: Padding(
@@ -576,10 +851,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 if (movements.isNotEmpty)
                   _reviewRow('Movimientos netos',
                       formatCurrency(netMovements)),
+                if (totalComm > 0)
+                  _reviewRow('Comisiones',
+                      formatCurrency(totalComm)),
                 const Divider(),
                 _reviewRow(
                   'Debería tener',
-                  formatCurrency(totalOpeningGeneral + netMovements),
+                  formatCurrency(totalOpeningGeneral + netMovements + totalComm),
                   bold: true,
                   color: Colors.green[800],
                 ),

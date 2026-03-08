@@ -68,7 +68,8 @@ model BankingEntity {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  balanceEntries BalanceEntry[]
+  balanceEntries    BalanceEntry[]
+  commissionEntries CommissionEntry[]
 
   @@map("banking_entities")
 }
@@ -87,14 +88,16 @@ model Shift {
   totalOpeningBalance Decimal? @map("total_opening_balance") @db.Decimal(12, 2)
   totalClosingBalance Decimal? @map("total_closing_balance") @db.Decimal(12, 2)
   totalMovements      Decimal? @map("total_movements") @db.Decimal(12, 2)
+  totalCommissions    Decimal? @map("total_commissions") @db.Decimal(12, 2)
   discrepancy         Decimal? @db.Decimal(12, 2)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  operator       User           @relation(fields: [operatorId], references: [id])
-  balanceEntries BalanceEntry[]
-  movements      Movement[]
+  operator          User              @relation(fields: [operatorId], references: [id])
+  balanceEntries    BalanceEntry[]
+  movements         Movement[]
+  commissionEntries CommissionEntry[]
 
   @@map("shifts")
 }
@@ -147,4 +150,19 @@ model Movement {
   createdBy User?           @relation(fields: [createdById], references: [id])
 
   @@map("movements")
+}
+
+model CommissionEntry {
+  id       String  @id @default(uuid())
+  shiftId  String  @map("shift_id")
+  entityId String? @map("entity_id")
+  concept  String?
+  amount   Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  shift  Shift          @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  entity BankingEntity? @relation(fields: [entityId], references: [id])
+
+  @@map("commission_entries")
 }

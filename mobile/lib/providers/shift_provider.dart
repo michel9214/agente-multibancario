@@ -53,11 +53,13 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
     required String shiftId,
     required double endingCash,
     required List<Map<String, dynamic>> closingBalances,
+    List<Map<String, dynamic>> commissions = const [],
   }) async {
     final shift = await _service.closeShift(
       shiftId: shiftId,
       endingCash: endingCash,
       closingBalances: closingBalances,
+      commissions: commissions,
     );
     state = const AsyncValue.data(null);
     return shift;
