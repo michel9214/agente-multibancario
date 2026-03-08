@@ -26,6 +26,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
   // Commission controllers: entityId -> controller, concept -> controller
   final Map<String, TextEditingController> _commissionControllers = {};
   bool _loading = false;
+  bool _prefilled = false;
 
   @override
   void dispose() {
@@ -210,6 +211,9 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           }
 
           final openingEntries = _getOpeningEntries(shift);
+          final closingEntries = shift.balanceEntries
+              .where((b) => b.type == 'CLOSING')
+              .toList();
 
           for (final entry in openingEntries) {
             _balanceControllers.putIfAbsent(
@@ -220,6 +224,40 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           for (final concept in _extraCommissionConcepts) {
             _commissionControllers.putIfAbsent(
                 'concept_$concept', () => TextEditingController());
+          }
+
+          // Pre-fill from existing closing data when editing a PRECLOSED shift
+          if (!_prefilled && shift.isPreclosed) {
+            _prefilled = true;
+            // Closing balances & photos
+            for (final closing in closingEntries) {
+              if (_balanceControllers.containsKey(closing.entityId)) {
+                _balanceControllers[closing.entityId]!.text =
+                    closing.amount % 1 == 0
+                        ? closing.amount.toStringAsFixed(0)
+                        : closing.amount.toStringAsFixed(2);
+              }
+              if (closing.receiptPhotoUrl != null) {
+                _photoUrls[closing.entityId] = closing.receiptPhotoUrl;
+              }
+            }
+            // Ending cash
+            if (shift.endingCash != null) {
+              _cashController.text = shift.endingCash! % 1 == 0
+                  ? shift.endingCash!.toStringAsFixed(0)
+                  : shift.endingCash!.toStringAsFixed(2);
+            }
+            // Commissions
+            for (final comm in shift.commissionEntries) {
+              final key = comm.entityId != null
+                  ? 'entity_${comm.entityId}'
+                  : 'concept_${comm.concept}';
+              if (_commissionControllers.containsKey(key) && comm.amount > 0) {
+                _commissionControllers[key]!.text = comm.amount % 1 == 0
+                    ? comm.amount.toStringAsFixed(0)
+                    : comm.amount.toStringAsFixed(2);
+              }
+            }
           }
 
           return Column(
