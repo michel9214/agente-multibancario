@@ -869,8 +869,10 @@ class _FinalCloseDialogState extends State<_FinalCloseDialog> {
                   final note = _noteController.text.trim().isNotEmpty
                       ? _noteController.text.trim()
                       : null;
+                  final photoUrl = _photoUrl;
+                  final onConfirm = widget.onConfirm;
                   Navigator.pop(context);
-                  await widget.onConfirm(note, _photoUrl);
+                  await onConfirm(note, photoUrl);
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,

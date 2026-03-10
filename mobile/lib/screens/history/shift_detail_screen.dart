@@ -469,6 +469,22 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
               ),
             ),
 
+          // Back to home button (always visible)
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.go('/home'),
+              icon: const Icon(Icons.home),
+              label: const Text('Volver al Inicio'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+
           // Annul open shift button (OWNER only, OPEN shifts only)
           if (shift.isOpen && isOwner) ...[
             const SizedBox(height: 24),

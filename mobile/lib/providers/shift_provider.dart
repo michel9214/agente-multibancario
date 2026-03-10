@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/database.dart';
 import '../models/shift.dart';
 import '../services/shift_service.dart';
 
 class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
   final ShiftService _service = ShiftService();
+  final AppDatabase _db = AppDatabase.instance;
 
   ActiveShiftNotifier() : super(const AsyncValue.loading()) {
     _loadWithRetry();
@@ -29,6 +31,9 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
     state = const AsyncValue.loading();
     try {
       final shift = await _service.getActiveShift();
+      if (shift == null) {
+        await _db.clearActiveShiftCache();
+      }
       state = AsyncValue.data(shift);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -75,6 +80,7 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
       discrepancyNote: discrepancyNote,
       discrepancyPhotoUrl: discrepancyPhotoUrl,
     );
+    await _db.clearActiveShiftCache();
     state = const AsyncValue.data(null);
     return shift;
   }
