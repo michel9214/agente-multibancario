@@ -22,6 +22,7 @@ import '../screens/operators/edit_operator_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/history/shift_detail_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
+import '../services/api_client.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
@@ -33,6 +34,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       lastToken = next.token;
       refreshNotifier.value++;
     }
+  });
+
+  // Listen for 401 errors (token expired) and force logout
+  ApiClient.onUnauthorized.listen((_) {
+    ref.read(authProvider.notifier).logout();
   });
 
   return GoRouter(

@@ -68,9 +68,6 @@ export class ShiftsService {
     if (shift.status === ShiftStatus.CLOSED) {
       throw new BadRequestException('Este turno ya está cerrado');
     }
-    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
-      throw new ForbiddenException('No puedes cerrar el turno de otro operador');
-    }
 
     return this.prisma.$transaction(async (tx) => {
       // Delete existing closing balances and commissions (in case of re-preclose)
@@ -146,9 +143,6 @@ export class ShiftsService {
     if (shift.status !== ShiftStatus.PRECLOSED) {
       throw new BadRequestException('El turno debe estar en pre-cierre para cerrar definitivamente');
     }
-    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
-      throw new ForbiddenException('No puedes cerrar el turno de otro operador');
-    }
 
     return this.prisma.$transaction(async (tx) => {
       // Recalculate in case movements were modified during preclose
@@ -187,9 +181,6 @@ export class ShiftsService {
     if (!shift) throw new NotFoundException('Turno no encontrado');
     if (shift.status !== ShiftStatus.PRECLOSED) {
       throw new BadRequestException('Solo se puede reabrir un turno en pre-cierre');
-    }
-    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
-      throw new ForbiddenException('No puedes modificar el turno de otro operador');
     }
 
     await this.prisma.shift.update({
@@ -270,9 +261,6 @@ export class ShiftsService {
     if (!shift) throw new NotFoundException('Turno no encontrado');
     if (shift.status !== ShiftStatus.PRECLOSED) {
       throw new BadRequestException('Solo se pueden editar comisiones en pre-cierre');
-    }
-    if (shift.operatorId !== userId && userRole !== Role.OWNER) {
-      throw new ForbiddenException('No puedes modificar el turno de otro operador');
     }
 
     return this.prisma.$transaction(async (tx) => {

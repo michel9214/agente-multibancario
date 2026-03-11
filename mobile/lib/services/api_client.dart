@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api.dart';
@@ -7,6 +8,10 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   late final Dio dio;
+
+  /// Stream to notify the app when a 401 occurs (token expired)
+  static final _onUnauthorized = StreamController<void>.broadcast();
+  static Stream<void> get onUnauthorized => _onUnauthorized.stream;
 
   ApiClient._internal() {
     dio = Dio(BaseOptions(
@@ -25,13 +30,13 @@ class ApiClient {
         }
         handler.next(options);
       },
-      onError: (error, handler) {
+      onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
-          // Token expired or invalid - clear stored data
-          SharedPreferences.getInstance().then((prefs) {
-            prefs.remove('auth_token');
-            prefs.remove('auth_user');
-          });
+          // Token expired or invalid - clear stored data and notify
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('auth_user');
+          _onUnauthorized.add(null);
         }
         handler.next(error);
       },

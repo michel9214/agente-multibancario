@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -60,9 +62,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(token: token, user: user);
       return true;
     } catch (e) {
-      String msg = 'Error de conexión';
-      if (e.toString().contains('401')) msg = 'Credenciales inválidas';
-      state = state.copyWith(isLoading: false, error: msg);
+      state = state.copyWith(isLoading: false, error: _parseError(e));
       return false;
     }
   }
@@ -80,11 +80,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = AuthState(token: token, user: user);
       return true;
-    } catch (e, stack) {
-      String msg = 'Error de conexión';
-      state = state.copyWith(isLoading: false, error: msg);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _parseError(e));
       return false;
     }
+  }
+
+  String _parseError(dynamic e) {
+    if (e is DioException) {
+      if (e.response?.statusCode == 401) return 'Credenciales inválidas';
+      if (e.response?.statusCode == 403) return 'Acceso denegado';
+      if (e.response != null && e.response!.statusCode != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) return data['message'].toString();
+        return 'Error del servidor (${e.response!.statusCode})';
+      }
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return 'Tiempo de espera agotado. Intenta de nuevo.';
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'Sin conexión a internet';
+      }
+    }
+    if (e is SocketException) return 'Sin conexión a internet';
+    return 'Error de conexión. Intenta de nuevo.';
   }
 
   Future<void> logout() async {
