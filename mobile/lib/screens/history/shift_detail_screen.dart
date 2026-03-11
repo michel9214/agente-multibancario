@@ -350,6 +350,30 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           ),
           const SizedBox(height: 8),
 
+          if (shift.isClosed || shift.isPreclosed)
+            _SectionCard(
+              title: 'CIERRE',
+              titleColor: Colors.orange[800]!,
+              cardColor: Colors.orange[50]!,
+              subtitle: formatCurrency(totalClosing),
+              icon: Icons.stop_circle_outlined,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SectionDetailScreen(
+                    title: 'Cierre',
+                    color: Colors.orange,
+                    cashLabel: 'Efectivo final',
+                    cashAmount: shift.endingCash ?? 0,
+                    entries: closingEntries,
+                    totalBalance: totalClosingBalance,
+                    totalGeneral: totalClosing,
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+
           // Commissions card
           if (shift.commissionEntries.isNotEmpty) ...[
             Card(
@@ -395,6 +419,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           // Discrepancy justification
           if (shift.discrepancyNote != null ||
               shift.discrepancyPhotoUrl != null) ...[
+            const SizedBox(height: 8),
             Card(
               color: Colors.grey[100],
               child: Padding(
@@ -443,31 +468,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
           ],
-
-          if (shift.isClosed || shift.isPreclosed)
-            _SectionCard(
-              title: 'CIERRE',
-              titleColor: Colors.orange[800]!,
-              cardColor: Colors.orange[50]!,
-              subtitle: formatCurrency(totalClosing),
-              icon: Icons.stop_circle_outlined,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SectionDetailScreen(
-                    title: 'Cierre',
-                    color: Colors.orange,
-                    cashLabel: 'Efectivo final',
-                    cashAmount: shift.endingCash ?? 0,
-                    entries: closingEntries,
-                    totalBalance: totalClosingBalance,
-                    totalGeneral: totalClosing,
-                  ),
-                ),
-              ),
-            ),
 
           // Back to home button (always visible)
           const SizedBox(height: 24),

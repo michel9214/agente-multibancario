@@ -270,35 +270,6 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             const SizedBox(height: 8),
           ],
 
-          // Commissions card
-          if (r.details.commissions.isNotEmpty) ...[
-            Card(
-              color: Colors.teal[50],
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('COMISIONES',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal[800],
-                          fontSize: 13,
-                        )),
-                    const SizedBox(height: 8),
-                    ...r.details.commissions
-                        .map((c) => _row(c.name, formatCurrency(c.amount))),
-                    const Divider(),
-                    _row('Total comisiones',
-                        formatCurrency(r.totalCommissions),
-                        bold: true, color: Colors.teal[800]),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
           // Total esperado (sin comisiones)
           Card(
             color: Colors.green[50],
@@ -355,6 +326,35 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             ),
           ),
           const SizedBox(height: 8),
+
+          // Commissions card
+          if (r.details.commissions.isNotEmpty) ...[
+            Card(
+              color: Colors.teal[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('COMISIONES',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal[800],
+                          fontSize: 13,
+                        )),
+                    const SizedBox(height: 8),
+                    ...r.details.commissions
+                        .map((c) => _row(c.name, formatCurrency(c.amount))),
+                    const Divider(),
+                    _row('Total comisiones',
+                        formatCurrency(r.totalCommissions),
+                        bold: true, color: Colors.teal[800]),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Discrepancy result
           Card(

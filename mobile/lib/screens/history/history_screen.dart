@@ -78,7 +78,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
 
     for (final list in grouped.values) {
-      list.sort((a, b) => a.startedAt.compareTo(b.startedAt));
+      list.sort((a, b) => b.startedAt.compareTo(a.startedAt));
     }
 
     final widgets = <Widget>[];
@@ -199,16 +199,27 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   Text(
                     'Turno $turnNumber',
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
                     ),
                   ),
                   if (shift.operator != null) ...[
                     const SizedBox(width: 8),
-                    Text(
-                      '- ${shift.operator!.fullName}',
-                      style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A56DB).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        shift.operator!.fullName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: const Color(0xFF1A56DB),
+                        ),
+                      ),
                     ),
                   ],
                 ],
