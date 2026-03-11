@@ -112,9 +112,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         ),
       );
-      for (var i = 0; i < entry.value.length; i++) {
+      final count = entry.value.length;
+      for (var i = 0; i < count; i++) {
         widgets
-            .add(_buildShiftCard(context, entry.value[i], turnNumber: i + 1));
+            .add(_buildShiftCard(context, entry.value[i], turnNumber: count - i));
       }
     }
     return widgets;
