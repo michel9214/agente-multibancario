@@ -246,7 +246,7 @@ export class ShiftsService {
       where: { status: { in: [ShiftStatus.OPEN, ShiftStatus.PRECLOSED] } },
       orderBy: { startedAt: 'desc' },
       include: {
-        balanceEntries: { include: { entity: true } },
+        balanceEntries: { include: { entity: true }, orderBy: { entity: { name: 'asc' } } },
         movements: { include: { reason: true }, orderBy: { createdAt: 'desc' } },
         commissionEntries: { include: { entity: true } },
         operator: { select: { id: true, fullName: true, email: true } },
