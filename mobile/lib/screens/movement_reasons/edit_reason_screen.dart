@@ -85,7 +85,7 @@ class _EditReasonScreenState extends ConsumerState<EditReasonScreen> {
         return Scaffold(
           appBar: AppBar(title: const Text('Editar Razón')),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
             child: Form(
               key: _formKey,
               child: Column(

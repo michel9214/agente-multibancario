@@ -41,7 +41,7 @@ class EntitiesScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.read(entitiesProvider.notifier).load(),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
               children: [
                 Text('Activas (${active.length})',
                     style: Theme.of(context).textTheme.titleMedium),

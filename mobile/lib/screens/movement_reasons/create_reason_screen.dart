@@ -57,7 +57,7 @@ class _CreateReasonScreenState extends ConsumerState<CreateReasonScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Nueva Razón')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
         child: Form(
           key: _formKey,
           child: Column(

@@ -92,7 +92,7 @@ class _EditEntityScreenState extends ConsumerState<EditEntityScreen> {
           _initFromEntity(entity);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
             child: Form(
               key: _formKey,
               child: Column(
