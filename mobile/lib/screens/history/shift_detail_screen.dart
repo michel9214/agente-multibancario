@@ -16,9 +16,7 @@ const _kSlateLight = Color(0xFF334155);
 const _kMuted = Color(0xFF64748B);
 const _kSurface = Color(0xFFF8FAFC);
 const _kGreen = Color(0xFF059669);
-const _kGreenBg = Color(0xFFECFDF5);
 const _kRed = Color(0xFFDC2626);
-const _kRedBg = Color(0xFFFEF2F2);
 const _kBlue = Color(0xFF2563EB);
 const _kAmber = Color(0xFFD97706);
 const _kTeal = Color(0xFF0D9488);
@@ -46,31 +44,32 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
 
   Future<void> _load() async {
     try {
+      // Load shift first — show UI immediately
       final shift = await ShiftService().getShift(widget.shiftId);
-
-      // Check if this is the most recent closed shift
-      bool isLast = false;
-      if (shift.isClosed) {
-        try {
-          final data = await ShiftService().getShifts(page: 1, limit: 1);
-          final shifts = (data['data'] as List)
-              .map((e) => Shift.fromJson(e))
-              .toList();
-          // The first shift (most recent) — if it's this one, it's the last
-          if (shifts.isNotEmpty && shifts.first.id == shift.id) {
-            isLast = true;
-          }
-        } catch (_) {}
-      }
-
+      if (!mounted) return;
       setState(() {
         _shift = shift;
-        _isLastClosed = isLast;
         _loading = false;
       });
+
+      // Check isLastClosed in background (non-blocking)
+      if (shift.isClosed) {
+        _checkIsLastClosed(shift.id);
+      }
     } catch (e) {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _checkIsLastClosed(String shiftId) async {
+    try {
+      final data = await ShiftService().getShifts(page: 1, limit: 1);
+      final shifts =
+          (data['data'] as List).map((e) => Shift.fromJson(e)).toList();
+      if (mounted && shifts.isNotEmpty && shifts.first.id == shiftId) {
+        setState(() => _isLastClosed = true);
+      }
+    } catch (_) {}
   }
 
   Color _discColor(double d) {
@@ -78,21 +77,10 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
     return _kRed;
   }
 
-  Color _discBg(double d) {
-    if (d.abs() < 0.01 || d > 0) return _kGreenBg;
-    return _kRedBg;
-  }
-
   String _discLabel(double d) {
     if (d.abs() < 0.01) return 'CUADRADO';
     if (d > 0) return 'SOBRANTE';
     return 'FALTANTE';
-  }
-
-  IconData _discIcon(double d) {
-    if (d.abs() < 0.01) return Icons.check_circle_rounded;
-    if (d > 0) return Icons.trending_up_rounded;
-    return Icons.trending_down_rounded;
   }
 
   // ── Dialogs ──
@@ -239,15 +227,14 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
     final discrepancy = totalClosing - totalExpected;
 
     final dColor = _discColor(discrepancy);
-    final dBg = _discBg(discrepancy);
 
     return Scaffold(
       backgroundColor: _kSurface,
       body: CustomScrollView(
         slivers: [
-          // ── Header with discrepancy hero ──
+          // ── Dark header ──
           SliverAppBar(
-            expandedHeight: (shift.isClosed || shift.isPreclosed) ? 230 : 160,
+            expandedHeight: (shift.isClosed || shift.isPreclosed) ? 220 : 150,
             pinned: true,
             backgroundColor: _kSlate,
             foregroundColor: Colors.white,
@@ -266,7 +253,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Operator + time
+                        // Operator row
                         Row(
                           children: [
                             Container(
@@ -276,7 +263,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(Icons.person_rounded,
-                                  size: 18, color: Colors.white.withOpacity(0.7)),
+                                  size: 18,
+                                  color: Colors.white.withOpacity(0.7)),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -304,7 +292,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                           ],
                         ),
                         const Spacer(),
-                        // Discrepancy (closed/preclosed)
+                        // Discrepancy hero
                         if (shift.isClosed || shift.isPreclosed) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -318,9 +306,10 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                               style: GoogleFonts.dmSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: discrepancy.abs() < 0.01 || discrepancy > 0
-                                    ? const Color(0xFF6EE7B7)
-                                    : const Color(0xFFFCA5A5),
+                                color:
+                                    discrepancy.abs() < 0.01 || discrepancy > 0
+                                        ? const Color(0xFF6EE7B7)
+                                        : const Color(0xFFFCA5A5),
                               ),
                             ),
                           ),
@@ -364,74 +353,16 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                  16, 20, 16, MediaQuery.of(context).padding.bottom + 32),
+                  16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
               child: Column(
                 children: [
-                  // Summary card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _dataRow('Total apertura', formatCurrency(totalOpening)),
-                        if (shift.movements.isNotEmpty)
-                          _dataRow('Movimientos netos',
-                              formatCurrency(netMovements),
-                              valueColor:
-                                  netMovements >= 0 ? _kGreen : _kRed),
-                        if (shift.isClosed || shift.isPreclosed) ...[
-                          _dataRow('Total esperado',
-                              formatCurrency(totalExpected),
-                              bold: true),
-                          _dataRow(
-                              'Total cierre', formatCurrency(totalClosing),
-                              bold: true),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Divider(color: Colors.grey.shade200, height: 1),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Discrepancia',
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w700,
-                                    color: dColor,
-                                  )),
-                              Text(formatCurrency(discrepancy),
-                                  style: GoogleFonts.dmMono(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                    color: dColor,
-                                  )),
-                            ],
-                          ),
-                        ],
-                        if (shift.sencillo > 0) ...[
-                          const SizedBox(height: 6),
-                          _dataRow('Sencillo', formatCurrency(shift.sencillo),
-                              valueColor: _kAmber),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Section navigation cards
+                  // ── Nav cards (the ONLY place showing amounts) ──
                   _navCard(
                     'APERTURA',
                     formatCurrency(totalOpening),
+                    shift.sencillo > 0
+                        ? 'Efectivo: ${formatCurrency(shift.startingCash)} · Sencillo: ${formatCurrency(shift.sencillo)}'
+                        : 'Efectivo: ${formatCurrency(shift.startingCash)}',
                     _kBlue,
                     Icons.login_rounded,
                     () => Navigator.push(
@@ -453,6 +384,9 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                   _navCard(
                     'MOVIMIENTOS (${shift.movements.length})',
                     formatCurrency(netMovements),
+                    shift.movements.isEmpty
+                        ? 'Sin movimientos'
+                        : 'Entradas: ${formatCurrencyShort(totalMovementsIn)} · Salidas: ${formatCurrencyShort(totalMovementsOut)}',
                     _kPurple,
                     Icons.swap_vert_rounded,
                     () => Navigator.push(
@@ -462,6 +396,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                                   movements: shift.movements,
                                   netMovements: netMovements,
                                 ))),
+                    valueColor: netMovements >= 0 ? _kGreen : _kRed,
                   ),
                   const SizedBox(height: 8),
 
@@ -469,6 +404,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     _navCard(
                       'CIERRE',
                       formatCurrency(totalClosing),
+                      'Efectivo: ${formatCurrency(shift.endingCash ?? 0)}',
                       _kAmber,
                       Icons.logout_rounded,
                       () => Navigator.push(
@@ -485,6 +421,40 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                                   ))),
                     ),
                     const SizedBox(height: 8),
+
+                    // Esperado vs cierre (subtle)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: dColor.withOpacity(0.04),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: dColor.withOpacity(0.12)),
+                      ),
+                      child: Row(
+                        children: [
+                          Text('Esperado: ',
+                              style: GoogleFonts.dmSans(
+                                  fontSize: 12, color: _kMuted)),
+                          Text(formatCurrency(totalExpected),
+                              style: GoogleFonts.dmMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kMuted)),
+                          const Spacer(),
+                          Text('Diferencia: ',
+                              style: GoogleFonts.dmSans(
+                                  fontSize: 12, color: dColor)),
+                          Text(formatCurrency(discrepancy),
+                              style: GoogleFonts.dmMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: dColor)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                   ],
 
                   // Commissions
@@ -496,7 +466,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border(
-                          left: BorderSide(color: _kTeal.withOpacity(0.5), width: 3),
+                          left: BorderSide(
+                              color: _kTeal.withOpacity(0.5), width: 3),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -511,7 +482,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.receipt_long_rounded,
+                              const Icon(Icons.receipt_long_rounded,
                                   color: _kTeal, size: 18),
                               const SizedBox(width: 8),
                               Text('COMISIONES',
@@ -626,7 +597,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     const SizedBox(height: 8),
                   ],
 
-                  // ── Action buttons ──
+                  // ── Actions ──
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -634,7 +605,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                       onPressed: () => context.go('/home'),
                       icon: const Icon(Icons.home_rounded, size: 20),
                       label: Text('Volver al Inicio',
-                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w600)),
+                          style:
+                              GoogleFonts.dmSans(fontWeight: FontWeight.w600)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _kSlate,
                         foregroundColor: Colors.white,
@@ -643,7 +615,6 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     ),
                   ),
 
-                  // Annul open shift (OWNER + OPEN)
                   if (shift.isOpen && isOwner) ...[
                     const SizedBox(height: 12),
                     SizedBox(
@@ -667,7 +638,6 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     ),
                   ],
 
-                  // Annul close (OWNER + CLOSED + LAST CLOSED ONLY)
                   if (shift.isClosed && isOwner && _isLastClosed) ...[
                     const SizedBox(height: 12),
                     SizedBox(
@@ -699,8 +669,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
     );
   }
 
-  Widget _dataRow(String label, String value,
-      {bool bold = false, Color? valueColor}) {
+  Widget _dataRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -708,25 +677,22 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
         children: [
           Flexible(
             child: Text(label,
-                style: GoogleFonts.dmSans(
-                  color: _kMuted,
-                  fontSize: 13,
-                  fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
-                )),
+                style: GoogleFonts.dmSans(color: _kMuted, fontSize: 13)),
           ),
           Text(value,
               style: GoogleFonts.dmMono(
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: FontWeight.w500,
                 fontSize: 14,
-                color: valueColor ?? _kSlate,
+                color: _kSlate,
               )),
         ],
       ),
     );
   }
 
-  Widget _navCard(String title, String subtitle, Color accent, IconData icon,
-      VoidCallback onTap) {
+  Widget _navCard(String title, String amount, String subtitle, Color accent,
+      IconData icon, VoidCallback onTap,
+      {Color? valueColor}) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
@@ -734,7 +700,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border(
@@ -760,78 +726,36 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(title,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                      fontSize: 13,
-                      letterSpacing: 0.5,
-                    )),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          color: accent,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        )),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          color: _kMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
               ),
-              Text(subtitle,
+              Text(amount,
                   style: GoogleFonts.dmMono(
                     fontWeight: FontWeight.w700,
-                    color: _kSlate,
+                    color: valueColor ?? _kSlate,
                     fontSize: 14,
                   )),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Icon(Icons.chevron_right_rounded,
-                  color: accent.withOpacity(0.5), size: 22),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── _SectionCard kept for backward compat if used elsewhere ──
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Color titleColor;
-  final Color cardColor;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _SectionCard({
-    required this.title,
-    required this.titleColor,
-    required this.cardColor,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: cardColor,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(icon, color: titleColor, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
-                      fontSize: 14,
-                    )),
-              ),
-              Text(subtitle,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: titleColor,
-                    fontSize: 14,
-                  )),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: titleColor),
+                  color: accent.withOpacity(0.4), size: 22),
             ],
           ),
         ),
