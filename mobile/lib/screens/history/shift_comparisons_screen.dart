@@ -1,48 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift_comparison.dart';
-import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
-import '../../widgets/loading_widget.dart';
 
-class ShiftComparisonsScreen extends StatefulWidget {
-  const ShiftComparisonsScreen({super.key});
+class ShiftComparisonDetailScreen extends StatelessWidget {
+  final ShiftComparison comparison;
 
-  @override
-  State<ShiftComparisonsScreen> createState() => _ShiftComparisonsScreenState();
-}
-
-class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
-  List<ShiftComparison> _comparisons = [];
-  bool _loading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final data = await ShiftService().getShiftComparisons();
-      setState(() {
-        _comparisons = (data['data'] as List)
-            .map((e) => ShiftComparison.fromJson(e))
-            .toList();
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
-  }
+  const ShiftComparisonDetailScreen({super.key, required this.comparison});
 
   Color _diffColor(double diff) {
     if (diff.abs() < 0.01) return const Color(0xFF0E9F6E);
@@ -50,234 +14,186 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
     return const Color(0xFFE02424);
   }
 
-  String _diffPrefix(double diff) {
-    if (diff > 0.005) return '+';
-    return '';
+  String _diffText(double diff) {
+    if (diff.abs() < 0.01) return 'S/ 0.00';
+    final prefix = diff > 0 ? '+' : '';
+    return '$prefix${formatCurrency(diff)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Comparación de Turnos')),
-      body: _loading
-          ? const LoadingWidget(message: 'Calculando diferencias...')
-          : _error != null
-              ? ErrorDisplay(message: 'Error al cargar', onRetry: _load)
-              : _comparisons.isEmpty
-                  ? const EmptyState(
-                      icon: Icons.compare_arrows,
-                      title: 'Sin comparaciones',
-                      subtitle:
-                          'Se necesitan al menos 2 turnos cerrados',
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _comparisons.length,
-                        itemBuilder: (context, index) =>
-                            _buildComparisonCard(_comparisons[index]),
-                      ),
-                    ),
-    );
-  }
-
-  Widget _buildComparisonCard(ShiftComparison comp) {
+    final comp = comparison;
     final totalColor = _diffColor(comp.totalDiff);
-    final totalBg = totalColor.withOpacity(0.08);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detalle de Diferencia')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           // Total difference banner
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            color: totalBg,
-            child: Row(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: totalColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: totalColor, width: 2),
+            ),
+            child: Column(
               children: [
                 Icon(
                   comp.totalDiff.abs() < 0.01
                       ? Icons.check_circle
-                      : comp.totalDiff > 0
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
+                      : Icons.swap_vert,
+                  size: 48,
                   color: totalColor,
-                  size: 28,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        comp.totalDiff.abs() < 0.01
-                            ? 'SIN DIFERENCIA'
-                            : 'DIFERENCIA',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          color: totalColor,
-                        ),
-                      ),
-                      Text(
-                        '${_diffPrefix(comp.totalDiff)}${formatCurrency(comp.totalDiff)}',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          color: totalColor,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                Text(
+                  comp.totalDiff.abs() < 0.01
+                      ? 'SIN DIFERENCIA'
+                      : 'DIFERENCIA TOTAL',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: totalColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _diffText(comp.totalDiff),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 28,
+                    color: totalColor,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
 
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Shift info row
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('CIERRE',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange[700],
-                              )),
-                          Text(
-                            comp.closingShift.operatorName,
+          // Shift info card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('CIERRE',
                             style: GoogleFonts.poppins(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                              color: Colors.orange[700],
+                            )),
+                        const SizedBox(height: 4),
+                        Text(
+                          comp.closingShift.operatorName,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
                           ),
-                          Text(
-                            comp.closingShift.closedAt != null
-                                ? formatDateTime(comp.closingShift.closedAt!)
-                                : formatDateTime(comp.closingShift.startedAt),
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          comp.closingShift.closedAt != null
+                              ? formatDate(comp.closingShift.closedAt!)
+                              : formatDate(comp.closingShift.startedAt),
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
-                    Icon(Icons.arrow_forward,
-                        color: Colors.grey[400], size: 24),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('APERTURA',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.blue[700],
-                              )),
-                          Text(
-                            comp.openingShift.operatorName,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.arrow_forward,
+                        color: Colors.grey[500], size: 20),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('APERTURA',
                             style: GoogleFonts.poppins(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                              color: Colors.blue[700],
+                            )),
+                        const SizedBox(height: 4),
+                        Text(
+                          comp.openingShift.operatorName,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
                           ),
-                          Text(
-                            formatDateTime(comp.openingShift.startedAt),
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600]),
+                        ),
+                        Text(
+                          formatDate(comp.openingShift.startedAt),
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Detail table card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Header
+                  _headerRow(),
+                  const Divider(height: 16),
+
+                  // Cash row
+                  _detailRow(
+                    'Efectivo',
+                    comp.closingShift.cash,
+                    comp.openingShift.cash,
+                    comp.cashDiff,
+                  ),
+                  const Divider(height: 8),
+
+                  // Entity rows
+                  ...comp.entityComparisons.map((e) => Column(
+                        children: [
+                          _detailRow(
+                            e.entityName,
+                            e.closingAmount,
+                            e.openingAmount,
+                            e.diff,
                           ),
+                          const Divider(height: 8),
                         ],
-                      ),
-                    ),
-                  ],
-                ),
+                      )),
 
-                const SizedBox(height: 14),
-                const Divider(height: 1),
-                const SizedBox(height: 10),
-
-                // Header row
-                Row(
-                  children: [
-                    const Expanded(
-                        flex: 3,
-                        child: Text('',
-                            style: TextStyle(fontSize: 11))),
-                    Expanded(
-                      flex: 2,
-                      child: Text('Cierre',
-                          textAlign: TextAlign.right,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.orange[700],
-                          )),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text('Apertura',
-                          textAlign: TextAlign.right,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
-                          )),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text('Dif.',
-                          textAlign: TextAlign.right,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          )),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                // Cash row
-                _comparisonRow(
-                  'Efectivo',
-                  comp.closingShift.cash,
-                  comp.openingShift.cash,
-                  comp.cashDiff,
-                ),
-
-                // Entity rows
-                ...comp.entityComparisons.map((e) => _comparisonRow(
-                      e.entityName,
-                      e.closingAmount,
-                      e.openingAmount,
-                      e.diff,
-                    )),
-
-                const Divider(height: 16),
-
-                // Total row
-                _comparisonRow(
-                  'TOTAL',
-                  comp.closingShift.cash +
-                      comp.entityComparisons.fold<double>(
-                          0, (s, e) => s + e.closingAmount),
-                  comp.openingShift.cash +
-                      comp.entityComparisons.fold<double>(
-                          0, (s, e) => s + e.openingAmount),
-                  comp.totalDiff,
-                  bold: true,
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  // Total row
+                  _detailRow(
+                    'TOTAL',
+                    comp.closingShift.cash +
+                        comp.entityComparisons.fold<double>(
+                            0, (s, e) => s + e.closingAmount),
+                    comp.openingShift.cash +
+                        comp.entityComparisons.fold<double>(
+                            0, (s, e) => s + e.openingAmount),
+                    comp.totalDiff,
+                    bold: true,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -285,7 +201,48 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
     );
   }
 
-  Widget _comparisonRow(
+  Widget _headerRow() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Expanded(flex: 3, child: SizedBox()),
+          Expanded(
+            flex: 2,
+            child: Text('Cierre',
+                textAlign: TextAlign.right,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange[700],
+                )),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('Apertura',
+                textAlign: TextAlign.right,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue[700],
+                )),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('Dif.',
+                textAlign: TextAlign.right,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(
     String label,
     double closingVal,
     double openingVal,
@@ -293,11 +250,10 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
     bool bold = false,
   }) {
     final diffColor = _diffColor(diff);
-    final weight = bold ? FontWeight.w700 : FontWeight.w500;
     final fontSize = bold ? 13.0 : 12.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(
@@ -306,9 +262,11 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
               label,
               style: GoogleFonts.poppins(
                 fontSize: fontSize,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
                 color: bold ? Colors.black87 : Colors.grey[700],
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
@@ -318,7 +276,7 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
               textAlign: TextAlign.right,
               style: GoogleFonts.poppins(
                 fontSize: fontSize,
-                fontWeight: weight,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),
@@ -329,14 +287,14 @@ class _ShiftComparisonsScreenState extends State<ShiftComparisonsScreen> {
               textAlign: TextAlign.right,
               style: GoogleFonts.poppins(
                 fontSize: fontSize,
-                fontWeight: weight,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),
           Expanded(
             flex: 2,
             child: Text(
-              '${_diffPrefix(diff)}${formatCurrencyShort(diff)}',
+              _diffText(diff),
               textAlign: TextAlign.right,
               style: GoogleFonts.poppins(
                 fontSize: fontSize,

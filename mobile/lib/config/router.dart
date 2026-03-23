@@ -21,7 +21,6 @@ import '../screens/operators/create_operator_screen.dart';
 import '../screens/operators/edit_operator_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/history/shift_detail_screen.dart';
-import '../screens/history/shift_comparisons_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../services/api_client.dart';
 
@@ -143,10 +142,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/history',
         builder: (context, state) => const HistoryScreen(),
-      ),
-      GoRoute(
-        path: '/shift-comparisons',
-        builder: (context, state) => const ShiftComparisonsScreen(),
       ),
       GoRoute(
         path: '/history/:id',

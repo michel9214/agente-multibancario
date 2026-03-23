@@ -95,9 +95,10 @@ class ShiftService {
     return response.data;
   }
 
-  Future<Map<String, dynamic>> getShiftComparisons({int page = 1}) async {
+  Future<Map<String, dynamic>> getShiftComparisons({int page = 1, int limit = 20}) async {
     final response = await _api.get('/shifts/comparisons', queryParameters: {
       'page': page,
+      'limit': limit,
     });
     return response.data;
   }
