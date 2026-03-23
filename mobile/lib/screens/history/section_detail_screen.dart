@@ -671,30 +671,79 @@ class PendingDeliveriesDetailScreen extends StatelessWidget {
                         BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 1)),
                       ],
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF7C3AED).withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.pending_actions_rounded, color: Color(0xFF7C3AED), size: 16),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF7C3AED).withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.pending_actions_rounded, color: Color(0xFF7C3AED), size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(pd.entityName,
+                                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 14, color: _kSlate)),
+                                  if (pd.description != null && pd.description!.isNotEmpty)
+                                    Text(pd.description!, style: GoogleFonts.dmSans(fontSize: 12, color: _kMuted)),
+                                ],
+                              ),
+                            ),
+                            Text(formatCurrency(pd.amount),
+                                style: GoogleFonts.dmMono(fontWeight: FontWeight.w700, fontSize: 15, color: _kSlate)),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(pd.entityName,
-                                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 14, color: _kSlate)),
-                              if (pd.description != null && pd.description!.isNotEmpty)
-                                Text(pd.description!, style: GoogleFonts.dmSans(fontSize: 12, color: _kMuted)),
-                            ],
+                        if (pd.receiptPhotoUrl != null) ...[
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () => showPhotoPreview(context, pd.receiptPhotoUrl!),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                pd.receiptPhotoUrl!,
+                                height: 140,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                cacheWidth: 800,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return Container(
+                                    height: 140,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: _kMuted.withOpacity(0.3)),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stack) => Container(
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Center(
+                                      child: Icon(Icons.broken_image_rounded, color: _kMuted)),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        Text(formatCurrency(pd.amount),
-                            style: GoogleFonts.dmMono(fontWeight: FontWeight.w700, fontSize: 15, color: _kSlate)),
+                          const SizedBox(height: 4),
+                          Center(
+                            child: Text('Toca para ampliar',
+                                style: GoogleFonts.dmSans(fontSize: 10, color: _kMuted)),
+                          ),
+                        ],
                       ],
                     ),
                   );
