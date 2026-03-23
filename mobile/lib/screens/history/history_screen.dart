@@ -226,6 +226,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   shift,
                   turnNumber: turnNum,
                   isLast: i == dayShifts.length - 1,
+                  isEven: i.isEven,
                 ));
 
                 if (isOwner && globalIdx < allShiftsOrdered.length - 1) {
@@ -334,7 +335,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   // ── Shift tile: discrepancy is the hero ──
   Widget _buildShiftTile(BuildContext context, Shift shift,
-      {required int turnNumber, required bool isLast}) {
+      {required int turnNumber, required bool isLast, bool isEven = true}) {
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
     final totalOpening = shift.startingCash + totalOpeningBalance;
     final netMovements = shift.totalMovements ?? 0.0;
@@ -378,17 +379,23 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     final timeLabel = _turnoLabel(shift.startedAt);
 
+    // Subtle alternating tint so adjacent shifts feel distinct
+    final tileBg = isEven ? Colors.white : const Color(0xFFF8FAFC);
+
     return Material(
-      color: Colors.transparent,
+      color: tileBg,
       child: InkWell(
         onTap: () => context.push('/history/${shift.id}'),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
-            border: !isLast
-                ? Border(bottom: BorderSide(color: Colors.grey.shade100))
-                : null,
+            border: Border(
+              left: BorderSide(
+                color: discColor.withOpacity(0.5),
+                width: 3,
+              ),
+            ),
           ),
+          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
