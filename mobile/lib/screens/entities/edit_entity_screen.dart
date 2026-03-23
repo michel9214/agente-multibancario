@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/banking_entity.dart';
 import '../../providers/entities_provider.dart';
 
@@ -123,8 +124,8 @@ class _EditEntityScreenState extends ConsumerState<EditEntityScreen> {
                     onChanged: (v) => setState(() => _type = v!),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Color',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
+                  Text('Color',
+                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,

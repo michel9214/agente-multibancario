@@ -227,7 +227,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         child: Text(
                           'Turno consecutivo - datos cargados del cierre anterior'
                               '${_previousShift?.operator != null ? " (${_previousShift!.operator!.fullName})" : ""}',
-                          style: TextStyle(
+                          style: GoogleFonts.dmSans(
                               fontSize: 12, color: _kBlue),
                         ),
                       ),
@@ -245,7 +245,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         decoration: BoxDecoration(
                           color: i <= _step
                               ? Theme.of(context).colorScheme.primary
-                              : Colors.grey[300],
+                              : const Color(0xFFCBD5E1),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -285,7 +285,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _step == 2
-                              ? Colors.green
+                              ? _kGreen
                               : Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding:
@@ -323,12 +323,12 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.access_time_filled,
-                      size: 64, color: Colors.blue[300]),
+                      size: 64, color: _kBlue.withOpacity(0.6)),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     '¿Que tipo de turno deseas iniciar?',
                     style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        GoogleFonts.dmSans(fontSize: 20, fontWeight: FontWeight.w700, color: _kSlate),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
@@ -349,8 +349,8 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         padding: const EdgeInsets.all(20),
                         side: BorderSide(
                             color: _noPreviousShift
-                                ? Colors.grey[300]!
-                                : Colors.blue,
+                                ? const Color(0xFFCBD5E1)
+                                : _kBlue,
                             width: 2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -361,17 +361,17 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                           Icon(Icons.repeat,
                               size: 36,
                               color: _noPreviousShift
-                                  ? Colors.grey
-                                  : Colors.blue),
+                                  ? _kMuted
+                                  : _kBlue),
                           const SizedBox(height: 12),
                           Text(
                             'Turno Consecutivo',
-                            style: TextStyle(
+                            style: GoogleFonts.dmSans(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: _noPreviousShift
-                                  ? Colors.grey
-                                  : Colors.blue,
+                                  ? _kMuted
+                                  : _kBlue,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -380,11 +380,11 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                                 ? 'No hay turno anterior cerrado'
                                 : 'Los datos de cierre del turno anterior\nseran los datos de apertura',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.dmSans(
                               fontSize: 13,
                               color: _noPreviousShift
-                                  ? Colors.grey
-                                  : Colors.grey[600],
+                                  ? _kMuted
+                                  : _kMuted,
                             ),
                           ),
                         ],
@@ -403,7 +403,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.all(20),
                         side: const BorderSide(
-                            color: Colors.green, width: 2),
+                            color: _kGreen, width: 2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -411,23 +411,23 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                       child: Column(
                         children: [
                           const Icon(Icons.add_circle_outline,
-                              size: 36, color: Colors.green),
+                              size: 36, color: _kGreen),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Turno Nuevo',
-                            style: TextStyle(
+                            style: GoogleFonts.dmSans(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                              fontWeight: FontWeight.w700,
+                              color: _kGreen,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Ingresar todos los datos\nde apertura manualmente',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.dmSans(
                               fontSize: 13,
-                              color: Colors.grey[600],
+                              color: _kMuted,
                             ),
                           ),
                         ],
@@ -462,15 +462,15 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
               hintText: '0.00',
             ),
             style:
-                const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                GoogleFonts.dmMono(fontSize: 24, fontWeight: FontWeight.w700, color: _kSlate),
           ),
           const SizedBox(height: 32),
           Text('Sencillo',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Monto en sencillo entregado por el dueno. Se devuelve integro al cerrar turno.',
-            style: TextStyle(color: Colors.grey),
+            style: GoogleFonts.dmSans(color: _kMuted),
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -483,7 +483,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
               hintText: '0.00',
             ),
             style:
-                const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                GoogleFonts.dmMono(fontSize: 20, fontWeight: FontWeight.w700, color: _kSlate),
           ),
         ],
       ),
@@ -530,7 +530,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     Expanded(
                       child: Text(entity.name,
                           style:
-                              const TextStyle(fontWeight: FontWeight.bold)),
+                              GoogleFonts.dmSans(fontWeight: FontWeight.w700, color: _kSlate)),
                     ),
                     if (isFromPrevious)
                       Container(
@@ -575,7 +575,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: !hasPhoto
-                            ? Border.all(color: Colors.red, width: 2)
+                            ? Border.all(color: _kRed, width: 2)
                             : null,
                       ),
                       child: IconButton(
@@ -584,7 +584,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                           hasPhoto
                               ? Icons.check_circle
                               : Icons.camera_alt,
-                          color: hasPhoto ? Colors.green : Colors.red,
+                          color: hasPhoto ? _kGreen : _kRed,
                         ),
                         tooltip: 'Foto obligatoria',
                       ),
@@ -594,7 +594,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         onPressed: () => showPhotoPreview(
                             context, _photoUrls[entity.id]!),
                         icon: const Icon(Icons.visibility,
-                            color: Colors.blue, size: 20),
+                            color: _kBlue, size: 20),
                         tooltip: 'Ver foto',
                       ),
                   ],
@@ -605,7 +605,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                     child: Text(
                       'Foto del comprobante obligatoria',
                       style:
-                          TextStyle(color: Colors.red[700], fontSize: 11),
+                          GoogleFonts.dmSans(color: _kRed, fontSize: 11),
                     ),
                   ),
               ],
@@ -647,7 +647,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                   _reviewRow('Efectivo inicial', formatCurrency(cash)),
                   if (sencillo > 0)
                     _reviewRow('Sencillo', formatCurrency(sencillo),
-                        color: Colors.orange),
+                        color: _kAmber),
                   const Divider(),
                   ...balanceItems.map(
                       (e) => _reviewRow(e.key, formatCurrency(e.value))),
@@ -679,13 +679,13 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                  color: color)),
+              style: GoogleFonts.dmSans(
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.normal,
+                  color: color ?? _kSlate)),
           Text(value,
-              style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                  color: color)),
+              style: GoogleFonts.dmMono(
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                  color: color ?? _kSlate)),
         ],
       ),
     );
@@ -695,7 +695,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
     try {
       return Color(int.parse(hex.replaceFirst('#', '0xFF')));
     } catch (_) {
-      return Colors.blue;
+      return _kBlue;
     }
   }
 }

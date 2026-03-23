@@ -74,11 +74,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Summary cards row
           Row(
             children: [
-              _statCard('Total Turnos', '$totalShifts', Colors.blue, Icons.access_time),
+              _statCard('Total Turnos', '$totalShifts', _kBlue, Icons.access_time),
               const SizedBox(width: 12),
-              _statCard('Cuadrados', '$balanced', Colors.green, Icons.check_circle),
+              _statCard('Cuadrados', '$balanced', _kGreen, Icons.check_circle),
               const SizedBox(width: 12),
-              _statCard('Descuadres', '$unbalanced', Colors.red, Icons.warning),
+              _statCard('Descuadres', '$unbalanced', _kRed, Icons.warning),
             ],
           ),
           const SizedBox(height: 24),
@@ -119,17 +119,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   sections: [
                     PieChartSectionData(
                       value: balanced.toDouble(),
-                      color: Colors.green,
+                      color: _kGreen,
                       title: 'Cuadrados\n$balanced',
-                      titleStyle: const TextStyle(
+                      titleStyle: GoogleFonts.dmSans(
                           fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       radius: 80,
                     ),
                     PieChartSectionData(
                       value: unbalanced.toDouble(),
-                      color: Colors.red,
+                      color: _kRed,
                       title: 'Descuadres\n$unbalanced',
-                      titleStyle: const TextStyle(
+                      titleStyle: GoogleFonts.dmSans(
                           fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       radius: 80,
                     ),
@@ -161,10 +161,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(icon, color: color, size: 28),
               const SizedBox(height: 8),
               Text(value,
-                  style: TextStyle(
+                  style: GoogleFonts.dmSans(
                       fontSize: 24, fontWeight: FontWeight.bold, color: color)),
               Text(title,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: GoogleFonts.dmSans(fontSize: 11, color: _kMuted),
                   textAlign: TextAlign.center),
             ],
           ),
@@ -214,7 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Text(
                       entityTotals[i]['name'].toString().substring(0,
                           entityTotals[i]['name'].toString().length > 5 ? 5 : entityTotals[i]['name'].toString().length),
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.dmSans(fontSize: 10),
                     ),
                   );
                 }
@@ -229,7 +229,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   'S/ ${value.toInt()}',
-                  style: const TextStyle(fontSize: 10),
+                  style: GoogleFonts.dmSans(fontSize: 10),
                 );
               },
             ),

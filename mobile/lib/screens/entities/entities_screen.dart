@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/banking_entity.dart';
 import '../../providers/entities_provider.dart';
 import '../../providers/shift_provider.dart';
@@ -114,7 +115,7 @@ class EntitiesScreen extends ConsumerWidget {
               child: ListTile(
                 leading: Icon(
                   entity.isActive ? Icons.toggle_off : Icons.toggle_on,
-                  color: entity.isActive ? Colors.orange : Colors.green,
+                  color: entity.isActive ? const Color(0xFFD97706) : const Color(0xFF059669),
                 ),
                 title: Text(entity.isActive ? 'Desactivar' : 'Activar'),
                 contentPadding: EdgeInsets.zero,
@@ -162,7 +163,7 @@ class EntitiesScreen extends ConsumerWidget {
     try {
       return Color(int.parse(hex.replaceFirst('#', '0xFF')));
     } catch (_) {
-      return Colors.blue;
+      return const Color(0xFF2563EB);
     }
   }
 

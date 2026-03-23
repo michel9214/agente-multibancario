@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/movement_reasons_provider.dart';
 
 class CreateReasonScreen extends ConsumerStatefulWidget {
@@ -80,8 +81,8 @@ class _CreateReasonScreenState extends ConsumerState<CreateReasonScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              const Text('Dirección por defecto',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('Dirección por defecto',
+                  style: GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -97,7 +98,7 @@ class _CreateReasonScreenState extends ConsumerState<CreateReasonScreen> {
                       ),
                       selected: _direction == 'IN',
                       onSelected: (_) => setState(() => _direction = 'IN'),
-                      selectedColor: Colors.green[200],
+                      selectedColor: const Color(0xFF059669).withOpacity(0.3),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -113,7 +114,7 @@ class _CreateReasonScreenState extends ConsumerState<CreateReasonScreen> {
                       ),
                       selected: _direction == 'OUT',
                       onSelected: (_) => setState(() => _direction = 'OUT'),
-                      selectedColor: Colors.red[200],
+                      selectedColor: const Color(0xFFDC2626).withOpacity(0.3),
                     ),
                   ),
                 ],
@@ -130,8 +131,8 @@ class _CreateReasonScreenState extends ConsumerState<CreateReasonScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Crear Razón',
-                        style: TextStyle(fontSize: 16)),
+                    : Text('Crear Razón',
+                        style: GoogleFonts.dmSans(fontSize: 16)),
               ),
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/user.dart';
 import '../../services/user_service.dart';
 import '../../widgets/loading_widget.dart';
@@ -87,7 +88,7 @@ class _OperatorsScreenState extends ConsumerState<OperatorsScreen> {
                           leading: CircleAvatar(
                             radius: 24,
                             backgroundColor: isActive
-                                ? Colors.green[100]
+                                ? const Color(0xFF059669).withOpacity(0.1)
                                 : Colors.grey[300],
                             backgroundImage: op.photoUrl != null
                                 ? NetworkImage(op.photoUrl!)
@@ -98,7 +99,7 @@ class _OperatorsScreenState extends ConsumerState<OperatorsScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: isActive
-                                          ? Colors.green
+                                          ? const Color(0xFF059669)
                                           : Colors.grey,
                                     ),
                                   )
@@ -112,7 +113,7 @@ class _OperatorsScreenState extends ConsumerState<OperatorsScreen> {
                           ),
                           subtitle: Text(isActive ? 'Activo' : 'Inactivo',
                               style: TextStyle(
-                                color: isActive ? Colors.green : Colors.red,
+                                color: isActive ? const Color(0xFF059669) : const Color(0xFFDC2626),
                                 fontSize: 12,
                               )),
                           trailing: PopupMenuButton<String>(
@@ -143,8 +144,8 @@ class _OperatorsScreenState extends ConsumerState<OperatorsScreen> {
                                         : Icons.person,
                                     size: 18,
                                     color: isActive
-                                        ? Colors.red
-                                        : Colors.green,
+                                        ? const Color(0xFFDC2626)
+                                        : const Color(0xFF059669),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(isActive

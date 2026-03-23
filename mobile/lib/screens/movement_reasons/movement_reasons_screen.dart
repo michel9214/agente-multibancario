@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/movement_reason.dart';
 import '../../providers/movement_reasons_provider.dart';
 import '../../widgets/loading_widget.dart';
@@ -79,12 +80,12 @@ class MovementReasonsScreen extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: isIn
-              ? Colors.green.withOpacity(reason.isActive ? 0.2 : 0.1)
-              : Colors.red.withOpacity(reason.isActive ? 0.2 : 0.1),
+              ? const Color(0xFF059669).withOpacity(reason.isActive ? 0.2 : 0.1)
+              : const Color(0xFFDC2626).withOpacity(reason.isActive ? 0.2 : 0.1),
           child: Icon(
             isIn ? Icons.arrow_downward : Icons.arrow_upward,
             color: reason.isActive
-                ? (isIn ? Colors.green : Colors.red)
+                ? (isIn ? const Color(0xFF059669) : const Color(0xFFDC2626))
                 : Colors.grey,
           ),
         ),
@@ -119,7 +120,7 @@ class MovementReasonsScreen extends ConsumerWidget {
               child: ListTile(
                 leading: Icon(
                   reason.isActive ? Icons.toggle_off : Icons.toggle_on,
-                  color: reason.isActive ? Colors.orange : Colors.green,
+                  color: reason.isActive ? const Color(0xFFD97706) : const Color(0xFF059669),
                 ),
                 title: Text(reason.isActive ? 'Desactivar' : 'Activar'),
                 contentPadding: EdgeInsets.zero,

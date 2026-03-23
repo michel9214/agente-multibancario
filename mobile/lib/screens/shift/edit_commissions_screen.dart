@@ -145,7 +145,7 @@ class _EditCommissionsScreenState
     try {
       return Color(int.parse(hex.replaceFirst('#', '0xFF')));
     } catch (_) {
-      return Colors.blue;
+      return _kBlue;
     }
   }
 
@@ -186,8 +186,8 @@ class _EditCommissionsScreenState
 
                     // Entity commissions
                     Text('Por entidad',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
                           color: _kMuted,
                         )),
@@ -197,7 +197,7 @@ class _EditCommissionsScreenState
                           entry.entity?.name ?? 'Entidad';
                       final entityColor = entry.entity?.color != null
                           ? _parseColor(entry.entity!.color)
-                          : Colors.blue;
+                          : _kBlue;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Row(
@@ -241,8 +241,8 @@ class _EditCommissionsScreenState
 
                     const SizedBox(height: 12),
                     Text('Por concepto',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
                           color: _kMuted,
                         )),
@@ -261,7 +261,7 @@ class _EditCommissionsScreenState
                               backgroundColor: _kTeal.withOpacity(0.05),
                               radius: 14,
                               child: Icon(icon,
-                                  color: Colors.teal, size: 14),
+                                  color: _kTeal, size: 14),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -297,18 +297,19 @@ class _EditCommissionsScreenState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total comisiones',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15)),
+                        Text('Total comisiones',
+                            style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: _kSlate)),
                         Text(
                           formatCurrency(_getTotal()),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                          style: GoogleFonts.dmMono(
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
                             color: _getTotal() > 0
                                 ? _kTeal
-                                : Colors.grey,
+                                : _kMuted,
                           ),
                         ),
                       ],
@@ -323,7 +324,7 @@ class _EditCommissionsScreenState
                   child: ElevatedButton(
                     onPressed: _saving ? null : () => _save(shift),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: _kTeal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),

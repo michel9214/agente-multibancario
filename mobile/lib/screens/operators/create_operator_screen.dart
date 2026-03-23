@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/photo_picker.dart';
 
@@ -69,12 +70,12 @@ class _CreateOperatorScreenState extends ConsumerState<CreateOperatorScreen> {
                   },
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.green[100],
+                    backgroundColor: const Color(0xFF059669).withOpacity(0.1),
                     backgroundImage:
                         _photoUrl != null ? NetworkImage(_photoUrl!) : null,
                     child: _photoUrl == null
                         ? const Icon(Icons.camera_alt,
-                            size: 32, color: Colors.green)
+                            size: 32, color: Color(0xFF059669))
                         : null,
                   ),
                 ),
@@ -101,7 +102,7 @@ class _CreateOperatorScreenState extends ConsumerState<CreateOperatorScreen> {
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF059669),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -111,8 +112,8 @@ class _CreateOperatorScreenState extends ConsumerState<CreateOperatorScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Text('Crear Operador',
-                        style: TextStyle(fontSize: 16)),
+                    : Text('Crear Operador',
+                        style: GoogleFonts.dmSans(fontSize: 16)),
               ),
             ],
           ),

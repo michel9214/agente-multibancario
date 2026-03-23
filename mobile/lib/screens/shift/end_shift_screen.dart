@@ -281,7 +281,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         decoration: BoxDecoration(
                           color:
-                              i <= _step ? Colors.orange : Colors.grey[300],
+                              i <= _step ? _kAmber : const Color(0xFFCBD5E1),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -323,7 +323,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _step == _totalSteps - 1
-                              ? Colors.orange
+                              ? _kAmber
                               : Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding:
@@ -374,7 +374,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         final entityName = entry.entity?.name ?? 'Entidad';
         final entityColor = entry.entity?.color != null
             ? _parseColor(entry.entity!.color)
-            : Colors.blue;
+            : _kBlue;
         final hasPhoto = _photoUrls[entry.entityId] != null;
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -397,13 +397,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(entityName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700, color: _kSlate)),
                           Text(
                             'Apertura: ${formatCurrency(entry.amount)}',
-                            style: TextStyle(
+                            style: GoogleFonts.dmSans(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: _kMuted,
                             ),
                           ),
                         ],
@@ -432,7 +432,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: !hasPhoto
-                            ? Border.all(color: Colors.red, width: 2)
+                            ? Border.all(color: _kRed, width: 2)
                             : null,
                       ),
                       child: IconButton(
@@ -442,7 +442,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                           hasPhoto
                               ? Icons.check_circle
                               : Icons.camera_alt,
-                          color: hasPhoto ? Colors.green : Colors.red,
+                          color: hasPhoto ? _kGreen : _kRed,
                         ),
                         tooltip: 'Foto obligatoria',
                       ),
@@ -452,7 +452,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         onPressed: () => showPhotoPreview(
                             context, _photoUrls[entry.entityId]!),
                         icon: const Icon(Icons.visibility,
-                            color: Colors.blue, size: 20),
+                            color: _kBlue, size: 20),
                         tooltip: 'Ver foto',
                       ),
                   ],
@@ -463,7 +463,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     child: Text(
                       'Foto del comprobante obligatoria',
                       style:
-                          TextStyle(color: Colors.red[700], fontSize: 11),
+                          GoogleFonts.dmSans(color: _kRed, fontSize: 11),
                     ),
                   ),
               ],
@@ -506,8 +506,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       ),
       const SizedBox(height: 16),
       Text('Por entidad',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
             fontSize: 14,
             color: _kMuted,
           )),
@@ -519,7 +519,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       final entityName = entry.entity?.name ?? 'Entidad';
       final entityColor = entry.entity?.color != null
           ? _parseColor(entry.entity!.color)
-          : Colors.blue;
+          : _kBlue;
       items.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -563,8 +563,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     items.addAll([
       const SizedBox(height: 12),
       Text('Por concepto',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
             fontSize: 14,
             color: _kMuted,
           )),
@@ -585,7 +585,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               CircleAvatar(
                 backgroundColor: _kTeal.withOpacity(0.05),
                 radius: 14,
-                child: Icon(icon, color: Colors.teal, size: 14),
+                child: Icon(icon, color: _kTeal, size: 14),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -622,14 +622,14 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Total comisiones',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text('Total comisiones',
+              style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 15, color: _kSlate)),
           Text(
             formatCurrency(totalComm),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.dmMono(
+              fontWeight: FontWeight.w700,
               fontSize: 16,
-              color: totalComm > 0 ? _kTeal : Colors.grey,
+              color: totalComm > 0 ? _kTeal : _kMuted,
             ),
           ),
         ],
@@ -665,7 +665,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               prefixText: 'S/ ',
               hintText: '0.00',
             ),
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: GoogleFonts.dmMono(fontSize: 24, fontWeight: FontWeight.w700, color: _kSlate),
           ),
           if (sencillo > 0) ...[
             const SizedBox(height: 24),
@@ -674,19 +674,19 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               decoration: BoxDecoration(
                 color: _kAmber.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.orange[300]!),
+                border: Border.all(color: _kAmber.withOpacity(0.5)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.orange),
+                  const Icon(Icons.info_outline, color: _kAmber),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Sencillo a devolver',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('Sencillo a devolver',
+                            style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700, fontSize: 13, color: _kSlate)),
                         const SizedBox(height: 4),
                         Text(
                           'Debes devolver ${formatCurrency(sencillo)} de sencillo recibido al inicio del turno.',
@@ -763,10 +763,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('APERTURA',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
                       color: _kBlue,
                       fontSize: 13,
+                      letterSpacing: 0.3,
                     )),
                 const SizedBox(height: 8),
                 _reviewRow('Efectivo inicial',
@@ -791,10 +792,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('MOVIMIENTOS (${movements.length})',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF7C3AED),
                         fontSize: 13,
+                        letterSpacing: 0.3,
                       )),
                   const SizedBox(height: 8),
                   ...movements.map((m) => Padding(
@@ -807,8 +809,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                   : Icons.arrow_upward,
                               size: 16,
                               color: m.direction == 'IN'
-                                  ? Colors.green
-                                  : Colors.red,
+                                  ? _kGreen
+                                  : _kRed,
                             ),
                             const SizedBox(width: 6),
                             Expanded(
@@ -817,16 +819,16 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                                     (m.description != null
                                         ? ' - ${m.description}'
                                         : ''),
-                                style: const TextStyle(fontSize: 13),
+                                style: GoogleFonts.dmSans(fontSize: 13, color: _kSlate),
                               ),
                             ),
                             Text(
                               '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
-                              style: TextStyle(
+                              style: GoogleFonts.dmMono(
                                 fontWeight: FontWeight.w600,
                                 color: m.direction == 'IN'
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? _kGreen
+                                    : _kRed,
                               ),
                             ),
                           ],
@@ -851,10 +853,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('COMISIONES',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
                         color: _kTeal,
                         fontSize: 13,
+                        letterSpacing: 0.3,
                       )),
                   const SizedBox(height: 8),
                   ...commissionItems.map((e) => _reviewRow(
@@ -877,10 +880,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('TOTAL ESPERADO',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
                       color: _kGreen,
                       fontSize: 13,
+                      letterSpacing: 0.3,
                     )),
                 const SizedBox(height: 8),
                 _reviewRow('Total apertura',
@@ -908,10 +912,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('CIERRE',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
                       color: _kAmber,
                       fontSize: 13,
+                      letterSpacing: 0.3,
                     )),
                 const SizedBox(height: 8),
                 _reviewRow('Efectivo final', formatCurrency(cash)),
@@ -936,26 +941,26 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         const SizedBox(height: 16),
         if (shift.sencillo > 0) ...[
           Card(
-            color: Colors.amber[50],
+            color: _kAmber.withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.money, color: Colors.orange, size: 28),
+                  const Icon(Icons.money, color: _kAmber, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Sencillo a devolver',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Sencillo a devolver',
+                            style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700, fontSize: 14, color: _kSlate)),
                         const SizedBox(height: 4),
                         Text(formatCurrency(shift.sencillo),
-                            style: const TextStyle(
+                            style: GoogleFonts.dmMono(
                                 fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange)),
+                                fontWeight: FontWeight.w700,
+                                color: _kAmber)),
                       ],
                     ),
                   ),
@@ -970,11 +975,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           decoration: BoxDecoration(
             color: _kAmber.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange[200]!),
+            border: Border.all(color: _kAmber.withOpacity(0.3)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.warning_amber, color: Colors.orange),
+              Icon(Icons.warning_amber, color: _kAmber),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -998,15 +1003,15 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         children: [
           Flexible(
             child: Text(label,
-                style: TextStyle(
+                style: GoogleFonts.dmSans(
                     fontWeight:
-                        bold ? FontWeight.bold : FontWeight.normal,
-                    color: color)),
+                        bold ? FontWeight.w700 : FontWeight.normal,
+                    color: color ?? _kSlate)),
           ),
           Text(value,
-              style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                  color: color)),
+              style: GoogleFonts.dmMono(
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                  color: color ?? _kSlate)),
         ],
       ),
     );
@@ -1016,7 +1021,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     try {
       return Color(int.parse(hex.replaceFirst('#', '0xFF')));
     } catch (_) {
-      return Colors.blue;
+      return _kBlue;
     }
   }
 }

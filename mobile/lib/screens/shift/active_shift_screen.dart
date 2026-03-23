@@ -158,19 +158,19 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                   Expanded(
                                     child: Text(
                                         b.entity?.name ?? 'Entidad',
-                                        style: const TextStyle(
-                                            color: Colors.grey)),
+                                        style: GoogleFonts.dmSans(
+                                            color: _kMuted)),
                                   ),
                                   Text(formatCurrency(b.amount),
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w500)),
+                                      style: GoogleFonts.dmMono(
+                                          fontWeight: FontWeight.w500, color: _kSlate)),
                                   if (b.receiptPhotoUrl != null) ...[
                                     const SizedBox(width: 8),
                                     GestureDetector(
                                       onTap: () => showPhotoPreview(
                                           context, b.receiptPhotoUrl!),
                                       child: const Icon(Icons.visibility,
-                                          color: Colors.blue, size: 20),
+                                          color: _kBlue, size: 20),
                                     ),
                                   ],
                                 ],
@@ -190,17 +190,18 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('TOTAL APERTURA',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15)),
+                                Text('TOTAL APERTURA',
+                                    style: GoogleFonts.dmSans(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: _kSlate)),
                                 Text(
                                   formatCurrency(shift.startingCash +
                                       openingEntries.fold<double>(
                                           0.0,
                                           (sum, b) => sum + b.amount)),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  style: GoogleFonts.dmMono(
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     color: Theme.of(context)
                                         .colorScheme
@@ -234,7 +235,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.swap_vert,
-                              size: 48, color: Colors.grey[400]),
+                              size: 48, color: _kMuted.withOpacity(0.5)),
                           const SizedBox(height: 8),
                           const Text('Sin movimientos registrados'),
                           const SizedBox(height: 4),
@@ -255,15 +256,15 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: m.direction == 'IN'
-                              ? Colors.green[100]
-                              : Colors.red[100],
+                              ? _kGreen.withOpacity(0.1)
+                              : _kRed.withOpacity(0.1),
                           child: Icon(
                             m.direction == 'IN'
                                 ? Icons.arrow_downward
                                 : Icons.arrow_upward,
                             color: m.direction == 'IN'
-                                ? Colors.green
-                                : Colors.red,
+                                ? _kGreen
+                                : _kRed,
                           ),
                         ),
                         title: Text(m.typeLabel),
@@ -275,11 +276,11 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                           children: [
                             Text(
                               '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.dmMono(
+                                fontWeight: FontWeight.w700,
                                 color: m.direction == 'IN'
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? _kGreen
+                                    : _kRed,
                               ),
                             ),
                             if (m.receiptPhotoUrl != null) ...[
@@ -288,7 +289,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                 onTap: () => showPhotoPreview(
                                     context, m.receiptPhotoUrl!),
                                 child: const Icon(Icons.visibility,
-                                    color: Colors.blue, size: 20),
+                                    color: _kBlue, size: 20),
                               ),
                             ],
                             if (canEditDelete) ...[
@@ -319,11 +320,11 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                     child: Row(children: [
                                       Icon(Icons.delete,
                                           size: 18,
-                                          color: Colors.red),
+                                          color: _kRed),
                                       SizedBox(width: 8),
                                       Text('Eliminar',
                                           style: TextStyle(
-                                              color: Colors.red)),
+                                              color: _kRed)),
                                     ]),
                                   ),
                                 ],
@@ -368,10 +369,11 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                 MainAxisAlignment.spaceBetween,
                             children: [
                               Text('DATOS DE CIERRE',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
                                     color: _kAmber,
                                     fontSize: 13,
+                                    letterSpacing: 0.3,
                                   )),
                               TextButton.icon(
                                 onPressed: () =>
@@ -395,12 +397,12 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                     Expanded(
                                       child: Text(
                                           b.entity?.name ?? 'Entidad',
-                                          style: const TextStyle(
-                                              color: Colors.grey)),
+                                          style: GoogleFonts.dmSans(
+                                              color: _kMuted)),
                                     ),
                                     Text(formatCurrency(b.amount),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w500)),
+                                        style: GoogleFonts.dmMono(
+                                            fontWeight: FontWeight.w500, color: _kSlate)),
                                     if (b.receiptPhotoUrl != null) ...[
                                       const SizedBox(width: 8),
                                       GestureDetector(
@@ -408,7 +410,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                             context, b.receiptPhotoUrl!),
                                         child: const Icon(
                                             Icons.visibility,
-                                            color: Colors.blue,
+                                            color: _kBlue,
                                             size: 20),
                                       ),
                                     ],
@@ -450,10 +452,11 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                 MainAxisAlignment.spaceBetween,
                             children: [
                               Text('COMISIONES',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
                                     color: _kTeal,
                                     fontSize: 13,
+                                    letterSpacing: 0.3,
                                   )),
                               TextButton.icon(
                                 onPressed: () =>
@@ -649,13 +652,13 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
     final Color discColor;
     final String discLabel;
     if (discrepancy.abs() < 0.01) {
-      discColor = Colors.green;
+      discColor = _kGreen;
       discLabel = 'CUADRADO';
     } else if (discrepancy > 0) {
-      discColor = Colors.green;
+      discColor = _kGreen;
       discLabel = 'SOBRANTE';
     } else {
-      discColor = Colors.red;
+      discColor = _kRed;
       discLabel = 'FALTANTE';
     }
 
@@ -677,8 +680,8 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
             const SizedBox(height: 8),
             Text(
               discLabel,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
                 fontSize: 18,
                 color: discColor,
               ),
@@ -686,7 +689,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
             const SizedBox(height: 4),
             Text(
               'Discrepancia: ${formatCurrency(discrepancy)}',
-              style: TextStyle(
+              style: GoogleFonts.dmMono(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: discColor,
@@ -742,7 +745,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
               }
             },
             child: const Text('Reabrir',
-                style: TextStyle(color: Colors.blue)),
+                style: TextStyle(color: _kBlue)),
           ),
         ],
       ),
@@ -818,7 +821,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
               }
             },
             child: const Text('Eliminar',
-                style: TextStyle(color: Colors.red)),
+                style: TextStyle(color: _kRed)),
           ),
         ],
       ),
@@ -834,15 +837,15 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
         children: [
           Flexible(
             child: Text(label,
-                style: TextStyle(
-                  color: color ?? Colors.grey,
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                style: GoogleFonts.dmSans(
+                  color: color ?? _kMuted,
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.normal,
                 )),
           ),
           Text(value,
-              style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                color: color,
+              style: GoogleFonts.dmMono(
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                color: color ?? _kSlate,
               )),
         ],
       ),
@@ -884,14 +887,14 @@ class _FinalCloseDialogState extends State<_FinalCloseDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Esta accion es irreversible. El turno quedara cerrado permanentemente.',
-              style: TextStyle(color: Colors.red, fontSize: 13),
+              style: GoogleFonts.dmSans(color: _kRed, fontSize: 13),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Justificacion de discrepancia (opcional):',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+              style: GoogleFonts.dmSans(fontWeight: FontWeight.w500, fontSize: 13, color: _kSlate),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -924,7 +927,7 @@ class _FinalCloseDialogState extends State<_FinalCloseDialog> {
                       : 'Agregar evidencia'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor:
-                        _photoUrl != null ? Colors.green : null,
+                        _photoUrl != null ? _kGreen : null,
                   ),
                 ),
                 if (_photoUrl != null) ...[
@@ -932,7 +935,7 @@ class _FinalCloseDialogState extends State<_FinalCloseDialog> {
                   GestureDetector(
                     onTap: () => showPhotoPreview(context, _photoUrl!),
                     child: const Icon(Icons.visibility,
-                        color: Colors.blue, size: 20),
+                        color: _kBlue, size: 20),
                   ),
                 ],
               ],
@@ -959,7 +962,7 @@ class _FinalCloseDialogState extends State<_FinalCloseDialog> {
                   await onConfirm(note, photoUrl);
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
+            backgroundColor: _kRed,
             foregroundColor: Colors.white,
           ),
           child: _closing

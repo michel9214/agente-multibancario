@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/movement.dart';
 import '../../models/movement_reason.dart';
 import '../../providers/movement_reasons_provider.dart';
@@ -188,8 +189,8 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                                         : Icons.arrow_upward,
                                     size: 16,
                                     color: r.defaultDirection == 'IN'
-                                        ? Colors.green
-                                        : Colors.red,
+                                        ? const Color(0xFF059669)
+                                        : const Color(0xFFDC2626),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(r.name),
@@ -217,14 +218,14 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                         label: const Text('Entrada'),
                         selected: _direction == 'IN',
                         onSelected: (v) => setState(() => _direction = 'IN'),
-                        selectedColor: Colors.green[200],
+                        selectedColor: const Color(0xFF059669).withOpacity(0.3),
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
                         label: const Text('Salida'),
                         selected: _direction == 'OUT',
                         onSelected: (v) => setState(() => _direction = 'OUT'),
-                        selectedColor: Colors.red[200],
+                        selectedColor: const Color(0xFFDC2626).withOpacity(0.3),
                       ),
                     ],
                   ),
@@ -238,7 +239,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                       prefixText: 'S/ ',
                       hintText: '0.00',
                     ),
-                    style: const TextStyle(
+                    style: GoogleFonts.dmSans(
                         fontSize: 20, fontWeight: FontWeight.bold),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Ingrese un monto';
@@ -268,7 +269,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                             _photoUrl != null
                                 ? Icons.check_circle
                                 : Icons.camera_alt,
-                            color: _photoUrl != null ? Colors.green : null,
+                            color: _photoUrl != null ? const Color(0xFF059669) : null,
                           ),
                           label: Text(_photoUrl != null
                               ? 'Foto adjunta'
@@ -281,7 +282,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                           onPressed: () =>
                               showPhotoPreview(context, _photoUrl!),
                           icon: const Icon(Icons.visibility,
-                              color: Colors.blue),
+                              color: Color(0xFF2563EB)),
                           tooltip: 'Ver foto',
                         ),
                       ],
@@ -292,7 +293,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                     onPressed: _loading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          _direction == 'IN' ? Colors.green : Colors.red,
+                          _direction == 'IN' ? const Color(0xFF059669) : const Color(0xFFDC2626),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -306,7 +307,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                             isEditing
                                 ? 'Guardar Cambios'
                                 : 'Registrar ${_direction == "IN" ? "Entrada" : "Salida"}',
-                            style: const TextStyle(fontSize: 16),
+                            style: GoogleFonts.dmSans(fontSize: 16),
                           ),
                   ),
                 ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/movement_reasons_provider.dart';
 
 class EditReasonScreen extends ConsumerStatefulWidget {
@@ -108,9 +109,9 @@ class _EditReasonScreenState extends ConsumerState<EditReasonScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  const Text('Dirección por defecto',
+                  Text('Dirección por defecto',
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -127,7 +128,7 @@ class _EditReasonScreenState extends ConsumerState<EditReasonScreen> {
                           selected: _direction == 'IN',
                           onSelected: (_) =>
                               setState(() => _direction = 'IN'),
-                          selectedColor: Colors.green[200],
+                          selectedColor: const Color(0xFF059669).withOpacity(0.3),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -144,7 +145,7 @@ class _EditReasonScreenState extends ConsumerState<EditReasonScreen> {
                           selected: _direction == 'OUT',
                           onSelected: (_) =>
                               setState(() => _direction = 'OUT'),
-                          selectedColor: Colors.red[200],
+                          selectedColor: const Color(0xFFDC2626).withOpacity(0.3),
                         ),
                       ),
                     ],
@@ -162,8 +163,8 @@ class _EditReasonScreenState extends ConsumerState<EditReasonScreen> {
                             child:
                                 CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Guardar Cambios',
-                            style: TextStyle(fontSize: 16)),
+                        : Text('Guardar Cambios',
+                            style: GoogleFonts.dmSans(fontSize: 16)),
                   ),
                 ],
               ),

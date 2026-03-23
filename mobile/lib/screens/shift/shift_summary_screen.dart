@@ -76,8 +76,8 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
 
   /// Color based on discrepancy: zero=green, positive=green (surplus), negative=red (deficit)
   Color _discrepancyColor(Reconciliation r) {
-    if (r.isBalanced || r.isSurplus) return Colors.green;
-    return Colors.red;
+    if (r.isBalanced || r.isSurplus) return _kGreen;
+    return _kRed;
   }
 
   Color _discrepancyBgColor(Reconciliation r) {
@@ -129,7 +129,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
               const PopupMenuItem(
                 value: 'pdf',
                 child: ListTile(
-                  leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                  leading: Icon(Icons.picture_as_pdf, color: _kRed),
                   title: Text('Exportar PDF'),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -137,7 +137,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
               const PopupMenuItem(
                 value: 'xlsx',
                 child: ListTile(
-                  leading: Icon(Icons.table_chart, color: Colors.green),
+                  leading: Icon(Icons.table_chart, color: _kGreen),
                   title: Text('Exportar Excel'),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -171,16 +171,16 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 const SizedBox(height: 12),
                 Text(
                   r.statusLabel,
-                  style: TextStyle(
+                  style: GoogleFonts.dmSans(
                     fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Discrepancia: ${formatCurrency(r.totalClosing - r.totalExpected)}',
-                  style: TextStyle(fontSize: 18, color: textColor),
+                  style: GoogleFonts.dmMono(fontSize: 18, color: textColor),
                 ),
               ],
             ),
@@ -196,10 +196,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('APERTURA',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
                         color: _kBlue,
                         fontSize: 13,
+                        letterSpacing: 0.3,
                       )),
                   const SizedBox(height: 8),
                   _row('Efectivo inicial', formatCurrency(r.startingCash)),
@@ -227,10 +228,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('MOVIMIENTOS (${r.details.movements.length})',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF7C3AED),
                           fontSize: 13,
+                          letterSpacing: 0.3,
                         )),
                     const SizedBox(height: 8),
                     ...r.details.movements.map((m) => Padding(
@@ -243,8 +245,8 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                                     : Icons.arrow_upward,
                                 size: 16,
                                 color: m.direction == 'IN'
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? _kGreen
+                                    : _kRed,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
@@ -253,16 +255,16 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                                       (m.description != null
                                           ? ' - ${m.description}'
                                           : ''),
-                                  style: const TextStyle(fontSize: 13),
+                                  style: GoogleFonts.dmSans(fontSize: 13, color: _kSlate),
                                 ),
                               ),
                               Text(
                                 '${m.direction == 'IN' ? '+' : '-'} ${formatCurrency(m.amount)}',
-                                style: TextStyle(
+                                style: GoogleFonts.dmMono(
                                   fontWeight: FontWeight.w600,
                                   color: m.direction == 'IN'
-                                      ? Colors.green
-                                      : Colors.red,
+                                      ? _kGreen
+                                      : _kRed,
                                 ),
                               ),
                             ],
@@ -288,10 +290,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('TOTAL ESPERADO',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
                         color: _kGreen,
                         fontSize: 13,
+                        letterSpacing: 0.3,
                       )),
                   const SizedBox(height: 8),
                   _row('Total apertura', formatCurrency(r.totalOpening)),
@@ -315,10 +318,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('CIERRE',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
                         color: _kAmber,
                         fontSize: 13,
+                        letterSpacing: 0.3,
                       )),
                   const SizedBox(height: 8),
                   _row('Efectivo final', formatCurrency(r.endingCash)),
@@ -346,10 +350,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('COMISIONES',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
                           color: _kTeal,
                           fontSize: 13,
+                          letterSpacing: 0.3,
                         )),
                     const SizedBox(height: 8),
                     ...r.details.commissions
@@ -375,10 +380,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('ENTREGAS PENDIENTES',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xFF7C3AED),
                           fontSize: 13,
+                          letterSpacing: 0.3,
                         )),
                     const SizedBox(height: 8),
                     ...r.details.pendingDeliveries.map((pd) => _row(
@@ -415,8 +421,8 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   const SizedBox(height: 4),
                   Text(
                     r.statusLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
                       fontSize: 14,
                       color: statusColor,
                     ),
@@ -430,7 +436,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
           if (r.discrepancyNote != null || r.discrepancyPhotoUrl != null) ...[
             const SizedBox(height: 8),
             Card(
-              color: Colors.grey[100],
+              color: _kMuted.withOpacity(0.08),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -441,10 +447,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                         Icon(Icons.note_alt, color: _kMuted, size: 20),
                         const SizedBox(width: 8),
                         Text('JUSTIFICACION',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
                               color: _kMuted,
                               fontSize: 13,
+                              letterSpacing: 0.3,
                             )),
                       ],
                     ),
@@ -460,11 +467,11 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                             context, r.discrepancyPhotoUrl!),
                         child: Row(
                           children: [
-                            const Icon(Icons.photo, color: Colors.blue, size: 18),
+                            const Icon(Icons.photo, color: _kBlue, size: 18),
                             const SizedBox(width: 6),
-                            const Text('Ver evidencia',
-                                style: TextStyle(
-                                    color: Colors.blue,
+                            Text('Ver evidencia',
+                                style: GoogleFonts.dmSans(
+                                    color: _kBlue,
                                     decoration: TextDecoration.underline)),
                           ],
                         ),
@@ -510,16 +517,16 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
         children: [
           Flexible(
             child: Text(label,
-                style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                  color: color,
+                style: GoogleFonts.dmSans(
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.normal,
+                  color: color ?? _kSlate,
                   fontSize: fontSize,
                 )),
           ),
           Text(value,
-              style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                color: color,
+              style: GoogleFonts.dmMono(
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                color: color ?? _kSlate,
                 fontSize: fontSize,
               )),
         ],
