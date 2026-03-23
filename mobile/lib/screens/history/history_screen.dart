@@ -11,7 +11,6 @@ import '../../widgets/loading_widget.dart';
 import 'shift_comparisons_screen.dart';
 
 const _kSlate = Color(0xFF1E293B);
-const _kSlateLight = Color(0xFF334155);
 const _kMuted = Color(0xFF64748B);
 const _kGreen = Color(0xFF059669);
 const _kGreenBg = Color(0xFFECFDF5);
@@ -141,8 +140,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
 
     final isOwner = ref.watch(authProvider).user?.isOwner == true;
-
-    // Build flat list of all shifts in display order
     final allShiftsOrdered = <Shift>[];
     for (final entry in grouped.entries) {
       allShiftsOrdered.addAll(entry.value);
@@ -154,10 +151,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       final dateKey = entry.key;
       final dayShifts = entry.value;
 
-      // Spacing between day groups
-      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 16));
+      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 18));
 
-      // Day container
+      // -- Day container --
       widgets.add(
         Container(
           decoration: BoxDecoration(
@@ -178,7 +174,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFF0F172A), _kSlate],
@@ -187,7 +183,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.calendar_today_rounded,
-                        size: 14, color: Colors.white54),
+                        size: 13, color: Colors.white54),
                     const SizedBox(width: 8),
                     Text(
                       dateKey,
@@ -218,32 +214,28 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ),
               ),
 
-              // Shifts within this day
+              // Shifts + bridges
               ...List.generate(dayShifts.length, (i) {
                 final shift = dayShifts[i];
                 final turnNum = turnNumbers[shift.id] ?? 1;
                 final globalIdx = allShiftsOrdered.indexOf(shift);
+                final items = <Widget>[];
 
-                final cardWidgets = <Widget>[];
-
-                // Shift card content
-                cardWidgets.add(_buildShiftTile(
+                items.add(_buildShiftTile(
                   context,
                   shift,
                   turnNumber: turnNum,
                   isLast: i == dayShifts.length - 1,
                 ));
 
-                // Comparison bridge (between this and next shift in global order)
                 if (isOwner && globalIdx < allShiftsOrdered.length - 1) {
-                  final comp =
-                      _findComparisonForOpeningShift(shift.id);
+                  final comp = _findComparisonForOpeningShift(shift.id);
                   if (comp != null) {
-                    cardWidgets.add(_buildComparisonBridge(comp));
+                    items.add(_buildComparisonBridge(comp));
                   }
                 }
 
-                return Column(children: cardWidgets);
+                return Column(children: items);
               }),
             ],
           ),
@@ -253,6 +245,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return widgets;
   }
 
+  // ── Comparison bridge: visual connector between shifts ──
   Widget _buildComparisonBridge(ShiftComparison comp) {
     final diff = comp.totalDiff;
     final Color color;
@@ -264,13 +257,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       color = _kGreen;
       bg = _kGreenBg;
       label = 'Empalme correcto';
-      icon = Icons.check_circle_rounded;
+      icon = Icons.link_rounded;
     } else {
       color = diff > 0 ? _kBlue : _kRed;
       bg = diff > 0 ? _kBlueBg : _kRedBg;
       final prefix = diff > 0 ? '+' : '';
       label = 'Diferencia: $prefix${formatCurrency(diff)}';
-      icon = Icons.warning_amber_rounded;
+      icon = Icons.link_off_rounded;
     }
 
     return GestureDetector(
@@ -283,45 +276,63 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         );
       },
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: bg,
-          border: Border(
-            left: BorderSide(color: color, width: 3),
-          ),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color),
+            // Connector dots
+            Column(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.4),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Container(
+                  width: 1.5,
+                  height: 8,
+                  color: color.withOpacity(0.25),
+                ),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.4),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(width: 10),
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 label,
                 style: GoogleFonts.dmSans(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: color,
                 ),
               ),
             ),
-            Text(
-              'Ver detalle',
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: color.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(width: 2),
             Icon(Icons.chevron_right_rounded,
-                size: 16, color: color.withOpacity(0.5)),
+                size: 18, color: color.withOpacity(0.5)),
           ],
         ),
       ),
     );
   }
 
+  // ── Shift tile: discrepancy is the hero ──
   Widget _buildShiftTile(BuildContext context, Shift shift,
       {required int turnNumber, required bool isLast}) {
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
@@ -336,26 +347,33 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final Color discColor;
     final Color discBg;
     final String discLabel;
+    final IconData discIcon;
+
     if (shift.isOpen) {
       discColor = _kBlue;
       discBg = _kBlueBg;
       discLabel = 'Abierto';
+      discIcon = Icons.access_time_rounded;
     } else if (shift.isPreclosed) {
       discColor = _kAmber;
       discBg = _kAmberBg;
       discLabel = 'Pre-cerrado';
+      discIcon = Icons.pause_circle_rounded;
     } else if (discrepancy.abs() < 0.01) {
       discColor = _kGreen;
       discBg = _kGreenBg;
       discLabel = 'Cuadrado';
+      discIcon = Icons.check_circle_rounded;
     } else if (discrepancy > 0) {
       discColor = _kGreen;
       discBg = _kGreenBg;
       discLabel = 'Sobrante';
+      discIcon = Icons.trending_up_rounded;
     } else {
       discColor = _kRed;
       discBg = _kRedBg;
       discLabel = 'Faltante';
+      discIcon = Icons.trending_down_rounded;
     }
 
     final timeLabel = _turnoLabel(shift.startedAt);
@@ -372,11 +390,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 : null,
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: turn number + operator + status
+              // ── Row 1: Identity ──
               Row(
                 children: [
-                  // Turn badge
                   Container(
                     width: 40,
                     height: 40,
@@ -400,20 +418,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                shift.operator?.fullName ?? 'Operador',
-                                style: GoogleFonts.dmSans(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: _kSlate,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          shift.operator?.fullName ?? 'Operador',
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: _kSlate,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Row(
@@ -447,9 +459,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       ],
                     ),
                   ),
+                  // Status badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: discBg,
                       borderRadius: BorderRadius.circular(8),
@@ -460,103 +473,85 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         color: discColor,
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
-                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              // Financial data
+              // ── Row 2: Discrepancy hero (closed/preclosed only) ──
               if (shift.isClosed || shift.isPreclosed) ...[
                 const SizedBox(height: 12),
-                // Apertura vs Cierre
-                Row(
-                  children: [
-                    Expanded(
-                      child: _financialColumn(
-                          'Apertura', totalOpening, _kBlue),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 32,
-                      color: Colors.grey.shade200,
-                    ),
-                    Expanded(
-                      child: _financialColumn(
-                          'Cierre', totalClosing, _kAmber),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // Discrepancy
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                      horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: discColor.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            discrepancy.abs() < 0.01
-                                ? Icons.check_circle_rounded
-                                : discrepancy > 0
-                                    ? Icons.trending_up_rounded
-                                    : Icons.trending_down_rounded,
-                            size: 15,
-                            color: discColor,
-                          ),
-                          const SizedBox(width: 6),
-                          Text('Discrepancia',
+                      Icon(discIcon, size: 28, color: discColor),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Discrepancia',
                               style: GoogleFonts.dmSans(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
+                                color: discColor.withOpacity(0.7),
+                              ),
+                            ),
+                            Text(
+                              formatCurrency(discrepancy),
+                              style: GoogleFonts.dmMono(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
                                 color: discColor,
-                              )),
-                        ],
-                      ),
-                      Text(
-                        formatCurrency(discrepancy),
-                        style: GoogleFonts.dmMono(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: discColor,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Movements & Commissions
+
+                // ── Row 3+4: Movimientos & Comisiones stacked ──
                 if (netMovements.abs() >= 0.01 || totalComm > 0) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (netMovements.abs() >= 0.01)
-                        _miniTag(
-                          'Movimientos: ${formatCurrencyShort(netMovements)}',
-                          netMovements >= 0 ? _kGreen : _kRed,
-                        ),
-                      if (netMovements.abs() >= 0.01 && totalComm > 0)
-                        const SizedBox(width: 6),
-                      if (totalComm > 0)
-                        _miniTag(
-                          'Comisiones: ${formatCurrencyShort(totalComm)}',
-                          _kTeal,
-                        ),
-                    ],
-                  ),
+                  if (netMovements.abs() >= 0.01)
+                    _detailRow(
+                      'Movimientos',
+                      formatCurrency(netMovements),
+                      netMovements >= 0 ? _kGreen : _kRed,
+                    ),
+                  if (totalComm > 0)
+                    _detailRow(
+                      'Comisiones',
+                      formatCurrency(totalComm),
+                      _kTeal,
+                    ),
                 ],
               ] else ...[
+                // Open shift
                 const SizedBox(height: 8),
-                _financialRow('Apertura', totalOpening),
+                _detailRow(
+                  'Apertura',
+                  formatCurrency(totalOpening),
+                  _kBlue,
+                ),
                 if (netMovements.abs() >= 0.01)
-                  _financialRow('Movimientos', netMovements,
-                      color: netMovements >= 0 ? _kGreen : _kRed),
+                  _detailRow(
+                    'Movimientos',
+                    formatCurrency(netMovements),
+                    netMovements >= 0 ? _kGreen : _kRed,
+                  ),
               ],
             ],
           ),
@@ -565,72 +560,41 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _financialColumn(String label, double value, Color accent) {
+  Widget _detailRow(String label, String value, Color color) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: accent,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            formatCurrency(value),
-            style: GoogleFonts.dmMono(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: _kSlate,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _financialRow(String label, double value, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: GoogleFonts.dmSans(fontSize: 13, color: _kMuted)),
+          Row(
+            children: [
+              Container(
+                width: 3,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  color: _kMuted,
+                ),
+              ),
+            ],
+          ),
           Text(
-            formatCurrency(value),
+            value,
             style: GoogleFonts.dmMono(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: color ?? _kSlate,
+              color: color,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _miniTag(String text, Color color) {
-    return Flexible(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.dmMono(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-          overflow: TextOverflow.ellipsis,
-        ),
       ),
     );
   }
