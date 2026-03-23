@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../services/movement_service.dart';
@@ -9,6 +10,14 @@ import '../../models/reconciliation.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 class ActiveShiftScreen extends ConsumerStatefulWidget {
   const ActiveShiftScreen({super.key});
@@ -80,30 +89,38 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.amber[50],
+                      color: _kAmber.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber, width: 2),
+                      border: Border.all(color: _kAmber.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.pause_circle_filled,
-                            color: Colors.amber, size: 32),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _kAmber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.pause_circle_filled,
+                              color: _kAmber, size: 24),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('TURNO PRE-CERRADO',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber[900],
-                                    fontSize: 15,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
+                                    color: _kAmber,
+                                    fontSize: 14,
+                                    letterSpacing: 0.3,
                                   )),
                               const SizedBox(height: 2),
                               Text(
                                 'Puedes modificar datos antes del cierre definitivo',
-                                style: TextStyle(
-                                  color: Colors.amber[800],
+                                style: GoogleFonts.dmSans(
+                                  color: _kMuted,
                                   fontSize: 12,
                                 ),
                               ),
@@ -340,7 +357,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
 
                   // Closing balances
                   Card(
-                    color: Colors.orange[50],
+                    color: _kAmber.withOpacity(0.05),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -353,7 +370,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                               Text('DATOS DE CIERRE',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.orange[800],
+                                    color: _kAmber,
                                     fontSize: 13,
                                   )),
                               TextButton.icon(
@@ -411,7 +428,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                   closingEntries.fold<double>(
                                       0.0, (sum, b) => sum + b.amount)),
                               bold: true,
-                              color: Colors.orange[800],
+                              color: _kAmber,
                             ),
                           ],
                         ],
@@ -422,7 +439,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
 
                   // Commissions (always show with edit button)
                   Card(
-                    color: Colors.teal[50],
+                    color: _kTeal.withOpacity(0.05),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -435,7 +452,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                               Text('COMISIONES',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.teal[800],
+                                    color: _kTeal,
                                     fontSize: 13,
                                   )),
                               TextButton.icon(
@@ -446,7 +463,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(60, 30),
-                                  foregroundColor: Colors.teal[700],
+                                  foregroundColor: _kTeal,
                                 ),
                               ),
                             ],
@@ -458,7 +475,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                               child: Text(
                                 'Sin comisiones registradas',
                                 style: TextStyle(
-                                    color: Colors.teal[300],
+                                    color: _kMuted,
                                     fontSize: 13),
                               ),
                             )
@@ -477,7 +494,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                           (sum, c) =>
                                               sum + c.amount)),
                               bold: true,
-                              color: Colors.teal[800],
+                              color: _kTeal,
                             ),
                           ],
                         ],
@@ -510,7 +527,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reabrir Turno'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.blue,
+                        foregroundColor: _kBlue,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -527,7 +544,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                       icon: const Icon(Icons.lock),
                       label: const Text('Cerrar Turno Definitivamente'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: _kRed,
                         foregroundColor: Colors.white,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
@@ -544,7 +561,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                       icon: const Icon(Icons.stop_circle_outlined),
                       label: const Text('Cerrar Turno'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
+                        backgroundColor: _kAmber,
                         foregroundColor: Colors.white,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
@@ -9,6 +10,14 @@ import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
 import 'section_detail_screen.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 class ShiftDetailScreen extends ConsumerStatefulWidget {
   final String shiftId;
@@ -217,9 +226,9 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
 
     final statusColor = _discrepancyColor(discrepancy);
     final bgColor =
-        statusColor == Colors.green ? Colors.green[50]! : Colors.red[50]!;
+        statusColor == Colors.green ? _kGreen.withOpacity(0.05) : _kRed.withOpacity(0.05);
     final textColor =
-        statusColor == Colors.green ? Colors.green[800]! : Colors.red[800]!;
+        statusColor == Colors.green ? _kGreen : _kRed;
 
     return Scaffold(
       appBar: AppBar(
@@ -310,8 +319,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           // Navigable section cards
           _SectionCard(
             title: 'APERTURA',
-            titleColor: Colors.blue[800]!,
-            cardColor: Colors.blue[50]!,
+            titleColor: _kBlue,
+            cardColor: _kBlue.withOpacity(0.05),
             subtitle: formatCurrency(totalOpening),
             icon: Icons.play_circle_outline,
             onTap: () => Navigator.push(
@@ -334,8 +343,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
 
           _SectionCard(
             title: 'MOVIMIENTOS (${shift.movements.length})',
-            titleColor: Colors.purple[800]!,
-            cardColor: Colors.purple[50]!,
+            titleColor: Color(0xFF7C3AED),
+            cardColor: Color(0xFF7C3AED).withOpacity(0.05),
             subtitle: formatCurrency(netMovements),
             icon: Icons.swap_vert,
             onTap: () => Navigator.push(
@@ -353,8 +362,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           if (shift.isClosed || shift.isPreclosed)
             _SectionCard(
               title: 'CIERRE',
-              titleColor: Colors.orange[800]!,
-              cardColor: Colors.orange[50]!,
+              titleColor: _kAmber,
+              cardColor: _kAmber.withOpacity(0.05),
               subtitle: formatCurrency(totalClosing),
               icon: Icons.stop_circle_outlined,
               onTap: () => Navigator.push(
@@ -377,7 +386,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           // Commissions card
           if (shift.commissionEntries.isNotEmpty) ...[
             Card(
-              color: Colors.teal[50],
+              color: _kTeal.withOpacity(0.05),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -386,12 +395,12 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     Row(
                       children: [
                         Icon(Icons.receipt_long,
-                            color: Colors.teal[800], size: 20),
+                            color: _kTeal, size: 20),
                         const SizedBox(width: 8),
                         Text('COMISIONES',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.teal[800],
+                              color: _kTeal,
                               fontSize: 13,
                             )),
                       ],
@@ -407,7 +416,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                       formatCurrency(shift.commissionEntries
                           .fold<double>(0.0, (sum, c) => sum + c.amount)),
                       bold: true,
-                      color: Colors.teal[800],
+                      color: _kTeal,
                     ),
                   ],
                 ),
@@ -430,12 +439,12 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     Row(
                       children: [
                         Icon(Icons.note_alt,
-                            color: Colors.grey[700], size: 20),
+                            color: _kMuted, size: 20),
                         const SizedBox(width: 8),
                         Text('JUSTIFICACION',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
+                              color: _kMuted,
                               fontSize: 13,
                             )),
                       ],
@@ -548,7 +557,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
           Flexible(
             child: Text(label,
                 style: TextStyle(
-                  color: color ?? Colors.grey[700],
+                  color: color ?? _kMuted,
                   fontWeight: bold ? FontWeight.bold : FontWeight.normal,
                 )),
           ),

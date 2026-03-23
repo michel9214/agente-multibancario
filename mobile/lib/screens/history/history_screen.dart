@@ -10,6 +10,14 @@ import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import 'shift_comparisons_screen.dart';
 
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kTeal = Color(0xFF0D9488);
+const _kAmber = Color(0xFFD97706);
+
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
@@ -145,7 +153,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A56DB).withOpacity(0.1),
+                    color: _kBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.calendar_today,
@@ -154,7 +162,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 const SizedBox(width: 10),
                 Text(
                   dateKey,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -195,10 +203,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final Color color;
     final String label;
     if (diff.abs() < 0.01) {
-      color = const Color(0xFF0E9F6E);
+      color = _kGreen;
       label = 'Sin diferencia';
     } else {
-      color = diff > 0 ? const Color(0xFF1A56DB) : const Color(0xFFE02424);
+      color = diff > 0 ? _kBlue : _kRed;
       final prefix = diff > 0 ? '+' : '';
       label = 'Diferencia: $prefix${formatCurrency(diff)}';
     }
@@ -222,7 +230,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.dmSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: color,
@@ -251,13 +259,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final Color discColor;
     final String discLabel;
     if (discrepancy.abs() < 0.01) {
-      discColor = const Color(0xFF0E9F6E);
+      discColor = _kGreen;
       discLabel = 'Cuadrado';
     } else if (discrepancy > 0) {
-      discColor = const Color(0xFF0E9F6E);
+      discColor = _kGreen;
       discLabel = 'Sobrante';
     } else {
-      discColor = const Color(0xFFE02424);
+      discColor = _kRed;
       discLabel = 'Faltante';
     }
 
@@ -278,7 +286,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: (shift.isOpen
-                              ? const Color(0xFF1A56DB)
+                              ? _kBlue
                               : shift.isPreclosed
                                   ? Colors.amber
                                   : discColor)
@@ -291,9 +299,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           : shift.isPreclosed
                               ? 'Pre-cerrado'
                               : discLabel,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.dmSans(
                         color: shift.isOpen
-                            ? const Color(0xFF1A56DB)
+                            ? _kBlue
                             : shift.isPreclosed
                                 ? Colors.amber[800]
                                 : discColor,
@@ -315,7 +323,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 children: [
                   Text(
                     'Turno $turnNumber',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 17,
                     ),
@@ -326,15 +334,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A56DB).withOpacity(0.08),
+                        color: _kBlue.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         shift.operator!.fullName,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          color: const Color(0xFF1A56DB),
+                          color: _kBlue,
                         ),
                       ),
                     ),
@@ -346,7 +354,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               if (netMovements.abs() >= 0.01)
                 _cardRow('Movimientos', formatCurrency(netMovements),
                     valueColor:
-                        netMovements >= 0 ? const Color(0xFF0E9F6E) : const Color(0xFFE02424)),
+                        netMovements >= 0 ? _kGreen : _kRed),
               if (shift.isClosed || shift.isPreclosed) ...[
                 _cardRow('Esperado', formatCurrency(totalExpected)),
                 _cardRow('Cierre', formatCurrency(totalClosing)),
@@ -363,14 +371,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Discrepancia',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.dmSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: discColor,
                             )),
                         Text(
                           formatCurrency(discrepancy),
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.dmSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: discColor,
@@ -386,24 +394,24 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D9488).withOpacity(0.06),
+                      color: _kTeal.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Comisiones',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.dmSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0D9488),
+                              color: _kTeal,
                             )),
                         Text(
                           formatCurrency(totalComm),
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.dmSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D9488),
+                            color: _kTeal,
                           ),
                         ),
                       ],
@@ -427,7 +435,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           Text('$label:',
               style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
           Text(value,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.dmSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: valueColor,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/entities_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../services/shift_service.dart';
@@ -8,6 +9,14 @@ import '../../models/shift.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
 import '../../models/banking_entity.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 class StartShiftScreen extends ConsumerStatefulWidget {
   const StartShiftScreen({super.key});
@@ -209,17 +218,17 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 8),
-                  color: Colors.blue[50],
+                  color: _kBlue.withOpacity(0.05),
                   child: Row(
                     children: [
-                      Icon(Icons.repeat, size: 16, color: Colors.blue[700]),
+                      Icon(Icons.repeat, size: 16, color: _kBlue),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Turno consecutivo - datos cargados del cierre anterior'
                               '${_previousShift?.operator != null ? " (${_previousShift!.operator!.fullName})" : ""}',
                           style: TextStyle(
-                              fontSize: 12, color: Colors.blue[700]),
+                              fontSize: 12, color: _kBlue),
                         ),
                       ),
                     ],
@@ -528,12 +537,12 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: _kBlue.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text('anterior',
                             style: TextStyle(
-                                fontSize: 10, color: Colors.blue[700])),
+                                fontSize: 10, color: _kBlue)),
                       ),
                   ],
                 ),

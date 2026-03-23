@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+
 class LoadingWidget extends StatelessWidget {
   final String? message;
   const LoadingWidget({super.key, this.message});
@@ -11,16 +14,19 @@ class LoadingWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(strokeWidth: 3),
+          SizedBox(
+            width: 36,
+            height: 36,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: _kSlate.withOpacity(0.4),
+            ),
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(message!,
-                style: GoogleFonts.poppins(
-                  color: Colors.grey.shade500,
+                style: GoogleFonts.dmSans(
+                  color: _kMuted,
                   fontSize: 14,
                 )),
           ],
@@ -44,27 +50,33 @@ class ErrorDisplay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                shape: BoxShape.circle,
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.error_outline, size: 32, color: Colors.red.shade400),
+              child: const Icon(Icons.error_outline,
+                  size: 28, color: Color(0xFFDC2626)),
             ),
             const SizedBox(height: 16),
             Text(message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.dmSans(
                   fontSize: 15,
-                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w500,
+                  color: _kSlate,
                 )),
             if (onRetry != null) ...[
               const SizedBox(height: 20),
-              ElevatedButton.icon(
+              OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh, size: 20),
+                icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Reintentar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _kSlate,
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
               ),
             ],
           ],
@@ -90,26 +102,26 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(icon, size: 40, color: Colors.grey.shade400),
+              child: Icon(icon, size: 36, color: _kMuted),
             ),
             const SizedBox(height: 20),
             Text(title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: Colors.grey.shade700,
+                  color: _kSlate,
                 )),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!,
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey.shade500,
+                  style: GoogleFonts.dmSans(
+                    color: _kMuted,
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center),

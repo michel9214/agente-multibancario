@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift.dart';
 import '../../models/balance_entry.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 const _extraCommissionConcepts = ['Depositos', 'Retiros', 'Recargas'];
 
@@ -478,18 +487,18 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.teal[50],
+          color: _kTeal.withOpacity(0.05),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.teal[200]!),
+          border: Border.all(color: _kTeal.withOpacity(0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.teal[700], size: 20),
+            Icon(Icons.info_outline, color: _kTeal, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Las comisiones se suman al total esperado del cierre.',
-                style: TextStyle(fontSize: 12, color: Colors.teal[800]),
+                style: TextStyle(fontSize: 12, color: _kTeal),
               ),
             ),
           ],
@@ -500,7 +509,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.grey[700],
+            color: _kMuted,
           )),
       const SizedBox(height: 8),
     ];
@@ -557,7 +566,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.grey[700],
+            color: _kMuted,
           )),
       const SizedBox(height: 8),
     ]);
@@ -574,7 +583,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: Colors.teal[50],
+                backgroundColor: _kTeal.withOpacity(0.05),
                 radius: 14,
                 child: Icon(icon, color: Colors.teal, size: 14),
               ),
@@ -620,7 +629,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: totalComm > 0 ? Colors.teal[700] : Colors.grey,
+              color: totalComm > 0 ? _kTeal : Colors.grey,
             ),
           ),
         ],
@@ -663,7 +672,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: _kAmber.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.orange[300]!),
               ),
@@ -747,7 +756,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
         Card(
-          color: Colors.blue[50],
+          color: _kBlue.withOpacity(0.05),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -756,7 +765,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 Text('APERTURA',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
+                      color: _kBlue,
                       fontSize: 13,
                     )),
                 const SizedBox(height: 8),
@@ -767,7 +776,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 const Divider(),
                 _reviewRow('Total apertura',
                     formatCurrency(totalOpeningGeneral),
-                    bold: true, color: Colors.blue[800]),
+                    bold: true, color: _kBlue),
               ],
             ),
           ),
@@ -775,7 +784,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         const SizedBox(height: 8),
         if (movements.isNotEmpty) ...[
           Card(
-            color: Colors.purple[50],
+            color: Color(0xFF7C3AED).withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -784,7 +793,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   Text('MOVIMIENTOS (${movements.length})',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.purple[800],
+                        color: Color(0xFF7C3AED),
                         fontSize: 13,
                       )),
                   const SizedBox(height: 8),
@@ -826,7 +835,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   const Divider(),
                   _reviewRow('Movimientos netos',
                       formatCurrency(netMovements),
-                      bold: true, color: Colors.purple[800]),
+                      bold: true, color: Color(0xFF7C3AED)),
                 ],
               ),
             ),
@@ -835,7 +844,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         ],
         if (commissionItems.isNotEmpty) ...[
           Card(
-            color: Colors.teal[50],
+            color: _kTeal.withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -844,7 +853,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   Text('COMISIONES',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.teal[800],
+                        color: _kTeal,
                         fontSize: 13,
                       )),
                   const SizedBox(height: 8),
@@ -853,7 +862,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   const Divider(),
                   _reviewRow('Total comisiones',
                       formatCurrency(totalComm),
-                      bold: true, color: Colors.teal[800]),
+                      bold: true, color: _kTeal),
                 ],
               ),
             ),
@@ -861,7 +870,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           const SizedBox(height: 8),
         ],
         Card(
-          color: Colors.green[50],
+          color: _kGreen.withOpacity(0.05),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -870,7 +879,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 Text('TOTAL ESPERADO',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green[800],
+                      color: _kGreen,
                       fontSize: 13,
                     )),
                 const SizedBox(height: 8),
@@ -884,7 +893,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   'Debería tener',
                   formatCurrency(totalOpeningGeneral + netMovements),
                   bold: true,
-                  color: Colors.green[800],
+                  color: _kGreen,
                 ),
               ],
             ),
@@ -892,7 +901,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         ),
         const SizedBox(height: 8),
         Card(
-          color: Colors.orange[50],
+          color: _kAmber.withOpacity(0.05),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -901,7 +910,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                 Text('CIERRE',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange[800],
+                      color: _kAmber,
                       fontSize: 13,
                     )),
                 const SizedBox(height: 8),
@@ -918,7 +927,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   'TOTAL CIERRE',
                   formatCurrency(cash + totalClosing),
                   bold: true,
-                  color: Colors.orange[800],
+                  color: _kAmber,
                 ),
               ],
             ),
@@ -959,7 +968,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.orange[50],
+            color: _kAmber.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.orange[200]!),
           ),

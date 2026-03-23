@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/balance_entry.dart';
 import '../../models/movement.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 /// Detail screen for Opening/Closing sections
 class SectionDetailScreen extends StatelessWidget {
@@ -228,7 +237,7 @@ class MovementsSectionScreen extends StatelessWidget {
           ...movements.map((m) => _MovementCard(movement: m)),
           const SizedBox(height: 12),
           Card(
-            color: Colors.purple[50],
+            color: Color(0xFF7C3AED).withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -237,12 +246,12 @@ class MovementsSectionScreen extends StatelessWidget {
                   Text('Movimientos netos',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.purple[800])),
+                          color: Color(0xFF7C3AED))),
                   Text(formatCurrency(netMovements),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.purple[800])),
+                          color: Color(0xFF7C3AED))),
                 ],
               ),
             ),

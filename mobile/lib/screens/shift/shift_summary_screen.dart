@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/reconciliation.dart';
@@ -10,6 +11,14 @@ import '../../services/report_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/photo_picker.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 class ShiftSummaryScreen extends ConsumerStatefulWidget {
   final String shiftId;
@@ -72,13 +81,13 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
   }
 
   Color _discrepancyBgColor(Reconciliation r) {
-    if (r.isBalanced || r.isSurplus) return Colors.green[50]!;
-    return Colors.red[50]!;
+    if (r.isBalanced || r.isSurplus) return _kGreen.withOpacity(0.05);
+    return _kRed.withOpacity(0.05);
   }
 
   Color _discrepancyTextColor(Reconciliation r) {
-    if (r.isBalanced || r.isSurplus) return Colors.green[800]!;
-    return Colors.red[800]!;
+    if (r.isBalanced || r.isSurplus) return _kGreen;
+    return _kRed;
   }
 
   @override
@@ -180,7 +189,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
 
           // Apertura card
           Card(
-            color: Colors.blue[50],
+            color: _kBlue.withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -189,7 +198,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   Text('APERTURA',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue[800],
+                        color: _kBlue,
                         fontSize: 13,
                       )),
                   const SizedBox(height: 8),
@@ -201,7 +210,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                       formatCurrency(r.totalOpeningBalance),
                       bold: true),
                   _row('Total apertura', formatCurrency(r.totalOpening),
-                      bold: true, color: Colors.blue[800]),
+                      bold: true, color: _kBlue),
                 ],
               ),
             ),
@@ -211,7 +220,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
           // Movements card
           if (r.details.movements.isNotEmpty) ...[
             Card(
-              color: Colors.purple[50],
+              color: Color(0xFF7C3AED).withOpacity(0.05),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -220,7 +229,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                     Text('MOVIMIENTOS (${r.details.movements.length})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.purple[800],
+                          color: Color(0xFF7C3AED),
                           fontSize: 13,
                         )),
                     const SizedBox(height: 8),
@@ -262,7 +271,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                     const Divider(),
                     _row('Movimientos netos',
                         formatCurrency(r.totalMovements),
-                        bold: true, color: Colors.purple[800]),
+                        bold: true, color: Color(0xFF7C3AED)),
                   ],
                 ),
               ),
@@ -272,7 +281,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
 
           // Total esperado (sin comisiones)
           Card(
-            color: Colors.green[50],
+            color: _kGreen.withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -281,7 +290,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   Text('TOTAL ESPERADO',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
+                        color: _kGreen,
                         fontSize: 13,
                       )),
                   const SizedBox(height: 8),
@@ -290,7 +299,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                     _row('Movimientos netos', formatCurrency(r.totalMovements)),
                   const Divider(),
                   _row('Debería tener', formatCurrency(r.totalExpected),
-                      bold: true, color: Colors.green[800]),
+                      bold: true, color: _kGreen),
                 ],
               ),
             ),
@@ -299,7 +308,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
 
           // Cierre card
           Card(
-            color: Colors.orange[50],
+            color: _kAmber.withOpacity(0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -308,7 +317,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   Text('CIERRE',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange[800],
+                        color: _kAmber,
                         fontSize: 13,
                       )),
                   const SizedBox(height: 8),
@@ -320,7 +329,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                       formatCurrency(r.totalClosingBalance),
                       bold: true),
                   _row('Total cierre', formatCurrency(r.totalClosing),
-                      bold: true, color: Colors.orange[800]),
+                      bold: true, color: _kAmber),
                 ],
               ),
             ),
@@ -330,7 +339,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
           // Commissions card
           if (r.details.commissions.isNotEmpty) ...[
             Card(
-              color: Colors.teal[50],
+              color: _kTeal.withOpacity(0.05),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -339,7 +348,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                     Text('COMISIONES',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.teal[800],
+                          color: _kTeal,
                           fontSize: 13,
                         )),
                     const SizedBox(height: 8),
@@ -348,7 +357,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                     const Divider(),
                     _row('Total comisiones',
                         formatCurrency(r.totalCommissions),
-                        bold: true, color: Colors.teal[800]),
+                        bold: true, color: _kTeal),
                   ],
                 ),
               ),
@@ -399,12 +408,12 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.note_alt, color: Colors.grey[700], size: 20),
+                        Icon(Icons.note_alt, color: _kMuted, size: 20),
                         const SizedBox(width: 8),
                         Text('JUSTIFICACION',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
+                              color: _kMuted,
                               fontSize: 13,
                             )),
                       ],

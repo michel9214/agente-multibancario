@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift.dart';
 import '../../models/balance_entry.dart';
 import '../../providers/shift_provider.dart';
 import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
+
+const _kSlate = Color(0xFF1E293B);
+const _kMuted = Color(0xFF64748B);
+const _kGreen = Color(0xFF059669);
+const _kRed = Color(0xFFDC2626);
+const _kBlue = Color(0xFF2563EB);
+const _kAmber = Color(0xFFD97706);
+const _kTeal = Color(0xFF0D9488);
 
 const _extraCommissionConcepts = ['Depositos', 'Retiros', 'Recargas'];
 
@@ -180,7 +189,7 @@ class _EditCommissionsScreenState
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Colors.grey[700],
+                          color: _kMuted,
                         )),
                     const SizedBox(height: 8),
                     ...openingEntries.map((entry) {
@@ -235,7 +244,7 @@ class _EditCommissionsScreenState
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Colors.grey[700],
+                          color: _kMuted,
                         )),
                     const SizedBox(height: 8),
                     ..._extraCommissionConcepts.map((concept) {
@@ -249,7 +258,7 @@ class _EditCommissionsScreenState
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: Colors.teal[50],
+                              backgroundColor: _kTeal.withOpacity(0.05),
                               radius: 14,
                               child: Icon(icon,
                                   color: Colors.teal, size: 14),
@@ -298,7 +307,7 @@ class _EditCommissionsScreenState
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                             color: _getTotal() > 0
-                                ? Colors.teal[700]
+                                ? _kTeal
                                 : Colors.grey,
                           ),
                         ),
