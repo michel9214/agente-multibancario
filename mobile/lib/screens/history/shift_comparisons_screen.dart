@@ -351,23 +351,21 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (hasDiff) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                    child:
-                        _amountPill('Cierre', comp.closingShift.cash, _kAmber)),
-                const SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded,
-                    size: 14, color: Colors.grey[300]),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: _amountPill(
-                        'Apertura', comp.openingShift.cash, _kBlue)),
-              ],
-            ),
-          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                  child:
+                      _amountPill('Cierre', comp.closingShift.cash, _kAmber)),
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward_rounded,
+                  size: 14, color: Colors.grey[300]),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _amountPill(
+                      'Apertura', comp.openingShift.cash, _kBlue)),
+            ],
+          ),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
