@@ -5,12 +5,16 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CloudinaryService } from '../uploads/cloudinary.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { ShiftStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class MovementsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cloudinary: CloudinaryService,
+  ) {}
 
   async create(shiftId: string, userId: string, dto: CreateMovementDto) {
     const shift = await this.prisma.shift.findUnique({ where: { id: shiftId } });
@@ -81,6 +85,14 @@ export class MovementsService {
     if (userRole !== Role.OWNER && movement.createdById !== userId) {
       throw new ForbiddenException('Solo puedes eliminar tus propios movimientos');
     }
-    return this.prisma.movement.delete({ where: { id } });
+    // Delete from DB
+    const deleted = await this.prisma.movement.delete({ where: { id } });
+
+    // Clean up Cloudinary image in background
+    if (deleted.receiptPhotoUrl) {
+      this.cloudinary.deleteByUrl(deleted.receiptPhotoUrl).catch(() => {});
+    }
+
+    return deleted;
   }
 }

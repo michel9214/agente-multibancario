@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReconciliationService } from '../reconciliation/reconciliation.service';
+import { CloudinaryService } from '../uploads/cloudinary.service';
 import { OpenShiftDto } from './dto/open-shift.dto';
 import { CloseShiftDto, FinalCloseDto } from './dto/close-shift.dto';
 import { BalanceType, ShiftStatus, Role } from '@prisma/client';
@@ -15,7 +16,38 @@ export class ShiftsService {
   constructor(
     private prisma: PrismaService,
     private reconciliation: ReconciliationService,
+    private cloudinary: CloudinaryService,
   ) {}
+
+  /**
+   * Collect all photo URLs from a shift and its related records
+   */
+  private async collectShiftPhotoUrls(shiftId: string): Promise<string[]> {
+    const urls: string[] = [];
+
+    const shift = await this.prisma.shift.findUnique({ where: { id: shiftId } });
+    if (shift?.discrepancyPhotoUrl) urls.push(shift.discrepancyPhotoUrl);
+
+    const balances = await this.prisma.balanceEntry.findMany({
+      where: { shiftId },
+      select: { receiptPhotoUrl: true },
+    });
+    balances.forEach((b) => { if (b.receiptPhotoUrl) urls.push(b.receiptPhotoUrl); });
+
+    const movements = await this.prisma.movement.findMany({
+      where: { shiftId },
+      select: { receiptPhotoUrl: true },
+    });
+    movements.forEach((m) => { if (m.receiptPhotoUrl) urls.push(m.receiptPhotoUrl); });
+
+    const pendingDeliveries = await this.prisma.pendingDelivery.findMany({
+      where: { shiftId },
+      select: { receiptPhotoUrl: true },
+    });
+    pendingDeliveries.forEach((pd) => { if (pd.receiptPhotoUrl) urls.push(pd.receiptPhotoUrl); });
+
+    return urls;
+  }
 
   async openShift(operatorId: string, dto: OpenShiftDto) {
     // Check for existing open/preclosed shift
@@ -219,6 +251,10 @@ export class ShiftsService {
       );
     }
 
+    // Collect discrepancy photo URL before clearing
+    const photoUrls: string[] = [];
+    if (shift.discrepancyPhotoUrl) photoUrls.push(shift.discrepancyPhotoUrl);
+
     await this.prisma.shift.update({
       where: { id: shiftId },
       data: {
@@ -228,6 +264,11 @@ export class ShiftsService {
         discrepancyPhotoUrl: null,
       },
     });
+
+    // Clean up Cloudinary images in background
+    if (photoUrls.length > 0) {
+      this.cloudinary.deleteMultipleByUrls(photoUrls).catch(() => {});
+    }
 
     return this.getShiftWithDetails(shiftId);
   }
@@ -308,8 +349,16 @@ export class ShiftsService {
       throw new BadRequestException('Solo se puede anular un turno abierto');
     }
 
-    // Cascade delete handles balance_entries, movements, commission_entries
+    // Collect all photo URLs before deleting
+    const photoUrls = await this.collectShiftPhotoUrls(shiftId);
+
+    // Cascade delete handles balance_entries, movements, commission_entries, pending_deliveries
     await this.prisma.shift.delete({ where: { id: shiftId } });
+
+    // Clean up Cloudinary images in background
+    if (photoUrls.length > 0) {
+      this.cloudinary.deleteMultipleByUrls(photoUrls).catch(() => {});
+    }
 
     return { message: 'Turno anulado correctamente' };
   }
