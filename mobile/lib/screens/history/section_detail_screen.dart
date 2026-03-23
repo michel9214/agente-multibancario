@@ -50,7 +50,7 @@ class SectionDetailScreen extends StatelessWidget {
         slivers: [
           // ── Sticky header with total ──
           SliverAppBar(
-            expandedHeight: 190,
+            expandedHeight: sencillo > 0 ? 260 : 230,
             pinned: true,
             backgroundColor: _kSlate,
             foregroundColor: Colors.white,
@@ -79,17 +79,38 @@ class SectionDetailScreen extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        // Cash + sencillo row
-                        Row(
-                          children: [
-                            _headerPill(cashLabel, formatCurrency(cashAmount)),
-                            if (sencillo > 0) ...[
-                              const SizedBox(width: 8),
-                              _headerPill(
-                                  'Sencillo', formatCurrency(sencillo)),
-                            ],
-                          ],
-                        ),
+                        // Cash line
+                        _headerLine(cashLabel, formatCurrency(cashAmount)),
+                        const SizedBox(height: 4),
+                        // Saldos line
+                        _headerLine('Saldos', formatCurrency(totalBalance)),
+                        // Sencillo (subtle, where saldos pill used to be)
+                        if (sencillo > 0) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Sencillo: ',
+                                    style: GoogleFonts.dmSans(
+                                        fontSize: 11,
+                                        color: Colors.white38)),
+                                Text(formatCurrency(sencillo),
+                                    style: GoogleFonts.dmMono(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white70,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         Text(
                           formatCurrency(totalGeneral),
@@ -163,33 +184,27 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _headerPill(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              color: Colors.white38,
-            ),
+  Widget _headerLine(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white54,
           ),
-          Text(
-            value,
-            style: GoogleFonts.dmMono(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white70,
-            ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.dmMono(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -331,7 +346,7 @@ class MovementsSectionScreen extends StatelessWidget {
         slivers: [
           // ── Sticky header with net amount ──
           SliverAppBar(
-            expandedHeight: 190,
+            expandedHeight: 230,
             pinned: true,
             backgroundColor: _kSlate,
             foregroundColor: Colors.white,
@@ -360,20 +375,41 @@ class MovementsSectionScreen extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        // Entradas / Salidas pills
+                        // Entradas line
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _statPill(
-                              'Entradas',
-                              '+${formatCurrency(totalIn)}',
-                              const Color(0xFF6EE7B7),
-                            ),
-                            const SizedBox(width: 8),
-                            _statPill(
-                              'Salidas',
-                              '-${formatCurrency(totalOut)}',
-                              const Color(0xFFFCA5A5),
-                            ),
+                            Text('Entradas',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white54,
+                                )),
+                            Text('+${formatCurrency(totalIn)}',
+                                style: GoogleFonts.dmMono(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF6EE7B7),
+                                )),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // Salidas line
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Salidas',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white54,
+                                )),
+                            Text('-${formatCurrency(totalOut)}',
+                                style: GoogleFonts.dmMono(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFFFCA5A5),
+                                )),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -428,32 +464,6 @@ class MovementsSectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _statPill(String label, String value, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: GoogleFonts.dmSans(fontSize: 11, color: Colors.white38),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.dmMono(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _MovementTile extends StatelessWidget {
