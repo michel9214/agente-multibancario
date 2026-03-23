@@ -12,6 +12,7 @@ import '../screens/shift/active_shift_screen.dart';
 import '../screens/shift/end_shift_screen.dart';
 import '../screens/shift/shift_summary_screen.dart';
 import '../screens/shift/edit_commissions_screen.dart';
+import '../screens/shift/pending_deliveries_screen.dart';
 import '../screens/movements/movement_form_screen.dart';
 import '../screens/movement_reasons/movement_reasons_screen.dart';
 import '../screens/movement_reasons/create_reason_screen.dart';
@@ -91,6 +92,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/shift/commissions',
         builder: (context, state) => const EditCommissionsScreen(),
+      ),
+      GoRoute(
+        path: '/shift/pending-deliveries',
+        builder: (context, state) => const PendingDeliveriesScreen(),
       ),
       GoRoute(
         path: '/shift/:id/summary',

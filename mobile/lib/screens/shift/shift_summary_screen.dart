@@ -365,6 +365,36 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             const SizedBox(height: 8),
           ],
 
+          // Pending deliveries card
+          if (r.details.pendingDeliveries.isNotEmpty) ...[
+            Card(
+              color: const Color(0xFF7C3AED).withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ENTREGAS PENDIENTES',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF7C3AED),
+                          fontSize: 13,
+                        )),
+                    const SizedBox(height: 8),
+                    ...r.details.pendingDeliveries.map((pd) => _row(
+                        '${pd.entityName}: ${pd.description ?? ""}',
+                        formatCurrency(pd.amount))),
+                    const Divider(),
+                    _row('Total entregas pendientes',
+                        formatCurrency(r.totalPendingDeliveries),
+                        bold: true, color: const Color(0xFF7C3AED)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
           // Discrepancy result
           Card(
             color: bgColor,

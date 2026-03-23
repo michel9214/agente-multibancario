@@ -85,6 +85,13 @@ class ActiveShiftNotifier extends StateNotifier<AsyncValue<Shift?>> {
     return shift;
   }
 
+  Future<Shift> updatePendingDeliveries(
+      String shiftId, List<Map<String, dynamic>> pendingDeliveries) async {
+    final shift = await _service.updatePendingDeliveries(shiftId, pendingDeliveries);
+    state = AsyncValue.data(shift);
+    return shift;
+  }
+
   Future<Shift> reopenShift(String shiftId) async {
     final shift = await _service.reopenShift(shiftId);
     state = AsyncValue.data(shift);

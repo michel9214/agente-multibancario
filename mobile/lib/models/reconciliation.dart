@@ -3,6 +3,7 @@ class Reconciliation {
   final double totalClosingBalance;
   final double totalMovements;
   final double totalCommissions;
+  final double totalPendingDeliveries;
   final double startingCash;
   final double endingCash;
   final double discrepancy;
@@ -16,6 +17,7 @@ class Reconciliation {
     required this.totalClosingBalance,
     required this.totalMovements,
     required this.totalCommissions,
+    this.totalPendingDeliveries = 0,
     required this.startingCash,
     required this.endingCash,
     required this.discrepancy,
@@ -31,6 +33,7 @@ class Reconciliation {
       totalClosingBalance: _d(json['totalClosingBalance']),
       totalMovements: _d(json['totalMovements']),
       totalCommissions: _d(json['totalCommissions']),
+      totalPendingDeliveries: _d(json['totalPendingDeliveries']),
       startingCash: _d(json['startingCash']),
       endingCash: _d(json['endingCash']),
       discrepancy: _d(json['discrepancy']),
@@ -75,12 +78,14 @@ class ReconciliationDetails {
   final List<BalanceSummary> closingBalances;
   final List<MovementSummary> movements;
   final List<CommissionSummary> commissions;
+  final List<PendingDeliverySummary> pendingDeliveries;
 
   ReconciliationDetails({
     required this.openingBalances,
     required this.closingBalances,
     required this.movements,
     required this.commissions,
+    this.pendingDeliveries = const [],
   });
 
   factory ReconciliationDetails.fromJson(Map<String, dynamic> json) {
@@ -96,6 +101,10 @@ class ReconciliationDetails {
           .toList(),
       commissions: (json['commissions'] as List?)
               ?.map((e) => CommissionSummary.fromJson(e))
+              .toList() ??
+          [],
+      pendingDeliveries: (json['pendingDeliveries'] as List?)
+              ?.map((e) => PendingDeliverySummary.fromJson(e))
               .toList() ??
           [],
     );
@@ -147,6 +156,26 @@ class MovementSummary {
     return MovementSummary(
       type: json['type'],
       direction: json['direction'],
+      amount: (json['amount'] as num).toDouble(),
+      description: json['description'],
+    );
+  }
+}
+
+class PendingDeliverySummary {
+  final String entityName;
+  final double amount;
+  final String? description;
+
+  PendingDeliverySummary({
+    required this.entityName,
+    required this.amount,
+    this.description,
+  });
+
+  factory PendingDeliverySummary.fromJson(Map<String, dynamic> json) {
+    return PendingDeliverySummary(
+      entityName: json['entityName'] ?? '',
       amount: (json['amount'] as num).toDouble(),
       description: json['description'],
     );

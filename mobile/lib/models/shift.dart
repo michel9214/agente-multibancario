@@ -51,6 +51,59 @@ class CommissionEntity {
   }
 }
 
+class PendingDelivery {
+  final String id;
+  final String shiftId;
+  final String entityId;
+  final double amount;
+  final String? description;
+  final String? receiptPhotoUrl;
+  final PendingDeliveryEntity? entity;
+
+  PendingDelivery({
+    required this.id,
+    required this.shiftId,
+    required this.entityId,
+    required this.amount,
+    this.description,
+    this.receiptPhotoUrl,
+    this.entity,
+  });
+
+  factory PendingDelivery.fromJson(Map<String, dynamic> json) {
+    return PendingDelivery(
+      id: json['id'],
+      shiftId: json['shiftId'] ?? json['shift_id'] ?? '',
+      entityId: json['entityId'] ?? json['entity_id'] ?? '',
+      amount: _pdToDouble(json['amount']),
+      description: json['description'],
+      receiptPhotoUrl: json['receiptPhotoUrl'] ?? json['receipt_photo_url'],
+      entity: json['entity'] != null
+          ? PendingDeliveryEntity.fromJson(json['entity'])
+          : null,
+    );
+  }
+
+  String get entityName => entity?.name ?? '';
+
+  static double _pdToDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
+  }
+}
+
+class PendingDeliveryEntity {
+  final String id;
+  final String name;
+
+  PendingDeliveryEntity({required this.id, required this.name});
+
+  factory PendingDeliveryEntity.fromJson(Map<String, dynamic> json) {
+    return PendingDeliveryEntity(id: json['id'], name: json['name']);
+  }
+}
+
 class Shift {
   final String id;
   final String operatorId;
@@ -70,6 +123,7 @@ class Shift {
   final List<BalanceEntry> balanceEntries;
   final List<Movement> movements;
   final List<CommissionEntry> commissionEntries;
+  final List<PendingDelivery> pendingDeliveries;
   final ShiftOperator? operator;
 
   Shift({
@@ -91,6 +145,7 @@ class Shift {
     this.balanceEntries = const [],
     this.movements = const [],
     this.commissionEntries = const [],
+    this.pendingDeliveries = const [],
     this.operator,
   });
 
@@ -135,6 +190,10 @@ class Shift {
           [],
       commissionEntries: (json['commissionEntries'] as List<dynamic>?)
               ?.map((e) => CommissionEntry.fromJson(e))
+              .toList() ??
+          [],
+      pendingDeliveries: (json['pendingDeliveries'] as List<dynamic>?)
+              ?.map((e) => PendingDelivery.fromJson(e))
               .toList() ??
           [],
       operator: json['operator'] != null

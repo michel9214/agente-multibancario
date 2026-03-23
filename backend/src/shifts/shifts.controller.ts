@@ -89,6 +89,14 @@ export class ShiftsController {
     return this.shiftsService.updateCommissions(id, userId, userRole, body.commissions);
   }
 
+  @Patch(':id/pending-deliveries')
+  updatePendingDeliveries(
+    @Param('id') id: string,
+    @Body() body: { pendingDeliveries: { entityId: string; amount: number; description?: string; receiptPhotoUrl?: string }[] },
+  ) {
+    return this.shiftsService.updatePendingDeliveries(id, body.pendingDeliveries);
+  }
+
   @Patch(':id/annul-close')
   annulClose(
     @Param('id') id: string,

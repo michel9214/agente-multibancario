@@ -8,6 +8,7 @@ export interface ReconciliationResult {
   totalClosingBalance: number;
   totalMovements: number;
   totalCommissions: number;
+  totalPendingDeliveries: number;
   startingCash: number;
   endingCash: number;
   discrepancy: number;
@@ -19,6 +20,7 @@ export interface ReconciliationResult {
     closingBalances: { entityName: string; amount: number }[];
     movements: { type: string; direction: string; amount: number; description: string | null }[];
     commissions: { name: string; amount: number }[];
+    pendingDeliveries: { entityName: string; amount: number; description: string | null }[];
   };
 }
 
@@ -42,6 +44,11 @@ export class ReconciliationService {
     });
 
     const commissionEntries = await db.commissionEntry.findMany({
+      where: { shiftId },
+      include: { entity: true },
+    });
+
+    const pendingDeliveries = await db.pendingDelivery.findMany({
       where: { shiftId },
       include: { entity: true },
     });
@@ -85,19 +92,22 @@ export class ReconciliationService {
       new Decimal(0),
     );
 
+    const totalPendingDeliveries = pendingDeliveries.reduce(
+      (sum: Decimal, pd: any) => sum.plus(new Decimal(pd.amount.toString())),
+      new Decimal(0),
+    );
+
     const startingCash = new Decimal(shift.startingCash.toString());
     const endingCash = shift.endingCash
       ? new Decimal(shift.endingCash.toString())
       : new Decimal(0);
 
     // Formula:
-    // discrepancy = cierre - (apertura + movimientos)
-    // cierre = closing_balances + ending_cash
-    // apertura + movimientos = (opening_balances + starting_cash) + net_movements
-    // Commissions are informational only, NOT part of the formula
+    // discrepancy = cierre - (apertura + movimientos) - entregas_pendientes
+    // Pending deliveries reduce the discrepancy (explain surpluses)
     const totalClosing = totalClosingBalance.plus(endingCash);
     const totalExpected = totalOpeningBalance.plus(startingCash).plus(netMovements);
-    const discrepancy = totalClosing.minus(totalExpected);
+    const discrepancy = totalClosing.minus(totalExpected).minus(totalPendingDeliveries);
 
     let status: 'BALANCED' | 'SURPLUS' | 'DEFICIT';
     if (discrepancy.equals(0)) {
@@ -113,6 +123,7 @@ export class ReconciliationService {
       totalClosingBalance: totalClosingBalance.toNumber(),
       totalMovements: netMovements.toNumber(),
       totalCommissions: totalCommissions.toNumber(),
+      totalPendingDeliveries: totalPendingDeliveries.toNumber(),
       startingCash: startingCash.toNumber(),
       endingCash: endingCash.toNumber(),
       discrepancy: discrepancy.toNumber(),
@@ -137,6 +148,11 @@ export class ReconciliationService {
         commissions: commissionEntries.map((c: any) => ({
           name: c.entity ? c.entity.name : c.concept,
           amount: Number(c.amount),
+        })),
+        pendingDeliveries: pendingDeliveries.map((pd: any) => ({
+          entityName: pd.entity.name,
+          amount: Number(pd.amount),
+          description: pd.description,
         })),
       },
     };

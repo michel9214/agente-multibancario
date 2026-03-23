@@ -240,6 +240,7 @@ export class ShiftsService {
         balanceEntries: { include: { entity: true }, orderBy: { entity: { name: 'asc' } } },
         movements: { include: { reason: true }, orderBy: { createdAt: 'desc' } },
         commissionEntries: { include: { entity: true } },
+        pendingDeliveries: { include: { entity: true }, orderBy: { createdAt: 'asc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -360,6 +361,7 @@ export class ShiftsService {
         },
         movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
         commissionEntries: { include: { entity: true } },
+        pendingDeliveries: { include: { entity: true }, orderBy: { createdAt: 'asc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });
@@ -469,6 +471,48 @@ export class ShiftsService {
     return { data, total, page: p, limit: l };
   }
 
+  /**
+   * Update pending deliveries on a PRECLOSED shift
+   */
+  async updatePendingDeliveries(
+    shiftId: string,
+    pendingDeliveries: { entityId: string; amount: number; description?: string; receiptPhotoUrl?: string }[],
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+    if (!shift) throw new NotFoundException('Turno no encontrado');
+    if (shift.status !== ShiftStatus.PRECLOSED) {
+      throw new BadRequestException('Solo se pueden editar entregas pendientes en pre-cierre');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.pendingDelivery.deleteMany({ where: { shiftId } });
+
+      const valid = pendingDeliveries.filter((pd) => pd.amount > 0);
+      if (valid.length > 0) {
+        await tx.pendingDelivery.createMany({
+          data: valid.map((pd) => ({
+            shiftId,
+            entityId: pd.entityId,
+            amount: pd.amount,
+            description: pd.description || null,
+            receiptPhotoUrl: pd.receiptPhotoUrl || null,
+          })),
+        });
+      }
+
+      // Recalculate reconciliation
+      const recon = await this.reconciliation.calculate(shiftId, tx);
+      await tx.shift.update({
+        where: { id: shiftId },
+        data: { discrepancy: recon.discrepancy },
+      });
+
+      return this.getShiftWithDetails(shiftId, tx);
+    });
+  }
+
   private async getShiftWithDetails(shiftId: string, tx?: any) {
     const db = tx || this.prisma;
     return db.shift.findUnique({
@@ -480,6 +524,7 @@ export class ShiftsService {
         },
         movements: { include: { reason: true }, orderBy: { createdAt: 'asc' } },
         commissionEntries: { include: { entity: true } },
+        pendingDeliveries: { include: { entity: true }, orderBy: { createdAt: 'asc' } },
         operator: { select: { id: true, fullName: true, email: true } },
       },
     });

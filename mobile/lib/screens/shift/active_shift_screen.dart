@@ -503,6 +503,73 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                   ),
                   const SizedBox(height: 8),
 
+                  // Pending deliveries
+                  Card(
+                    color: const Color(0xFF7C3AED).withOpacity(0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('ENTREGAS PENDIENTES',
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF7C3AED),
+                                    fontSize: 13,
+                                  )),
+                              TextButton.icon(
+                                onPressed: () =>
+                                    context.push('/shift/pending-deliveries'),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Editar'),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(60, 30),
+                                  foregroundColor: const Color(0xFF7C3AED),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (shift.pendingDeliveries.isEmpty)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Sin entregas pendientes',
+                                style: TextStyle(
+                                    color: _kMuted,
+                                    fontSize: 13),
+                              ),
+                            )
+                          else ...[
+                            const SizedBox(height: 8),
+                            ...shift.pendingDeliveries.map((pd) =>
+                                _infoRow(
+                                    '${pd.entityName}: ${pd.description ?? ""}',
+                                    formatCurrency(pd.amount))),
+                            const Divider(),
+                            _infoRow(
+                              'Total entregas pendientes',
+                              formatCurrency(
+                                  shift.pendingDeliveries
+                                      .fold<double>(
+                                          0.0,
+                                          (sum, pd) =>
+                                              sum + pd.amount)),
+                              bold: true,
+                              color: const Color(0xFF7C3AED),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
                   // Discrepancy preview
                   if (_reconciliation != null) ...[
                     _buildDiscrepancyPreview(_reconciliation!),

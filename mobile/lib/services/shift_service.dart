@@ -95,6 +95,14 @@ class ShiftService {
     return response.data;
   }
 
+  Future<Shift> updatePendingDeliveries(
+      String shiftId, List<Map<String, dynamic>> pendingDeliveries) async {
+    final response = await _api.patch('/shifts/$shiftId/pending-deliveries', data: {
+      'pendingDeliveries': pendingDeliveries,
+    });
+    return Shift.fromJson(response.data);
+  }
+
   Future<Map<String, dynamic>> getShiftComparisons({int page = 1, int limit = 20}) async {
     final response = await _api.get('/shifts/comparisons', queryParameters: {
       'page': page,
