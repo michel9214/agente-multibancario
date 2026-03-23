@@ -440,17 +440,18 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: _kSlate.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(4),
+                                color: _kSlate,
+                                borderRadius: BorderRadius.circular(5),
                               ),
                               child: Text(
                                 timeLabel,
                                 style: GoogleFonts.dmSans(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kMuted,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),

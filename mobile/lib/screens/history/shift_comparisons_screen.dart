@@ -7,6 +7,7 @@ import '../../widgets/currency_formatter.dart';
 const _kSlate = Color(0xFF1E293B);
 const _kSlateLight = Color(0xFF334155);
 const _kSurface = Color(0xFFF8FAFC);
+const _kMuted = Color(0xFF64748B);
 const _kGreen = Color(0xFF059669);
 const _kGreenBg = Color(0xFFECFDF5);
 const _kRed = Color(0xFFDC2626);
@@ -44,19 +45,21 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final comp = comparison;
+    // totalDiff now only includes entities (no cash)
     final color = _diffColor(comp.totalDiff);
     final bg = _diffBg(comp.totalDiff);
 
-    final totalClosing = comp.closingShift.cash +
+    // Entity-only totals
+    final entityClosing =
         comp.entityComparisons.fold<double>(0, (s, e) => s + e.closingAmount);
-    final totalOpening = comp.openingShift.cash +
+    final entityOpening =
         comp.entityComparisons.fold<double>(0, (s, e) => s + e.openingAmount);
 
     return Scaffold(
       backgroundColor: _kSurface,
       body: CustomScrollView(
         slivers: [
-          // -- Dark header with total diff --
+          // -- Dark header with total entity diff --
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
@@ -78,12 +81,12 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Empalme de Turnos',
+                          'EMPALME DE TURNOS',
                           style: GoogleFonts.dmSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white54,
-                            letterSpacing: 1.2,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white38,
+                            letterSpacing: 1.5,
                           ),
                         ),
                         const Spacer(),
@@ -117,6 +120,13 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                             letterSpacing: -1,
                           ),
                         ),
+                        Text(
+                          'en saldos de entidades',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: Colors.white30,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -130,7 +140,7 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Column(
                 children: [
-                  // -- Operator cards side by side --
+                  // -- Operator cards --
                   Row(
                     children: [
                       Expanded(
@@ -156,55 +166,29 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                     ],
                   ),
 
+                  const SizedBox(height: 24),
+
+                  // -- Cash section (informational, excluded from total) --
+                  _sectionTitle('EFECTIVO EN CAJA'),
+                  const SizedBox(height: 8),
+                  _cashTile(comp),
+
                   const SizedBox(height: 20),
 
-                  // -- Section title --
-                  Row(
-                    children: [
-                      Container(
-                        width: 3,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: _kSlate,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'DESGLOSE POR CUENTA',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _kSlateLight,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                  // -- Entities section --
+                  _sectionTitle('SALDOS POR ENTIDAD'),
+                  const SizedBox(height: 8),
 
-                  // -- Cash row (special) --
-                  _entityTile(
-                    name: 'Efectivo en Caja',
-                    closingVal: comp.closingShift.cash,
-                    openingVal: comp.openingShift.cash,
-                    diff: comp.cashDiff,
-                    icon: Icons.payments_rounded,
-                    isCash: true,
-                  ),
-
-                  // -- Entity rows --
                   ...comp.entityComparisons.map((e) => _entityTile(
                         name: e.entityName,
                         closingVal: e.closingAmount,
                         openingVal: e.openingAmount,
                         diff: e.diff,
-                        icon: Icons.account_balance_rounded,
                       )),
 
                   const SizedBox(height: 6),
 
-                  // -- Total summary bar --
+                  // -- Total summary (entities only) --
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -220,12 +204,12 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Total cierre',
+                            Text('Saldos cierre',
                                 style: GoogleFonts.dmSans(
                                   fontSize: 13,
-                                  color: Colors.grey[600],
+                                  color: _kMuted,
                                 )),
-                            Text(formatCurrency(totalClosing),
+                            Text(formatCurrency(entityClosing),
                                 style: GoogleFonts.dmMono(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -236,12 +220,12 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Total apertura',
+                            Text('Saldos apertura',
                                 style: GoogleFonts.dmSans(
                                   fontSize: 13,
-                                  color: Colors.grey[600],
+                                  color: _kMuted,
                                 )),
-                            Text(formatCurrency(totalOpening),
+                            Text(formatCurrency(entityOpening),
                                 style: GoogleFonts.dmMono(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -278,8 +262,124 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  SizedBox(
+                      height:
+                          MediaQuery.of(context).padding.bottom + 32),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: _kSlate,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: GoogleFonts.dmSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: _kSlateLight,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -- Cash tile: visually distinct, marked as not included --
+  Widget _cashTile(ShiftComparison comp) {
+    final cashColor = _diffColor(comp.cashDiff);
+    final hasDiff = comp.cashDiff.abs() >= 0.01;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.payments_rounded, size: 18, color: _kAmber),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Efectivo en Caja',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _kSlate,
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hasDiff
+                      ? cashColor.withOpacity(0.08)
+                      : _kGreenBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _formatDiff(comp.cashDiff),
+                  style: GoogleFonts.dmMono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: cashColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (hasDiff) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                    child:
+                        _amountPill('Cierre', comp.closingShift.cash, _kAmber)),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_rounded,
+                    size: 14, color: Colors.grey[300]),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: _amountPill(
+                        'Apertura', comp.openingShift.cash, _kBlue)),
+              ],
+            ),
+          ],
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              'No incluido en el total de diferencia',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: _kMuted,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ),
@@ -362,8 +462,6 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
     required double closingVal,
     required double openingVal,
     required double diff,
-    required IconData icon,
-    bool isCash = false,
   }) {
     final color = _diffColor(diff);
     final hasDiff = diff.abs() >= 0.01;
@@ -388,14 +486,10 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Entity name + diff badge
           Row(
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isCash ? _kAmber : Colors.grey[400],
-              ),
+              Icon(Icons.account_balance_rounded,
+                  size: 18, color: Colors.grey[400]),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -427,30 +521,18 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-
-          // Only show amounts if there is a difference
           if (hasDiff) ...[
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: _amountPill(
-                    'Cierre',
-                    closingVal,
-                    _kAmber,
-                  ),
-                ),
+                    child: _amountPill('Cierre', closingVal, _kAmber)),
                 const SizedBox(width: 8),
                 Icon(Icons.arrow_forward_rounded,
                     size: 14, color: Colors.grey[300]),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _amountPill(
-                    'Apertura',
-                    openingVal,
-                    _kBlue,
-                  ),
-                ),
+                    child: _amountPill('Apertura', openingVal, _kBlue)),
               ],
             ),
           ],

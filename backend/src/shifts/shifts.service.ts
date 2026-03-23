@@ -438,7 +438,7 @@ export class ShiftsService {
 
       const cashDiff =
         Number(next.startingCash) - Number(prev.endingCash || 0);
-      const totalDiff = cashDiff + totalEntityDiff;
+      const totalDiff = totalEntityDiff;
 
       comparisons.push({
         closingShift: {
