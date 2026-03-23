@@ -143,26 +143,13 @@ class SectionDetailScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 color: accent.withOpacity(0.06),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${entries.length} entidad${entries.length > 1 ? 'es' : ''}',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: accent,
-                      ),
-                    ),
-                    Text(
-                      'Saldos: ${formatCurrency(totalBalance)}',
-                      style: GoogleFonts.dmMono(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '${entries.length} entidad${entries.length > 1 ? 'es' : ''}',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
                 ),
               ),
             ),
