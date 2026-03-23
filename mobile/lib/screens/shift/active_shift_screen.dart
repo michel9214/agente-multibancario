@@ -657,7 +657,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
   }
 
   Widget _buildDiscrepancyPreview(Reconciliation r) {
-    final discrepancy = r.totalClosing - r.totalExpected;
+    final discrepancy = r.discrepancy;
     final Color discColor;
     final String discLabel;
     if (discrepancy.abs() < 0.01) {
