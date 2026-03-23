@@ -179,7 +179,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Discrepancia: ${formatCurrency(r.totalClosing - r.totalExpected)}',
+                  'Discrepancia: ${formatCurrency(r.discrepancy)}',
                   style: GoogleFonts.dmMono(fontSize: 18, color: textColor),
                 ),
               ],
@@ -379,7 +379,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('ENTREGAS PENDIENTES',
+                    Text('PENDIENTES POR ENTREGAR',
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF7C3AED),
@@ -391,7 +391,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                         '${pd.entityName}: ${pd.description ?? ""}',
                         formatCurrency(pd.amount))),
                     const Divider(),
-                    _row('Total entregas pendientes',
+                    _row('Total pendientes por entregar',
                         formatCurrency(r.totalPendingDeliveries),
                         bold: true, color: const Color(0xFF7C3AED)),
                   ],
@@ -413,7 +413,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   const Divider(),
                   _row(
                     'DISCREPANCIA',
-                    formatCurrency(r.totalClosing - r.totalExpected),
+                    formatCurrency(r.discrepancy),
                     bold: true,
                     color: statusColor,
                     fontSize: 16,

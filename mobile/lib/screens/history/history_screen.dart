@@ -367,7 +367,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final totalExpected = totalOpening + netMovements;
     final totalClosingBalance = shift.totalClosingBalance ?? 0.0;
     final totalClosing = (shift.endingCash ?? 0.0) + totalClosingBalance;
-    final discrepancy = totalClosing - totalExpected;
+    final totalPendingDel = shift.pendingDeliveries.fold<double>(0.0, (sum, pd) => sum + pd.amount);
+    final discrepancy = totalClosing - totalExpected - totalPendingDel;
 
     final Color discColor;
     final Color discBg;

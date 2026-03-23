@@ -224,7 +224,8 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
     final totalClosingBalance =
         closingEntries.fold<double>(0.0, (sum, b) => sum + b.amount);
     final totalClosing = (shift.endingCash ?? 0) + totalClosingBalance;
-    final discrepancy = totalClosing - totalExpected;
+    final totalPendingDeliveries = shift.pendingDeliveries.fold<double>(0.0, (sum, pd) => sum + pd.amount);
+    final discrepancy = totalClosing - totalExpected - totalPendingDeliveries;
 
     final dColor = _discColor(discrepancy);
 
@@ -553,7 +554,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                               const Icon(Icons.pending_actions_rounded,
                                   color: _kPurple, size: 18),
                               const SizedBox(width: 8),
-                              Text('ENTREGAS PENDIENTES',
+                              Text('PENDIENTES POR ENTREGAR',
                                   style: GoogleFonts.dmSans(
                                     fontWeight: FontWeight.w700,
                                     color: _kPurple,

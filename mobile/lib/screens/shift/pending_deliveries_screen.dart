@@ -100,7 +100,7 @@ class _PendingDeliveriesScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Entregas pendientes actualizadas'),
+            content: Text('Pendientes por entregar actualizados'),
             backgroundColor: Color(0xFF059669),
           ),
         );
@@ -121,7 +121,7 @@ class _PendingDeliveriesScreenState
     final shift = ref.watch(activeShiftProvider).valueOrNull;
     if (shift == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Entregas Pendientes')),
+        appBar: AppBar(title: const Text('Pendientes por Entregar')),
         body: const Center(child: Text('No hay turno activo')),
       );
     }
@@ -137,7 +137,7 @@ class _PendingDeliveriesScreenState
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(title: const Text('Entregas Pendientes')),
+      appBar: AppBar(title: const Text('Pendientes por Entregar')),
       body: Column(
         children: [
           // Total bar
@@ -173,11 +173,11 @@ class _PendingDeliveriesScreenState
                         Icon(Icons.pending_actions_rounded,
                             size: 48, color: Colors.grey[300]),
                         const SizedBox(height: 12),
-                        Text('Sin entregas pendientes',
+                        Text('Sin pendientes por entregar',
                             style: GoogleFonts.dmSans(color: _kMuted)),
                         const SizedBox(height: 4),
                         Text(
-                          'Agrega entregas que aún no fueron recogidas',
+                          'Agrega montos que aún no fueron recogidos',
                           style: GoogleFonts.dmSans(
                               fontSize: 12, color: _kMuted),
                         ),
@@ -257,7 +257,7 @@ class _PendingDeliveriesScreenState
           // Header with delete
           Row(
             children: [
-              Text('Entrega ${index + 1}',
+              Text('Pendiente ${index + 1}',
                   style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,

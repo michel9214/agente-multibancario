@@ -29,6 +29,7 @@ class ActiveShiftScreen extends ConsumerStatefulWidget {
 class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
   Reconciliation? _reconciliation;
   bool _loadingRecon = false;
+  String? _lastShiftState;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +52,14 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
               icon: Icons.access_time,
               title: 'No hay turno activo',
             );
+          }
+
+          // Detect shift data changes and reset reconciliation
+          final shiftState = '${shift.id}_${shift.status}_${shift.movements.length}_${shift.pendingDeliveries.length}_${shift.commissionEntries.length}';
+          if (shiftState != _lastShiftState) {
+            _lastShiftState = shiftState;
+            _reconciliation = null;
+            _loadingRecon = false;
           }
 
           // Load reconciliation for PRECLOSED shifts
@@ -518,7 +527,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                             mainAxisAlignment:
                                 MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('ENTREGAS PENDIENTES',
+                              Text('PENDIENTES POR ENTREGAR',
                                   style: GoogleFonts.dmSans(
                                     fontWeight: FontWeight.w700,
                                     color: const Color(0xFF7C3AED),
@@ -542,7 +551,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                               padding:
                                   const EdgeInsets.symmetric(vertical: 8),
                               child: Text(
-                                'Sin entregas pendientes',
+                                'Sin pendientes por entregar',
                                 style: TextStyle(
                                     color: _kMuted,
                                     fontSize: 13),
@@ -556,7 +565,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
                                     formatCurrency(pd.amount))),
                             const Divider(),
                             _infoRow(
-                              'Total entregas pendientes',
+                              'Total pendientes por entregar',
                               formatCurrency(
                                   shift.pendingDeliveries
                                       .fold<double>(
