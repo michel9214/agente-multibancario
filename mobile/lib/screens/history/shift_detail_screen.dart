@@ -401,6 +401,25 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
+                  // Pending deliveries nav card (after movements, before cierre)
+                  if (shift.pendingDeliveries.isNotEmpty) ...[
+                    _navCard(
+                      'PENDIENTES POR ENTREGAR (${shift.pendingDeliveries.length})',
+                      formatCurrency(totalPendingDeliveries),
+                      '${shift.pendingDeliveries.length} pendiente${shift.pendingDeliveries.length > 1 ? 's' : ''}',
+                      const Color(0xFF7C3AED),
+                      Icons.pending_actions_rounded,
+                      () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => PendingDeliveriesDetailScreen(
+                                    pendingDeliveries: shift.pendingDeliveries,
+                                    totalPending: totalPendingDeliveries,
+                                  ))),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
                   if (shift.isClosed || shift.isPreclosed) ...[
                     _navCard(
                       'CIERRE',
@@ -423,7 +442,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Esperado vs cierre (subtle)
+                    // Esperado vs cierre (includes pending deliveries)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -433,25 +452,37 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: dColor.withOpacity(0.12)),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Text('Esperado: ',
-                              style: GoogleFonts.dmSans(
-                                  fontSize: 12, color: _kMuted)),
-                          Text(formatCurrency(totalExpected),
-                              style: GoogleFonts.dmMono(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kMuted)),
-                          const Spacer(),
-                          Text('Diferencia: ',
-                              style: GoogleFonts.dmSans(
-                                  fontSize: 12, color: dColor)),
-                          Text(formatCurrency(discrepancy),
-                              style: GoogleFonts.dmMono(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: dColor)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Esperado (apertura + mov. - pend.)',
+                                  style: GoogleFonts.dmSans(
+                                      fontSize: 11, color: _kMuted)),
+                              Text(formatCurrency(totalExpected - totalPendingDeliveries),
+                                  style: GoogleFonts.dmMono(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: _kMuted)),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Diferencia',
+                                  style: GoogleFonts.dmSans(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: dColor)),
+                              Text(formatCurrency(discrepancy),
+                                  style: GoogleFonts.dmMono(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: dColor)),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -517,75 +548,6 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                                   style: GoogleFonts.dmMono(
                                     fontWeight: FontWeight.w700,
                                     color: _kTeal,
-                                  )),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-
-                  // Pending deliveries
-                  if (shift.pendingDeliveries.isNotEmpty) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: const Border(
-                          left: BorderSide(
-                              color: _kPurple, width: 3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.pending_actions_rounded,
-                                  color: _kPurple, size: 18),
-                              const SizedBox(width: 8),
-                              Text('PENDIENTES POR ENTREGAR',
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w700,
-                                    color: _kPurple,
-                                    fontSize: 12,
-                                    letterSpacing: 0.8,
-                                  )),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ...shift.pendingDeliveries.map((pd) => _dataRow(
-                              '${pd.entityName}: ${pd.description ?? ""}',
-                              formatCurrency(pd.amount))),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Divider(
-                                color: Colors.grey.shade200, height: 1),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Total',
-                                  style: GoogleFonts.dmSans(
-                                      fontWeight: FontWeight.w700,
-                                      color: _kPurple)),
-                              Text(
-                                  formatCurrency(shift.pendingDeliveries
-                                      .fold<double>(
-                                          0.0, (s, pd) => s + pd.amount)),
-                                  style: GoogleFonts.dmMono(
-                                    fontWeight: FontWeight.w700,
-                                    color: _kPurple,
                                   )),
                             ],
                           ),

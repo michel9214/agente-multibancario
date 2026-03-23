@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/balance_entry.dart';
 import '../../models/movement.dart';
+import '../../models/shift.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
 
@@ -576,6 +577,132 @@ class _MovementTile extends StatelessWidget {
                       GoogleFonts.dmSans(fontSize: 10, color: _kMuted)),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// ─────────────────────────────────────────────
+/// Pending deliveries detail
+/// ─────────────────────────────────────────────
+class PendingDeliveriesDetailScreen extends StatelessWidget {
+  final List<PendingDelivery> pendingDeliveries;
+  final double totalPending;
+
+  const PendingDeliveriesDetailScreen({
+    super.key,
+    required this.pendingDeliveries,
+    required this.totalPending,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _kSurface,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: _kSlate,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0F172A), _kSlate],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PENDIENTES POR ENTREGAR',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white38,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          formatCurrency(totalPending),
+                          style: GoogleFonts.dmMono(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        Text(
+                          '${pendingDeliveries.length} pendiente${pendingDeliveries.length != 1 ? 's' : ''}',
+                          style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white30),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 32),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final pd = pendingDeliveries[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border(
+                        left: BorderSide(color: const Color(0xFF7C3AED).withOpacity(0.5), width: 3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 1)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.pending_actions_rounded, color: Color(0xFF7C3AED), size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(pd.entityName,
+                                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 14, color: _kSlate)),
+                              if (pd.description != null && pd.description!.isNotEmpty)
+                                Text(pd.description!, style: GoogleFonts.dmSans(fontSize: 12, color: _kMuted)),
+                            ],
+                          ),
+                        ),
+                        Text(formatCurrency(pd.amount),
+                            style: GoogleFonts.dmMono(fontWeight: FontWeight.w700, fontSize: 15, color: _kSlate)),
+                      ],
+                    ),
+                  );
+                },
+                childCount: pendingDeliveries.length,
+              ),
+            ),
+          ),
         ],
       ),
     );

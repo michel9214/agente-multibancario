@@ -340,6 +340,7 @@ export class ShiftsService {
         include: {
           operator: { select: { id: true, fullName: true, email: true } },
           commissionEntries: true,
+          pendingDeliveries: true,
         },
         orderBy: { startedAt: 'desc' },
         skip,
