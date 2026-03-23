@@ -146,12 +146,29 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
 
     final widgets = <Widget>[];
+    final groupKeys = grouped.keys.toList();
 
-    for (final entry in grouped.entries) {
-      final dateKey = entry.key;
-      final dayShifts = entry.value;
+    for (var g = 0; g < groupKeys.length; g++) {
+      final dateKey = groupKeys[g];
+      final dayShifts = grouped[dateKey]!;
 
-      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 18));
+      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 6));
+
+      // -- Cross-day bridge (between last shift of previous day and first of this day) --
+      if (g > 0 && isOwner) {
+        final prevDayShifts = grouped[groupKeys[g - 1]]!;
+        final lastShiftPrevDay = prevDayShifts.last; // oldest of previous day
+        final firstShiftThisDay = dayShifts.first; // newest of this day
+        // firstShiftThisDay is the opening shift (it opened after lastShiftPrevDay closed)
+        final comp = _findComparisonForOpeningShift(firstShiftThisDay.id);
+        if (comp != null) {
+          widgets.add(Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: _buildComparisonBridge(comp),
+          ));
+          widgets.add(const SizedBox(height: 6));
+        }
+      }
 
       // -- Day container --
       widgets.add(
@@ -214,11 +231,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ),
               ),
 
-              // Shifts + bridges
+              // Shifts + intra-day bridges only
               ...List.generate(dayShifts.length, (i) {
                 final shift = dayShifts[i];
                 final turnNum = turnNumbers[shift.id] ?? 1;
-                final globalIdx = allShiftsOrdered.indexOf(shift);
                 final items = <Widget>[];
 
                 items.add(_buildShiftTile(
@@ -229,7 +245,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   isEven: i.isEven,
                 ));
 
-                if (isOwner && globalIdx < allShiftsOrdered.length - 1) {
+                // Only show bridge INSIDE the day card if next shift is same day
+                if (isOwner && i < dayShifts.length - 1) {
                   final comp = _findComparisonForOpeningShift(shift.id);
                   if (comp != null) {
                     items.add(_buildComparisonBridge(comp));
