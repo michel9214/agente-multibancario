@@ -352,7 +352,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
   Widget _buildBalancesStep(List<BalanceEntry> openingEntries) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       itemCount: openingEntries.length + 1,
       itemBuilder: (context, i) {
         if (i == 0) {
@@ -637,7 +637,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     ]);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       children: items,
     );
   }
@@ -647,7 +647,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     final sencillo = shift?.sencillo ?? 0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -750,7 +750,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       children: [
         Text('Vista Previa del Cierre',
             style: Theme.of(context).textTheme.titleLarge),

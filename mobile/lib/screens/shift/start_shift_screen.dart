@@ -442,7 +442,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   Widget _buildCashStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -492,7 +492,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
 
   Widget _buildBalancesStep(List<BankingEntity> entities) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       itemCount: entities.length + 1,
       itemBuilder: (context, i) {
         if (i == 0) {
@@ -632,7 +632,7 @@ class _StartShiftScreenState extends ConsumerState<StartShiftScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
