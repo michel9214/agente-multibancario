@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/shift_service.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/loading_widget.dart';
@@ -48,8 +49,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isOwner = ref.watch(authProvider).user?.isOwner == true;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Historial de Turnos')),
+      appBar: AppBar(
+        title: const Text('Historial de Turnos'),
+        actions: [
+          if (isOwner)
+            IconButton(
+              icon: const Icon(Icons.compare_arrows),
+              tooltip: 'Comparar Turnos',
+              onPressed: () => context.push('/shift-comparisons'),
+            ),
+        ],
+      ),
       body: _loading
           ? const LoadingWidget(message: 'Cargando historial...')
           : _error != null

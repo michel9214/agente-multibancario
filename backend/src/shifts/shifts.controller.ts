@@ -34,6 +34,16 @@ export class ShiftsController {
     return this.shiftsService.getLastClosedShift();
   }
 
+  @Get('comparisons')
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  getShiftComparisons(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.shiftsService.getShiftComparisons(page, limit);
+  }
+
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })

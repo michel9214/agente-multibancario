@@ -367,6 +367,106 @@ export class ShiftsService {
     return shift;
   }
 
+  async getShiftComparisons(page = 1, limit = 20) {
+    // Fetch all closed shifts with their balance entries, ordered by startedAt ASC
+    const closedShifts = await this.prisma.shift.findMany({
+      where: { status: ShiftStatus.CLOSED },
+      orderBy: { startedAt: 'asc' },
+      include: {
+        balanceEntries: { include: { entity: true } },
+        operator: { select: { id: true, fullName: true } },
+      },
+    });
+
+    if (closedShifts.length < 2) {
+      return { data: [], total: 0, page, limit };
+    }
+
+    // Build comparisons for each consecutive pair
+    const comparisons = [];
+    for (let i = 0; i < closedShifts.length - 1; i++) {
+      const prev = closedShifts[i];
+      const next = closedShifts[i + 1];
+
+      const prevClosing = prev.balanceEntries.filter(
+        (b) => b.type === BalanceType.CLOSING,
+      );
+      const nextOpening = next.balanceEntries.filter(
+        (b) => b.type === BalanceType.OPENING,
+      );
+
+      // Build union of all entity IDs
+      const entityIds = new Set<string>();
+      prevClosing.forEach((b) => entityIds.add(b.entityId));
+      nextOpening.forEach((b) => entityIds.add(b.entityId));
+
+      const entityComparisons = [];
+      let totalEntityDiff = 0;
+
+      for (const entityId of entityIds) {
+        const closingEntry = prevClosing.find((b) => b.entityId === entityId);
+        const openingEntry = nextOpening.find((b) => b.entityId === entityId);
+        const closingAmount = closingEntry
+          ? Number(closingEntry.amount)
+          : 0;
+        const openingAmount = openingEntry
+          ? Number(openingEntry.amount)
+          : 0;
+        const diff = openingAmount - closingAmount;
+        totalEntityDiff += diff;
+
+        const entityName =
+          closingEntry?.entity?.name ||
+          openingEntry?.entity?.name ||
+          'Entidad';
+
+        entityComparisons.push({
+          entityId,
+          entityName,
+          closingAmount,
+          openingAmount,
+          diff,
+        });
+      }
+
+      // Sort entity comparisons by name
+      entityComparisons.sort((a, b) =>
+        a.entityName.localeCompare(b.entityName),
+      );
+
+      const cashDiff =
+        Number(next.startingCash) - Number(prev.endingCash || 0);
+      const totalDiff = cashDiff + totalEntityDiff;
+
+      comparisons.push({
+        closingShift: {
+          id: prev.id,
+          startedAt: prev.startedAt,
+          closedAt: prev.closedAt,
+          operatorName: prev.operator?.fullName || '-',
+          endingCash: Number(prev.endingCash || 0),
+        },
+        openingShift: {
+          id: next.id,
+          startedAt: next.startedAt,
+          operatorName: next.operator?.fullName || '-',
+          startingCash: Number(next.startingCash),
+        },
+        cashDiff,
+        totalDiff,
+        entityComparisons,
+      });
+    }
+
+    // Reverse to show most recent first, then paginate
+    comparisons.reverse();
+    const total = comparisons.length;
+    const skip = (page - 1) * limit;
+    const data = comparisons.slice(skip, skip + limit);
+
+    return { data, total, page, limit };
+  }
+
   private async getShiftWithDetails(shiftId: string, tx?: any) {
     const db = tx || this.prisma;
     return db.shift.findUnique({

@@ -26,6 +26,15 @@ String formatCurrency(double amount) {
   return 'S/ ${formatter.format(amount)}';
 }
 
+String formatCurrencyShort(double amount) {
+  final formatter = NumberFormat('#,##0.##', 'en_US');
+  return 'S/ ${formatter.format(amount)}';
+}
+
+String formatDateTime(DateTime date) {
+  return DateFormat('dd/MM HH:mm', 'es_PE').format(date.toLocal());
+}
+
 String formatDate(DateTime date) {
   return DateFormat('dd/MM/yyyy HH:mm', 'es_PE').format(date.toLocal());
 }
