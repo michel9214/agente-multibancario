@@ -22,6 +22,11 @@ const _kTeal = Color(0xFF0D9488);
 const _kAmber = Color(0xFFD97706);
 const _kAmberBg = Color(0xFFFFFBEB);
 
+String _dayName(DateTime date) {
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  return days[date.toLocal().weekday - 1];
+}
+
 String _turnoLabel(DateTime startedAt) {
   final hour = startedAt.toLocal().hour;
   if (hour < 12) return 'Mañana';
@@ -203,7 +208,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         size: 13, color: Colors.white54),
                     const SizedBox(width: 8),
                     Text(
-                      dateKey,
+                      '$dateKey  ·  ${_dayName(dayShifts.first.startedAt)}',
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
