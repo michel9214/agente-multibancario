@@ -159,13 +159,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
       if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 6));
 
-      // -- Cross-day bridge (between last shift of previous day and first of this day) --
+      // -- Cross-day bridge --
+      // Groups are ordered most-recent-first. g-1 = newer day, g = older day.
+      // Chronologically: older day's latest shift closes → newer day's earliest opens.
+      // In display: newer day (.first=latest, .last=earliest) is at g-1.
+      // The "opening" shift is the earliest of the newer day = grouped[g-1].last
       if (g > 0 && isOwner) {
-        final prevDayShifts = grouped[groupKeys[g - 1]]!;
-        final lastShiftPrevDay = prevDayShifts.last; // oldest of previous day
-        final firstShiftThisDay = dayShifts.first; // newest of this day
-        // firstShiftThisDay is the opening shift (it opened after lastShiftPrevDay closed)
-        final comp = _findComparisonForOpeningShift(firstShiftThisDay.id);
+        final newerDayShifts = grouped[groupKeys[g - 1]]!;
+        final earliestOfNewerDay = newerDayShifts.last;
+        final comp = _findComparisonForOpeningShift(earliestOfNewerDay.id);
         if (comp != null) {
           widgets.add(Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
