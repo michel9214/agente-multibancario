@@ -6,14 +6,18 @@ import '../../widgets/currency_formatter.dart';
 import '../../widgets/photo_picker.dart';
 
 const _kSlate = Color(0xFF1E293B);
+const _kSlateLight = Color(0xFF334155);
 const _kMuted = Color(0xFF64748B);
+const _kSurface = Color(0xFFF8FAFC);
 const _kGreen = Color(0xFF059669);
 const _kRed = Color(0xFFDC2626);
 const _kBlue = Color(0xFF2563EB);
 const _kAmber = Color(0xFFD97706);
-const _kTeal = Color(0xFF0D9488);
+const _kPurple = Color(0xFF7C3AED);
 
-/// Detail screen for Opening/Closing sections
+/// ─────────────────────────────────────────────
+/// Opening / Closing section detail
+/// ─────────────────────────────────────────────
 class SectionDetailScreen extends StatelessWidget {
   final String title;
   final Color color;
@@ -38,75 +42,119 @@ class SectionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = title == 'Apertura' ? _kBlue : _kAmber;
+
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Cash
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(cashLabel,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w500)),
-                      Text(formatCurrency(cashAmount),
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ],
+      backgroundColor: _kSurface,
+      body: CustomScrollView(
+        slivers: [
+          // ── Sticky header with total ──
+          SliverAppBar(
+            expandedHeight: 190,
+            pinned: true,
+            backgroundColor: _kSlate,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0F172A), _kSlate],
                   ),
-                  if (sencillo > 0) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Sencillo',
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.orange)),
-                        Text(formatCurrency(sencillo),
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange)),
+                        Text(
+                          title.toUpperCase(),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white38,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Cash + sencillo row
+                        Row(
+                          children: [
+                            _headerPill(cashLabel, formatCurrency(cashAmount)),
+                            if (sencillo > 0) ...[
+                              const SizedBox(width: 8),
+                              _headerPill(
+                                  'Sencillo', formatCurrency(sencillo)),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          formatCurrency(totalGeneral),
+                          style: GoogleFonts.dmMono(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        Text(
+                          'Total ${title.toLowerCase()}',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: Colors.white30,
+                          ),
+                        ),
                       ],
                     ),
-                  ],
-                ],
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
 
-          // Entities
-          if (entries.isNotEmpty) ...[
-            Text('Entidades',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...entries.map((b) => _EntityCard(entry: b, color: color)),
-            const SizedBox(height: 12),
-          ],
+          // ── Entity balance subtitle bar ──
+          if (entries.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                color: accent.withOpacity(0.06),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${entries.length} entidad${entries.length > 1 ? 'es' : ''}',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accent,
+                      ),
+                    ),
+                    Text(
+                      'Saldos: ${formatCurrency(totalBalance)}',
+                      style: GoogleFonts.dmMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-          // Totals
-          Card(
-            color: color.withOpacity(0.1),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _totalRow('Total saldos entidades',
-                      formatCurrency(totalBalance)),
-                  const Divider(),
-                  _totalRow('TOTAL ${title.toUpperCase()}',
-                      formatCurrency(totalGeneral),
-                      bold: true, color: color),
-                ],
+          // ── Entity cards ──
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+                16, 12, 16, MediaQuery.of(context).padding.bottom + 32),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    _EntityTile(entry: entries[index], accent: accent),
+                childCount: entries.length,
               ),
             ),
           ),
@@ -115,108 +163,149 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _totalRow(String label, String value,
-      {bool bold = false, Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _headerPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label,
-              style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                color: color,
-                fontSize: bold ? 15 : 14,
-              )),
-          Text(value,
-              style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                color: color,
-                fontSize: bold ? 16 : 14,
-              )),
+          Text(
+            '$label: ',
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: Colors.white38,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.dmMono(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white70,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _EntityCard extends StatelessWidget {
+class _EntityTile extends StatelessWidget {
   final BalanceEntry entry;
-  final Color color;
+  final Color accent;
 
-  const _EntityCard({required this.entry, required this.color});
+  const _EntityTile({required this.entry, required this.accent});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: color.withOpacity(0.2),
-                  radius: 16,
-                  child: Icon(Icons.account_balance, color: color, size: 18),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(entry.entity?.name ?? 'Entidad',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
-                ),
-                Text(formatCurrency(entry.amount),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-              ],
-            ),
-            if (entry.receiptPhotoUrl != null) ...[
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () =>
-                    showPhotoPreview(context, entry.receiptPhotoUrl!),
-                child: ClipRRect(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    entry.receiptPhotoUrl!,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Container(
-                        height: 150,
-                        color: Colors.grey[200],
-                        child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2)),
-                      );
-                    },
-                    errorBuilder: (context, error, stack) => Container(
-                      height: 80,
-                      color: Colors.grey[200],
-                      child: const Center(
-                          child: Icon(Icons.broken_image, color: Colors.grey)),
-                    ),
+                ),
+                child:
+                    Icon(Icons.account_balance_rounded, color: accent, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  entry.entity?.name ?? 'Entidad',
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _kSlate,
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Center(
-                child: Text('Toca para ampliar',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              Text(
+                formatCurrency(entry.amount),
+                style: GoogleFonts.dmMono(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: _kSlate,
+                ),
               ),
             ],
+          ),
+          if (entry.receiptPhotoUrl != null) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => showPhotoPreview(context, entry.receiptPhotoUrl!),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  entry.receiptPhotoUrl!,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  cacheWidth: 800,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: _kMuted.withOpacity(0.3)),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stack) => Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                        child:
+                            Icon(Icons.broken_image_rounded, color: _kMuted)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: Text('Toca para ampliar',
+                  style: GoogleFonts.dmSans(
+                      fontSize: 10, color: _kMuted)),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Detail screen for Movements section
+/// ─────────────────────────────────────────────
+/// Movements section detail
+/// ─────────────────────────────────────────────
 class MovementsSectionScreen extends StatelessWidget {
   final List<Movement> movements;
   final double netMovements;
@@ -229,31 +318,136 @@ class MovementsSectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final totalIn = movements
+        .where((m) => m.isIncoming)
+        .fold<double>(0.0, (s, m) => s + m.amount);
+    final totalOut = movements
+        .where((m) => !m.isIncoming)
+        .fold<double>(0.0, (s, m) => s + m.amount);
+
     return Scaffold(
-      appBar: AppBar(title: Text('Movimientos (${movements.length})')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ...movements.map((m) => _MovementCard(movement: m)),
-          const SizedBox(height: 12),
-          Card(
-            color: Color(0xFF7C3AED).withOpacity(0.05),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Movimientos netos',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7C3AED))),
-                  Text(formatCurrency(netMovements),
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF7C3AED))),
-                ],
+      backgroundColor: _kSurface,
+      body: CustomScrollView(
+        slivers: [
+          // ── Sticky header with net amount ──
+          SliverAppBar(
+            expandedHeight: 190,
+            pinned: true,
+            backgroundColor: _kSlate,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0F172A), _kSlate],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'MOVIMIENTOS',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white38,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Entradas / Salidas pills
+                        Row(
+                          children: [
+                            _statPill(
+                              'Entradas',
+                              '+${formatCurrency(totalIn)}',
+                              const Color(0xFF6EE7B7),
+                            ),
+                            const SizedBox(width: 8),
+                            _statPill(
+                              'Salidas',
+                              '-${formatCurrency(totalOut)}',
+                              const Color(0xFFFCA5A5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          formatCurrency(netMovements),
+                          style: GoogleFonts.dmMono(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        Text(
+                          'Neto de ${movements.length} movimiento${movements.length != 1 ? 's' : ''}',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: Colors.white30,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
+            ),
+          ),
+
+          // ── Movement cards ──
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+                16, 12, 16, MediaQuery.of(context).padding.bottom + 32),
+            sliver: movements.isEmpty
+                ? SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Center(
+                        child: Text('Sin movimientos',
+                            style: GoogleFonts.dmSans(color: _kMuted)),
+                      ),
+                    ),
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          _MovementTile(movement: movements[index]),
+                      childCount: movements.length,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statPill(String label, String value, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: GoogleFonts.dmSans(fontSize: 11, color: Colors.white38),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.dmMono(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textColor,
             ),
           ),
         ],
@@ -262,97 +456,130 @@ class MovementsSectionScreen extends StatelessWidget {
   }
 }
 
-class _MovementCard extends StatelessWidget {
+class _MovementTile extends StatelessWidget {
   final Movement movement;
 
-  const _MovementCard({required this.movement});
+  const _MovementTile({required this.movement});
 
   @override
   Widget build(BuildContext context) {
     final m = movement;
     final isIn = m.isIncoming;
+    final color = isIn ? _kGreen : _kRed;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor:
-                      isIn ? Colors.green[100] : Colors.red[100],
-                  radius: 16,
-                  child: Icon(
-                    isIn ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: isIn ? Colors.green : Colors.red,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(m.typeLabel,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
-                      if (m.description != null)
-                        Text(m.description!,
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600])),
-                    ],
-                  ),
-                ),
-                Text(
-                  '${isIn ? '+' : '-'} ${formatCurrency(m.amount)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: isIn ? Colors.green : Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            if (m.receiptPhotoUrl != null) ...[
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () => showPhotoPreview(context, m.receiptPhotoUrl!),
-                child: ClipRRect(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(
+          left: BorderSide(color: color.withOpacity(0.5), width: 3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    m.receiptPhotoUrl!,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Container(
-                        height: 150,
-                        color: Colors.grey[200],
-                        child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2)),
-                      );
-                    },
-                    errorBuilder: (context, error, stack) => Container(
-                      height: 80,
-                      color: Colors.grey[200],
-                      child: const Center(
-                          child: Icon(Icons.broken_image, color: Colors.grey)),
-                    ),
-                  ),
+                ),
+                child: Icon(
+                  isIn
+                      ? Icons.arrow_downward_rounded
+                      : Icons.arrow_upward_rounded,
+                  color: color,
+                  size: 16,
                 ),
               ),
-              const SizedBox(height: 4),
-              Center(
-                child: Text('Toca para ampliar',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(m.typeLabel,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: _kSlate,
+                        )),
+                    if (m.description != null)
+                      Text(m.description!,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: _kMuted,
+                          )),
+                  ],
+                ),
+              ),
+              Text(
+                '${isIn ? '+' : '-'} ${formatCurrency(m.amount)}',
+                style: GoogleFonts.dmMono(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: color,
+                ),
               ),
             ],
+          ),
+          if (m.receiptPhotoUrl != null) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => showPhotoPreview(context, m.receiptPhotoUrl!),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  m.receiptPhotoUrl!,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  cacheWidth: 800,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: _kMuted.withOpacity(0.3)),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stack) => Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                        child:
+                            Icon(Icons.broken_image_rounded, color: _kMuted)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: Text('Toca para ampliar',
+                  style:
+                      GoogleFonts.dmSans(fontSize: 10, color: _kMuted)),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
