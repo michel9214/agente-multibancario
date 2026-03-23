@@ -367,7 +367,9 @@ export class ShiftsService {
     return shift;
   }
 
-  async getShiftComparisons(page = 1, limit = 20) {
+  async getShiftComparisons(page?: number, limit?: number) {
+    const p = Number(page) || 1;
+    const l = Number(limit) || 20;
     // Fetch all closed shifts with their balance entries, ordered by startedAt ASC
     const closedShifts = await this.prisma.shift.findMany({
       where: { status: ShiftStatus.CLOSED },
@@ -461,10 +463,10 @@ export class ShiftsService {
     // Reverse to show most recent first, then paginate
     comparisons.reverse();
     const total = comparisons.length;
-    const skip = (page - 1) * limit;
-    const data = comparisons.slice(skip, skip + limit);
+    const skip = (p - 1) * l;
+    const data = comparisons.slice(skip, skip + l);
 
-    return { data, total, page, limit };
+    return { data, total, page: p, limit: l };
   }
 
   private async getShiftWithDetails(shiftId: string, tx?: any) {
