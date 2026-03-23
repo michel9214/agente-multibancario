@@ -3,18 +3,39 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/shift_comparison.dart';
 import '../../widgets/currency_formatter.dart';
 
+// -- Palette --
+const _kSlate = Color(0xFF1E293B);
+const _kSlateLight = Color(0xFF334155);
+const _kSurface = Color(0xFFF8FAFC);
+const _kGreen = Color(0xFF059669);
+const _kGreenBg = Color(0xFFECFDF5);
+const _kRed = Color(0xFFDC2626);
+const _kRedBg = Color(0xFFFEF2F2);
+const _kBlue = Color(0xFF2563EB);
+const _kBlueBg = Color(0xFFEFF6FF);
+const _kAmber = Color(0xFFD97706);
+
 class ShiftComparisonDetailScreen extends StatelessWidget {
   final ShiftComparison comparison;
 
   const ShiftComparisonDetailScreen({super.key, required this.comparison});
 
   Color _diffColor(double diff) {
-    if (diff.abs() < 0.01) return const Color(0xFF0E9F6E);
-    if (diff > 0) return const Color(0xFF1A56DB);
-    return const Color(0xFFE02424);
+    if (diff.abs() < 0.01) return _kGreen;
+    return diff > 0 ? _kBlue : _kRed;
   }
 
-  String _diffText(double diff) {
+  Color _diffBg(double diff) {
+    if (diff.abs() < 0.01) return _kGreenBg;
+    return diff > 0 ? _kBlueBg : _kRedBg;
+  }
+
+  String _diffLabel(double diff) {
+    if (diff.abs() < 0.01) return 'Sin diferencia';
+    return diff > 0 ? 'Excedente' : 'Faltante';
+  }
+
+  String _formatDiff(double diff) {
     if (diff.abs() < 0.01) return 'S/ 0.00';
     final prefix = diff > 0 ? '+' : '';
     return '$prefix${formatCurrency(diff)}';
@@ -23,284 +44,447 @@ class ShiftComparisonDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final comp = comparison;
-    final totalColor = _diffColor(comp.totalDiff);
+    final color = _diffColor(comp.totalDiff);
+    final bg = _diffBg(comp.totalDiff);
+
+    final totalClosing = comp.closingShift.cash +
+        comp.entityComparisons.fold<double>(0, (s, e) => s + e.closingAmount);
+    final totalOpening = comp.openingShift.cash +
+        comp.entityComparisons.fold<double>(0, (s, e) => s + e.openingAmount);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de Diferencia')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Total difference banner
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: totalColor.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: totalColor, width: 2),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  comp.totalDiff.abs() < 0.01
-                      ? Icons.check_circle
-                      : Icons.swap_vert,
-                  size: 48,
-                  color: totalColor,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  comp.totalDiff.abs() < 0.01
-                      ? 'SIN DIFERENCIA'
-                      : 'DIFERENCIA TOTAL',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: totalColor,
+      backgroundColor: _kSurface,
+      body: CustomScrollView(
+        slivers: [
+          // -- Dark header with total diff --
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            backgroundColor: _kSlate,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0F172A), _kSlate],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _diffText(comp.totalDiff),
-                  style: GoogleFonts.poppins(
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Empalme de Turnos',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white54,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            _diffLabel(comp.totalDiff),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: comp.totalDiff.abs() < 0.01
+                                  ? const Color(0xFF6EE7B7)
+                                  : comp.totalDiff > 0
+                                      ? const Color(0xFF93C5FD)
+                                      : const Color(0xFFFCA5A5),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _formatDiff(comp.totalDiff),
+                          style: GoogleFonts.dmMono(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Column(
+                children: [
+                  // -- Operator cards side by side --
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _operatorCard(
+                          label: 'CIERRE',
+                          name: comp.closingShift.operatorName,
+                          date: comp.closingShift.closedAt ??
+                              comp.closingShift.startedAt,
+                          accentColor: _kAmber,
+                          icon: Icons.logout_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _operatorCard(
+                          label: 'APERTURA',
+                          name: comp.openingShift.operatorName,
+                          date: comp.openingShift.startedAt,
+                          accentColor: _kBlue,
+                          icon: Icons.login_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // -- Section title --
+                  Row(
+                    children: [
+                      Container(
+                        width: 3,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: _kSlate,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'DESGLOSE POR CUENTA',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _kSlateLight,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // -- Cash row (special) --
+                  _entityTile(
+                    name: 'Efectivo en Caja',
+                    closingVal: comp.closingShift.cash,
+                    openingVal: comp.openingShift.cash,
+                    diff: comp.cashDiff,
+                    icon: Icons.payments_rounded,
+                    isCash: true,
+                  ),
+
+                  // -- Entity rows --
+                  ...comp.entityComparisons.map((e) => _entityTile(
+                        name: e.entityName,
+                        closingVal: e.closingAmount,
+                        openingVal: e.openingAmount,
+                        diff: e.diff,
+                        icon: Icons.account_balance_rounded,
+                      )),
+
+                  const SizedBox(height: 6),
+
+                  // -- Total summary bar --
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: color.withOpacity(0.25),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Total cierre',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                )),
+                            Text(formatCurrency(totalClosing),
+                                style: GoogleFonts.dmMono(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Total apertura',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                )),
+                            Text(formatCurrency(totalOpening),
+                                style: GoogleFonts.dmMono(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(
+                            color: color.withOpacity(0.2),
+                            height: 1,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('DIFERENCIA',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: color,
+                                )),
+                            Text(
+                              _formatDiff(comp.totalDiff),
+                              style: GoogleFonts.dmMono(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _operatorCard({
+    required String label,
+    required String name,
+    required DateTime date,
+    required Color accentColor,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: accentColor),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: accentColor,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            name,
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _kSlate,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            formatDate(date),
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _entityTile({
+    required String name,
+    required double closingVal,
+    required double openingVal,
+    required double diff,
+    required IconData icon,
+    bool isCash = false,
+  }) {
+    final color = _diffColor(diff);
+    final hasDiff = diff.abs() >= 0.01;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: hasDiff
+            ? Border.all(color: color.withOpacity(0.2), width: 1)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Entity name + diff badge
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isCash ? _kAmber : Colors.grey[400],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _kSlate,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hasDiff ? color.withOpacity(0.08) : _kGreenBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _formatDiff(diff),
+                  style: GoogleFonts.dmMono(
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    fontSize: 28,
-                    color: totalColor,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Only show amounts if there is a difference
+          if (hasDiff) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _amountPill(
+                    'Cierre',
+                    closingVal,
+                    _kAmber,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_rounded,
+                    size: 14, color: Colors.grey[300]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _amountPill(
+                    'Apertura',
+                    openingVal,
+                    _kBlue,
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Shift info card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('CIERRE',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.orange[700],
-                            )),
-                        const SizedBox(height: 4),
-                        Text(
-                          comp.closingShift.operatorName,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          comp.closingShift.closedAt != null
-                              ? formatDate(comp.closingShift.closedAt!)
-                              : formatDate(comp.closingShift.startedAt),
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.arrow_forward,
-                        color: Colors.grey[500], size: 20),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('APERTURA',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue[700],
-                            )),
-                        const SizedBox(height: 4),
-                        Text(
-                          comp.openingShift.operatorName,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          formatDate(comp.openingShift.startedAt),
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Detail table card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Header
-                  _headerRow(),
-                  const Divider(height: 16),
-
-                  // Cash row
-                  _detailRow(
-                    'Efectivo',
-                    comp.closingShift.cash,
-                    comp.openingShift.cash,
-                    comp.cashDiff,
-                  ),
-                  const Divider(height: 8),
-
-                  // Entity rows
-                  ...comp.entityComparisons.map((e) => Column(
-                        children: [
-                          _detailRow(
-                            e.entityName,
-                            e.closingAmount,
-                            e.openingAmount,
-                            e.diff,
-                          ),
-                          const Divider(height: 8),
-                        ],
-                      )),
-
-                  const SizedBox(height: 4),
-                  // Total row
-                  _detailRow(
-                    'TOTAL',
-                    comp.closingShift.cash +
-                        comp.entityComparisons.fold<double>(
-                            0, (s, e) => s + e.closingAmount),
-                    comp.openingShift.cash +
-                        comp.entityComparisons.fold<double>(
-                            0, (s, e) => s + e.openingAmount),
-                    comp.totalDiff,
-                    bold: true,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _headerRow() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          const Expanded(flex: 3, child: SizedBox()),
-          Expanded(
-            flex: 2,
-            child: Text('Cierre',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.orange[700],
-                )),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text('Apertura',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue[700],
-                )),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text('Dif.',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                )),
-          ),
-        ],
+  Widget _amountPill(String label, double value, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
-  }
-
-  Widget _detailRow(
-    String label,
-    double closingVal,
-    double openingVal,
-    double diff, {
-    bool bold = false,
-  }) {
-    final diffColor = _diffColor(diff);
-    final fontSize = bold ? 13.0 : 12.0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: fontSize,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-                color: bold ? Colors.black87 : Colors.grey[700],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: accent,
+              letterSpacing: 0.5,
             ),
           ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              formatCurrencyShort(closingVal),
-              textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
-                fontSize: fontSize,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              formatCurrencyShort(openingVal),
-              textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
-                fontSize: fontSize,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              _diffText(diff),
-              textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w700,
-                color: diffColor,
-              ),
+          const SizedBox(height: 2),
+          Text(
+            formatCurrency(value),
+            style: GoogleFonts.dmMono(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _kSlate,
             ),
           ),
         ],
