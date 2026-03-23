@@ -23,6 +23,13 @@ const _kTeal = Color(0xFF0D9488);
 const _kAmber = Color(0xFFD97706);
 const _kAmberBg = Color(0xFFFFFBEB);
 
+String _turnoLabel(DateTime startedAt) {
+  final hour = startedAt.toLocal().hour;
+  if (hour < 12) return 'Mañana';
+  if (hour < 18) return 'Tarde';
+  return 'Noche';
+}
+
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
@@ -48,9 +55,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     setState(() => _loading = true);
     try {
       final data = await ShiftService().getShifts(page: _page);
-      final shifts = (data['data'] as List)
-          .map((e) => Shift.fromJson(e))
-          .toList();
+      final shifts =
+          (data['data'] as List).map((e) => Shift.fromJson(e)).toList();
 
       Map<String, ShiftComparison> compMap = {};
       final isOwner = ref.read(authProvider).user?.isOwner == true;
@@ -89,7 +95,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       body: _loading
           ? const LoadingWidget(message: 'Cargando historial...')
           : _error != null
-              ? ErrorDisplay(message: 'Error al cargar', onRetry: _loadShifts)
+              ? ErrorDisplay(
+                  message: 'Error al cargar', onRetry: _loadShifts)
               : _shifts.isEmpty
                   ? const EmptyState(
                       icon: Icons.history_rounded,
@@ -100,10 +107,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       onRefresh: _loadShifts,
                       color: _kSlate,
                       child: ListView(
-                        padding: EdgeInsets.fromLTRB(
-                            16,
-                            16,
-                            16,
+                        padding: EdgeInsets.fromLTRB(16, 16, 16,
                             MediaQuery.of(context).padding.bottom + 32),
                         children: _buildGroupedList(),
                       ),
@@ -119,7 +123,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   List<Widget> _buildGroupedList() {
-    final allShiftsOrdered = <Shift>[];
     final grouped = <String, List<Shift>>{};
     for (final shift in _shifts) {
       final dateKey = formatDateShort(shift.startedAt);
@@ -127,9 +130,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
     for (final list in grouped.values) {
       list.sort((a, b) => b.startedAt.compareTo(a.startedAt));
-    }
-    for (final entry in grouped.entries) {
-      allShiftsOrdered.addAll(entry.value);
     }
 
     final turnNumbers = <String, int>{};
@@ -141,76 +141,116 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
 
     final isOwner = ref.watch(authProvider).user?.isOwner == true;
-    final widgets = <Widget>[];
-    String? lastDateKey;
 
-    for (var idx = 0; idx < allShiftsOrdered.length; idx++) {
-      final shift = allShiftsOrdered[idx];
-      final dateKey = formatDateShort(shift.startedAt);
-
-      // Date header
-      if (dateKey != lastDateKey) {
-        if (lastDateKey != null) widgets.add(const SizedBox(height: 8));
-        widgets.add(_buildDateHeader(dateKey));
-        lastDateKey = dateKey;
-      }
-
-      // Shift card
-      widgets.add(_buildShiftCard(
-        context,
-        shift,
-        turnNumber: turnNumbers[shift.id] ?? 1,
-      ));
-
-      // Comparison bridge
-      if (isOwner && idx < allShiftsOrdered.length - 1) {
-        final comp = _findComparisonForOpeningShift(shift.id);
-        if (comp != null) {
-          widgets.add(_buildComparisonBridge(comp));
-        }
-      }
+    // Build flat list of all shifts in display order
+    final allShiftsOrdered = <Shift>[];
+    for (final entry in grouped.entries) {
+      allShiftsOrdered.addAll(entry.value);
     }
-    return widgets;
-  }
 
-  Widget _buildDateHeader(String dateKey) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _kSlate,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 13, color: Colors.white70),
-                const SizedBox(width: 6),
-                Text(
-                  dateKey,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: Colors.white,
+    final widgets = <Widget>[];
+
+    for (final entry in grouped.entries) {
+      final dateKey = entry.key;
+      final dayShifts = entry.value;
+
+      // Spacing between day groups
+      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 16));
+
+      // Day container
+      widgets.add(
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              // Day header
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0F172A), _kSlate],
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_rounded,
+                        size: 14, color: Colors.white54),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateKey,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${dayShifts.length} turno${dayShifts.length > 1 ? 's' : ''}',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          color: Colors.white60,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Shifts within this day
+              ...List.generate(dayShifts.length, (i) {
+                final shift = dayShifts[i];
+                final turnNum = turnNumbers[shift.id] ?? 1;
+                final globalIdx = allShiftsOrdered.indexOf(shift);
+
+                final cardWidgets = <Widget>[];
+
+                // Shift card content
+                cardWidgets.add(_buildShiftTile(
+                  context,
+                  shift,
+                  turnNumber: turnNum,
+                  isLast: i == dayShifts.length - 1,
+                ));
+
+                // Comparison bridge (between this and next shift in global order)
+                if (isOwner && globalIdx < allShiftsOrdered.length - 1) {
+                  final comp =
+                      _findComparisonForOpeningShift(shift.id);
+                  if (comp != null) {
+                    cardWidgets.add(_buildComparisonBridge(comp));
+                  }
+                }
+
+                return Column(children: cardWidgets);
+              }),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 1,
-              color: Colors.grey.shade200,
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
+    return widgets;
   }
 
   Widget _buildComparisonBridge(ShiftComparison comp) {
@@ -229,7 +269,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       color = diff > 0 ? _kBlue : _kRed;
       bg = diff > 0 ? _kBlueBg : _kRedBg;
       final prefix = diff > 0 ? '+' : '';
-      label = '$prefix${formatCurrency(diff)}';
+      label = 'Diferencia: $prefix${formatCurrency(diff)}';
       icon = Icons.warning_amber_rounded;
     }
 
@@ -242,67 +282,48 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border(
+            left: BorderSide(color: color, width: 3),
+          ),
+        ),
         child: Row(
           children: [
-            const SizedBox(width: 32),
-            // Vertical connector line
-            Container(
-              width: 2,
-              height: 28,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Bridge pill
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 10),
             Expanded(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withOpacity(0.15)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 16, color: color),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: color,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Ver detalle',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: color.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 16, color: color.withOpacity(0.5)),
-                  ],
+              child: Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: color,
                 ),
               ),
             ),
+            Text(
+              'Ver detalle',
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: color.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.chevron_right_rounded,
+                size: 16, color: color.withOpacity(0.5)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildShiftCard(BuildContext context, Shift shift,
-      {required int turnNumber}) {
+  Widget _buildShiftTile(BuildContext context, Shift shift,
+      {required int turnNumber, required bool isLast}) {
     final totalOpeningBalance = shift.totalOpeningBalance ?? 0.0;
     final totalOpening = shift.startingCash + totalOpeningBalance;
     final netMovements = shift.totalMovements ?? 0.0;
@@ -337,205 +358,206 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       discLabel = 'Faltante';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    final timeLabel = _turnoLabel(shift.startedAt);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/history/${shift.id}'),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            border: !isLast
+                ? Border(bottom: BorderSide(color: Colors.grey.shade100))
+                : null,
           ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push('/history/${shift.id}'),
           child: Column(
             children: [
-              // -- Card header: turn number + operator + time --
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: _kSlate.withOpacity(0.03),
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade100),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Turn number circle
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _kSlate,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$turnNumber',
-                          style: GoogleFonts.dmMono(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+              // Header: turn number + operator + status
+              Row(
+                children: [
+                  // Turn badge
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _kSlate,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 12),
-                    // Operator name + time
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            shift.operator?.fullName ?? 'Operador',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: _kSlate,
-                            ),
-                          ),
-                          Text(
-                            formatTime(shift.startedAt),
-                            style: GoogleFonts.dmMono(
-                              fontSize: 12,
-                              color: _kMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: discBg,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    child: Center(
                       child: Text(
-                        discLabel,
-                        style: GoogleFonts.dmSans(
-                          color: discColor,
+                        '$turnNumber',
+                        style: GoogleFonts.dmMono(
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                          letterSpacing: 0.3,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // -- Financial data --
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                child: Column(
-                  children: [
-                    // Two-column layout: apertura vs cierre
-                    if (shift.isClosed || shift.isPreclosed) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _financialColumn(
-                              'Apertura',
-                              totalOpening,
-                              _kBlue,
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 36,
-                            color: Colors.grey.shade200,
-                          ),
-                          Expanded(
-                            child: _financialColumn(
-                              'Cierre',
-                              totalClosing,
-                              _kAmber,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      // Discrepancy bar
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: discColor.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  discrepancy.abs() < 0.01
-                                      ? Icons.check_circle_rounded
-                                      : discrepancy > 0
-                                          ? Icons.trending_up_rounded
-                                          : Icons.trending_down_rounded,
-                                  size: 16,
-                                  color: discColor,
+                            Flexible(
+                              child: Text(
+                                shift.operator?.fullName ?? 'Operador',
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: _kSlate,
                                 ),
-                                const SizedBox(width: 8),
-                                Text('Discrepancia',
-                                    style: GoogleFonts.dmSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: discColor,
-                                    )),
-                              ],
-                            ),
-                            Text(
-                              formatCurrency(discrepancy),
-                              style: GoogleFonts.dmMono(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: discColor,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      if (netMovements.abs() >= 0.01 || totalComm > 0) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
-                            if (netMovements.abs() >= 0.01)
-                              _miniTag(
-                                'Mov: ${formatCurrencyShort(netMovements)}',
-                                netMovements >= 0 ? _kGreen : _kRed,
+                            Text(
+                              formatTime(shift.startedAt),
+                              style: GoogleFonts.dmMono(
+                                fontSize: 12,
+                                color: _kMuted,
                               ),
-                            if (netMovements.abs() >= 0.01 && totalComm > 0)
-                              const SizedBox(width: 6),
-                            if (totalComm > 0)
-                              _miniTag(
-                                'Com: ${formatCurrencyShort(totalComm)}',
-                                _kTeal,
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: _kSlate.withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(4),
                               ),
+                              child: Text(
+                                timeLabel,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kMuted,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ],
-                    ] else ...[
-                      // Open shift - just show apertura
-                      _financialRow('Apertura', totalOpening),
-                      if (netMovements.abs() >= 0.01)
-                        _financialRow('Movimientos', netMovements,
-                            color: netMovements >= 0 ? _kGreen : _kRed),
-                    ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: discBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      discLabel,
+                      style: GoogleFonts.dmSans(
+                        color: discColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Financial data
+              if (shift.isClosed || shift.isPreclosed) ...[
+                const SizedBox(height: 12),
+                // Apertura vs Cierre
+                Row(
+                  children: [
+                    Expanded(
+                      child: _financialColumn(
+                          'Apertura', totalOpening, _kBlue),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: Colors.grey.shade200,
+                    ),
+                    Expanded(
+                      child: _financialColumn(
+                          'Cierre', totalClosing, _kAmber),
+                    ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 10),
+                // Discrepancy
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: discColor.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            discrepancy.abs() < 0.01
+                                ? Icons.check_circle_rounded
+                                : discrepancy > 0
+                                    ? Icons.trending_up_rounded
+                                    : Icons.trending_down_rounded,
+                            size: 15,
+                            color: discColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text('Discrepancia',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: discColor,
+                              )),
+                        ],
+                      ),
+                      Text(
+                        formatCurrency(discrepancy),
+                        style: GoogleFonts.dmMono(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: discColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Movements & Commissions
+                if (netMovements.abs() >= 0.01 || totalComm > 0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (netMovements.abs() >= 0.01)
+                        _miniTag(
+                          'Movimientos: ${formatCurrencyShort(netMovements)}',
+                          netMovements >= 0 ? _kGreen : _kRed,
+                        ),
+                      if (netMovements.abs() >= 0.01 && totalComm > 0)
+                        const SizedBox(width: 6),
+                      if (totalComm > 0)
+                        _miniTag(
+                          'Comisiones: ${formatCurrencyShort(totalComm)}',
+                          _kTeal,
+                        ),
+                    ],
+                  ),
+                ],
+              ] else ...[
+                const SizedBox(height: 8),
+                _financialRow('Apertura', totalOpening),
+                if (netMovements.abs() >= 0.01)
+                  _financialRow('Movimientos', netMovements,
+                      color: netMovements >= 0 ? _kGreen : _kRed),
+              ],
             ],
           ),
         ),
@@ -557,7 +579,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             formatCurrency(value),
             style: GoogleFonts.dmMono(
@@ -573,7 +595,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Widget _financialRow(String label, double value, {Color? color}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -593,18 +615,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   Widget _miniTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.dmMono(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: color,
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.dmMono(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
