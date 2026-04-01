@@ -281,7 +281,38 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             const SizedBox(height: 8),
           ],
 
-          // Total esperado
+          // Pending deliveries card
+          if (r.details.pendingDeliveries.isNotEmpty) ...[
+            Card(
+              color: const Color(0xFF7C3AED).withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PENDIENTES POR ENTREGAR',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF7C3AED),
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        )),
+                    const SizedBox(height: 8),
+                    ...r.details.pendingDeliveries.map((pd) => _row(
+                        '${pd.entityName}: ${pd.description ?? ""}',
+                        formatCurrency(pd.amount))),
+                    const Divider(),
+                    _row('Total pendientes por entregar',
+                        formatCurrency(r.totalPendingDeliveries),
+                        bold: true, color: const Color(0xFF7C3AED)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Total esperado (sum of apertura + movimientos + pendientes)
           Card(
             color: _kGreen.withOpacity(0.05),
             child: Padding(
@@ -310,6 +341,36 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             ),
           ),
           const SizedBox(height: 8),
+
+          // Commissions card (informational)
+          if (r.details.commissions.isNotEmpty) ...[
+            Card(
+              color: _kTeal.withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('COMISIONES',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          color: _kTeal,
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        )),
+                    const SizedBox(height: 8),
+                    ...r.details.commissions
+                        .map((c) => _row(c.name, formatCurrency(c.amount))),
+                    const Divider(),
+                    _row('Total comisiones',
+                        formatCurrency(r.totalCommissions),
+                        bold: true, color: _kTeal),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Cierre card
           Card(
@@ -341,67 +402,6 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             ),
           ),
           const SizedBox(height: 8),
-
-          // Commissions card
-          if (r.details.commissions.isNotEmpty) ...[
-            Card(
-              color: _kTeal.withOpacity(0.05),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('COMISIONES',
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          color: _kTeal,
-                          fontSize: 13,
-                          letterSpacing: 0.3,
-                        )),
-                    const SizedBox(height: 8),
-                    ...r.details.commissions
-                        .map((c) => _row(c.name, formatCurrency(c.amount))),
-                    const Divider(),
-                    _row('Total comisiones',
-                        formatCurrency(r.totalCommissions),
-                        bold: true, color: _kTeal),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // Pending deliveries card
-          if (r.details.pendingDeliveries.isNotEmpty) ...[
-            Card(
-              color: const Color(0xFF7C3AED).withOpacity(0.05),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('PENDIENTES POR ENTREGAR',
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF7C3AED),
-                          fontSize: 13,
-                          letterSpacing: 0.3,
-                        )),
-                    const SizedBox(height: 8),
-                    ...r.details.pendingDeliveries.map((pd) => _row(
-                        '${pd.entityName}: ${pd.description ?? ""}',
-                        formatCurrency(pd.amount))),
-                    const Divider(),
-                    _row('Total pendientes por entregar',
-                        formatCurrency(r.totalPendingDeliveries),
-                        bold: true, color: const Color(0xFF7C3AED)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
 
           // Discrepancy result
           Card(
