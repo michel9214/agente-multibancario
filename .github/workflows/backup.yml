@@ -1,0 +1,65 @@
+name: Daily Database Backup
+
+on:
+  schedule:
+    # Runs every day at 5:00 AM UTC (12:00 AM Peru time)
+    - cron: '0 5 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout backup branch
+        uses: actions/checkout@v4
+        with:
+          ref: backup
+          fetch-depth: 1
+        continue-on-error: true
+
+      - name: Create backup branch if not exists
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git rev-parse --verify backup 2>/dev/null; then
+            git checkout --orphan backup
+            git rm -rf . 2>/dev/null || true
+            echo "# Database Backups" > README.md
+            git add README.md
+            git commit -m "Initialize backup branch"
+            git push origin backup
+          fi
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create database dump
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          pg_dump "$DATABASE_URL" \
+            --no-owner \
+            --no-privileges \
+            --format=plain \
+            --file=backup.sql
+
+          # Create a compressed version too
+          gzip -k backup.sql
+
+          # Generate info file
+          echo "Backup date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > backup-info.txt
+          echo "Database size: $(wc -c < backup.sql) bytes" >> backup-info.txt
+          echo "Compressed size: $(wc -c < backup.sql.gz) bytes" >> backup-info.txt
+          echo "Tables:" >> backup-info.txt
+          grep "^CREATE TABLE" backup.sql | sed 's/CREATE TABLE /  - /' >> backup-info.txt
+
+      - name: Commit and push backup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backup.sql backup.sql.gz backup-info.txt
+          git commit -m "Backup $(date -u '+%Y-%m-%d %H:%M UTC')" --allow-empty
+          git push origin backup --force
