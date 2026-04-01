@@ -401,7 +401,7 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Pending deliveries nav card (after movements, before cierre)
+                  // Pending deliveries nav card
                   if (shift.pendingDeliveries.isNotEmpty) ...[
                     _navCard(
                       'PENDIENTES POR ENTREGAR (${shift.pendingDeliveries.length})',
@@ -421,6 +421,35 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                   ],
 
                   if (shift.isClosed || shift.isPreclosed) ...[
+                    // Esperado (sum of apertura + mov + pendientes)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _kGreen.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _kGreen.withOpacity(0.15)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Esperado',
+                              style: GoogleFonts.dmSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _kGreen)),
+                          Text(formatCurrency(totalExpected),
+                              style: GoogleFonts.dmMono(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _kGreen)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Cierre
                     _navCard(
                       'CIERRE',
                       formatCurrency(totalClosing),
@@ -442,47 +471,29 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Esperado vs cierre (includes pending deliveries)
+                    // Diferencia (esperado vs cierre)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: dColor.withOpacity(0.04),
+                        color: dColor.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: dColor.withOpacity(0.12)),
+                        border: Border.all(color: dColor.withOpacity(0.15)),
                       ),
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Esperado',
-                                  style: GoogleFonts.dmSans(
-                                      fontSize: 12, color: _kMuted)),
-                              Text(formatCurrency(totalExpected),
-                                  style: GoogleFonts.dmMono(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: _kMuted)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Diferencia',
-                                  style: GoogleFonts.dmSans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: dColor)),
-                              Text(formatCurrency(discrepancy),
-                                  style: GoogleFonts.dmMono(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: dColor)),
-                            ],
-                          ),
+                          Text('Diferencia',
+                              style: GoogleFonts.dmSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: dColor)),
+                          Text(formatCurrency(discrepancy),
+                              style: GoogleFonts.dmMono(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: dColor)),
                         ],
                       ),
                     ),
