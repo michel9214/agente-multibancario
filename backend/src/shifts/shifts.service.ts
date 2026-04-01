@@ -422,9 +422,9 @@ export class ShiftsService {
   async getShiftComparisons(page?: number, limit?: number) {
     const p = Number(page) || 1;
     const l = Number(limit) || 20;
-    // Fetch all closed shifts with their balance entries, ordered by startedAt ASC
-    const closedShifts = await this.prisma.shift.findMany({
-      where: { status: ShiftStatus.CLOSED },
+    // Fetch all shifts with balance entries, ordered by startedAt ASC
+    // Include OPEN/PRECLOSED so we can compare last closed → current open
+    const allShifts = await this.prisma.shift.findMany({
       orderBy: { startedAt: 'asc' },
       include: {
         balanceEntries: { include: { entity: true } },
@@ -432,15 +432,19 @@ export class ShiftsService {
       },
     });
 
-    if (closedShifts.length < 2) {
-      return { data: [], total: 0, page, limit };
+    if (allShifts.length < 2) {
+      return { data: [], total: 0, page: p, limit: l };
     }
 
     // Build comparisons for each consecutive pair
+    // Only compare when prev shift is CLOSED (has closing balances)
     const comparisons = [];
-    for (let i = 0; i < closedShifts.length - 1; i++) {
-      const prev = closedShifts[i];
-      const next = closedShifts[i + 1];
+    for (let i = 0; i < allShifts.length - 1; i++) {
+      const prev = allShifts[i];
+      const next = allShifts[i + 1];
+
+      // Skip if prev shift has no closing data
+      if (prev.status !== ShiftStatus.CLOSED) continue;
 
       const prevClosing = prev.balanceEntries.filter(
         (b) => b.type === BalanceType.CLOSING,
