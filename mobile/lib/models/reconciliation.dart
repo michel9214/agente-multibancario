@@ -63,8 +63,8 @@ class Reconciliation {
   /// Total cierre (efectivo + saldos)
   double get totalClosing => endingCash + totalClosingBalance;
 
-  /// Total esperado = apertura + movimientos netos (comisiones son solo informativas)
-  double get totalExpected => totalOpening + totalMovements;
+  /// Total esperado = apertura + movimientos netos + pendientes por entregar
+  double get totalExpected => totalOpening + totalMovements + totalPendingDeliveries;
 
   static double _d(dynamic v) {
     if (v is num) return v.toDouble();

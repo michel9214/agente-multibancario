@@ -219,13 +219,13 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
         .where((m) => m.direction == 'OUT')
         .fold<double>(0.0, (sum, m) => sum + m.amount);
     final netMovements = totalMovementsIn - totalMovementsOut;
-    final totalExpected = totalOpening + netMovements;
+    final totalPendingDeliveries = shift.pendingDeliveries.fold<double>(0.0, (sum, pd) => sum + pd.amount);
+    final totalExpected = totalOpening + netMovements + totalPendingDeliveries;
 
     final totalClosingBalance =
         closingEntries.fold<double>(0.0, (sum, b) => sum + b.amount);
     final totalClosing = (shift.endingCash ?? 0) + totalClosingBalance;
-    final totalPendingDeliveries = shift.pendingDeliveries.fold<double>(0.0, (sum, pd) => sum + pd.amount);
-    final discrepancy = totalClosing - totalExpected - totalPendingDeliveries;
+    final discrepancy = totalClosing - totalExpected;
 
     final dColor = _discColor(discrepancy);
 
@@ -457,10 +457,10 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Esperado (apertura + mov. - pend.)',
+                              Text('Esperado',
                                   style: GoogleFonts.dmSans(
-                                      fontSize: 11, color: _kMuted)),
-                              Text(formatCurrency(totalExpected - totalPendingDeliveries),
+                                      fontSize: 12, color: _kMuted)),
+                              Text(formatCurrency(totalExpected),
                                   style: GoogleFonts.dmMono(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,

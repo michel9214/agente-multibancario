@@ -705,7 +705,7 @@ class _ActiveShiftScreenState extends ConsumerState<ActiveShiftScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            _infoRow('Esperado (apertura + mov.)',
+            _infoRow('Esperado',
                 formatCurrency(r.totalExpected)),
             _infoRow('Cierre real', formatCurrency(r.totalClosing)),
           ],

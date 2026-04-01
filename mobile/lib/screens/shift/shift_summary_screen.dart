@@ -281,7 +281,7 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
             const SizedBox(height: 8),
           ],
 
-          // Total esperado (sin comisiones)
+          // Total esperado
           Card(
             color: _kGreen.withOpacity(0.05),
             child: Padding(
@@ -300,6 +300,8 @@ class _ShiftSummaryScreenState extends ConsumerState<ShiftSummaryScreen> {
                   _row('Total apertura', formatCurrency(r.totalOpening)),
                   if (r.details.movements.isNotEmpty)
                     _row('Movimientos netos', formatCurrency(r.totalMovements)),
+                  if (r.totalPendingDeliveries > 0)
+                    _row('Pendientes por entregar', formatCurrency(r.totalPendingDeliveries)),
                   const Divider(),
                   _row('Debería tener', formatCurrency(r.totalExpected),
                       bold: true, color: _kGreen),
