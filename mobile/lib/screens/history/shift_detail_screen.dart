@@ -500,74 +500,6 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                     const SizedBox(height: 12),
                   ],
 
-                  // Commissions
-                  if (shift.commissionEntries.isNotEmpty) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border(
-                          left: BorderSide(
-                              color: _kTeal.withOpacity(0.5), width: 3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.receipt_long_rounded,
-                                  color: _kTeal, size: 18),
-                              const SizedBox(width: 8),
-                              Text('COMISIONES',
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w700,
-                                    color: _kTeal,
-                                    fontSize: 12,
-                                    letterSpacing: 0.8,
-                                  )),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ...shift.commissionEntries.map((c) => _dataRow(
-                              c.name, formatCurrency(c.amount))),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Divider(
-                                color: Colors.grey.shade200, height: 1),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Total',
-                                  style: GoogleFonts.dmSans(
-                                      fontWeight: FontWeight.w700,
-                                      color: _kTeal)),
-                              Text(
-                                  formatCurrency(shift.commissionEntries
-                                      .fold<double>(
-                                          0.0, (s, c) => s + c.amount)),
-                                  style: GoogleFonts.dmMono(
-                                    fontWeight: FontWeight.w700,
-                                    color: _kTeal,
-                                  )),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-
                   // Justification
                   if (shift.discrepancyNote != null ||
                       shift.discrepancyPhotoUrl != null) ...[
@@ -634,6 +566,74 @@ class _ShiftDetailScreenState extends ConsumerState<ShiftDetailScreen> {
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // Commissions
+                  if (shift.commissionEntries.isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border(
+                          left: BorderSide(
+                              color: _kTeal.withOpacity(0.5), width: 3),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.receipt_long_rounded,
+                                  color: _kTeal, size: 18),
+                              const SizedBox(width: 8),
+                              Text('COMISIONES',
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
+                                    color: _kTeal,
+                                    fontSize: 12,
+                                    letterSpacing: 0.8,
+                                  )),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          ...shift.commissionEntries.map((c) => _dataRow(
+                              c.name, formatCurrency(c.amount))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Divider(
+                                color: Colors.grey.shade200, height: 1),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Total',
+                                  style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w700,
+                                      color: _kTeal)),
+                              Text(
+                                  formatCurrency(shift.commissionEntries
+                                      .fold<double>(
+                                          0.0, (s, c) => s + c.amount)),
+                                  style: GoogleFonts.dmMono(
+                                    fontWeight: FontWeight.w700,
+                                    color: _kTeal,
+                                  )),
+                            ],
+                          ),
                         ],
                       ),
                     ),
