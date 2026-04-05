@@ -49,8 +49,8 @@ jobs:
             --format=plain \
             --file=backup.sql
 
-          # Create a compressed version too
-          gzip -k backup.sql
+          # Create a compressed version too (force overwrite)
+          gzip -kf backup.sql
 
           # Generate info file
           echo "Backup date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > backup-info.txt
