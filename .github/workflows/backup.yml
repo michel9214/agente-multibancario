@@ -1,9 +1,10 @@
-name: Daily Database Backup
+name: Daily Database Backup (legacy Neon)
 
+# DESACTIVADO 2026-08-25: la base se migró de Neon al homelab (dockerhost,
+# stack /opt/stacks/multibanco). El backup diario ahora corre por cron en el
+# dockerhost y empuja a la rama `backup` (ver /opt/stacks/multibanco/backup.sh).
+# Se conserva solo el disparo manual por si hiciera falta re-dumpear Neon.
 on:
-  schedule:
-    # Runs every day at 5:00 AM UTC (12:00 AM Peru time)
-    - cron: '0 5 * * *'
   workflow_dispatch: # Allow manual trigger
 
 permissions:
