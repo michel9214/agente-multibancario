@@ -1,0 +1,14 @@
+Backup date: 2026-09-26 05:30:01 UTC
+Source: homelab dockerhost (multibanco-db)
+Database size: 3219271 bytes
+Compressed size: 690050 bytes
+Tables:
+  - public._prisma_migrations (
+  - public.balance_entries (
+  - public.banking_entities (
+  - public.commission_entries (
+  - public.movement_reasons (
+  - public.movements (
+  - public.pending_deliveries (
+  - public.shifts (
+  - public.users (
